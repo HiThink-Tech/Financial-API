@@ -1,0 +1,66 @@
+# ---- Project-specific (not committed) ----
+refer-to/
+feature/
+
+# ---- Secrets / local env ----
+.env
+.env.*
+!.env.example
+
+# ---- OS ----
+.DS_Store
+Thumbs.db
+
+# ---- Python bytecode / cache ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# ---- Packaging / build artifacts ----
+build/
+dist/
+*.egg-info/
+*.egg
+pip-wheel-metadata/
+.eggs/
+
+# ---- Virtual environments ----
+.venv/
+venv/
+env/
+ENV/
+
+# ---- Testing / coverage ----
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+
+# ---- Type checkers / linters ----
+.mypy_cache/
+.ruff_cache/
+.pytype/
+
+# ---- Jupyter ----
+.ipynb_checkpoints/
+
+# ---- IDE / editor ----
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# ---- Local data / scratch outputs ----
+data/
+out/
+*.sqlite
+*.sqlite3
+*.db
+*.duckdb
+*.parquet
+*.log
