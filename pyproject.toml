@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "marketdb"
+version = "0.1.0"
+description = "Local A-share market database (Python + DuckDB) backed by Parquet full dumps and REST/MCP incremental updates."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Proprietary" }
+authors = [{ name = "haoruilee" }]
+dependencies = [
+    "duckdb>=1.1,<2",
+    "pyarrow>=16,<25",
+    "pandas>=2.2,<4",
+    "typer>=0.12,<1",
+    "rich>=13,<14",
+    "python-dotenv>=1.0,<2",
+    "requests>=2.31,<3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8,<10",
+    "ruff>=0.5,<1",
+]
+
+[project.scripts]
+marketdb = "marketdb.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["marketdb*"]
+exclude = ["tests*", "feature*", "refer-to*", "docs*"]
+
+[tool.setuptools.package-data]
+marketdb = ["sql/*.sql"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"

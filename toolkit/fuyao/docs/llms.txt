@@ -1,0 +1,38 @@
+# 同花顺金融数据 API 文档
+
+> 面向 AI Agent、量化研究与 Fintech 应用的 A 股结构化金融数据 REST API + MCP Tools 文档站。
+> 完整聚合见 [llms-full.txt](https://fuyao.aicubes.cn/llms-full.txt)。在线浏览 https://fuyao.aicubes.cn/docs
+
+## 入门
+
+- [用 AI 助手快速接入](https://fuyao.aicubes.cn/ai-quickstart.md): 让 ChatGPT / Claude / Cursor 帮你 3 分钟内完成第一次 API 或 MCP 调用
+- [同花顺金融数据API](https://fuyao.aicubes.cn/docs/): 面向 AI Agent / 量化研究 / Fintech 应用的结构化金融数据服务
+- [项目介绍](https://fuyao.aicubes.cn/docs/introduction/): 同花顺金融数据产品的能力范围与接入方式
+- [快速开始](https://fuyao.aicubes.cn/docs/quickstart/): 3 步获取 API Token 并发起第一次调用
+
+## REST API 参考
+
+- [API 参考](https://fuyao.aicubes.cn/docs/api-reference/overview/): REST API 端点总览
+- [价格数据](https://fuyao.aicubes.cn/docs/api-reference/prices/): A 股行情快照与历史 K 线接口
+- [全市场数据导出](https://fuyao.aicubes.cn/docs/api-reference/market-dumps/): A 股全市场历史 K 线与复权因子 Parquet 文件下载
+- [标的检索与目录](https://fuyao.aicubes.cn/docs/api-reference/tickers/): 跨市场标的检索与代码表批量获取
+- [公司行动](https://fuyao.aicubes.cn/docs/api-reference/corporate-actions/): A 股复权因子事件流（分红 / 送股 / 配股）
+- [财务报表](https://fuyao.aicubes.cn/docs/api-reference/financials/): A 股整体合并利润表 / 资产负债表 / 现金流量表多期序列
+- [交易日历](https://fuyao.aicubes.cn/docs/api-reference/calendar/): A 股近一年交易日序列
+
+## MCP 接入
+
+- [MCP 工具概览](https://fuyao.aicubes.cn/docs/mcp/overview/): 给 LLM Agent 用的 REST 适配器 —— 命名、边界、运行方式
+
+## MCP 工具
+
+- [A股交易日历](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_calendar_trading_days/): A 股近一年交易日序列（无入参）
+- [复权因子事件流](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_corporate_actions_adjustment_factors/): 单只 A 股的复权因子事件流（分红 / 送股 / 配股）
+- [资产负债表](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_financials_balance_sheets/): 单只 A 股的整体合并资产负债表多期序列
+- [现金流量表](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_financials_cash_flow_statements/): 单只 A 股的整体合并现金流量表多期序列
+- [利润表](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_financials_income_statements/): 单只 A 股的整体合并利润表多期序列
+- [A股历史K线](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_prices_historical/): 单只标的的 A 股历史 K 线序列
+- [A股行情快照](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_prices_snapshot/): A 股行情快照（按 thscodes 批量或全市场分页）
+- [标的目录（代码表浏览）](https://fuyao.aicubes.cn/docs/mcp/tools/get_meta_tickers_list/): 批量获取代码表（按交易所 / 资产类别过滤）
+- [标的检索（跨市场消歧）](https://fuyao.aicubes.cn/docs/mcp/tools/get_meta_tickers_search/): 公司名 / 代码片段解析为标准 thscode
+

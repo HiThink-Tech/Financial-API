@@ -1,0 +1,1937 @@
+# 同花顺金融数据 API 文档 — 完整聚合
+
+> 本文件由站内所有文档自动聚合,供 LLM 一次性消费。
+> 索引版本：https://fuyao.aicubes.cn/llms.txt
+> 在线版本：https://fuyao.aicubes.cn/docs
+
+
+---
+
+# 入门
+
+## 用 AI 助手快速接入
+
+来源：https://fuyao.aicubes.cn/ai-quickstart.md
+
+> 让 ChatGPT / Claude / Cursor 帮你 3 分钟内完成第一次 API 或 MCP 调用
+
+> 让 ChatGPT / Claude / Cursor 帮你 3 分钟内完成第一次 API 或 MCP 调用。
+> 全程不需要手写 curl，全程让 AI 替你生成代码或直接调用工具。
+
+整体只有三件事：
+
+1. **登录拿 Token** —— 后端的 capability 都要鉴权，先签发一个属于你的 Token。
+2. **把站内 `llms-full.txt` 喂给 AI** —— 让 AI 一次性掌握全部接口契约。
+3. **让 AI 帮你调** —— 要么让它生成 REST 代码、要么给它配 MCP 工具直接调。
+
+---
+
+## 第 1 步：登录并签发 Token
+
+1. 打开 <https://fuyao.aicubes.cn/>，用同花顺账号登录。
+2. 进入「Token 管理」页（<https://fuyao.aicubes.cn/admin>），点击 **创建 Token**，填一个别名（例如 `ai-playground`）。
+3. 提交后窗口里弹出的完整 Token **只此一次可见**，请立刻保存到本地的密码管理器或 `.env`。
+
+更详细的步骤、Token 生命周期与常见报错见 <https://fuyao.aicubes.cn/docs/quickstart>。
+
+---
+
+## 第 2 步：把文档喂给 AI
+
+本站根目录提供两份给 AI 用的纯文本聚合：
+
+- <https://fuyao.aicubes.cn/llms.txt> —— 索引清单，**适合 AI 先扫一眼知道有哪些接口**。
+- <https://fuyao.aicubes.cn/llms-full.txt> —— 全站全文聚合，**适合一次性塞进上下文窗口，让 AI 看到完整字段、参数与示例**。
+
+下面按使用场景给两种喂法。
+
+### 方式一：URL 直接给 AI
+
+适用于 Claude、ChatGPT（带浏览能力的版本）、Cursor、Perplexity 等。
+
+在对话里贴：
+
+```
+请抓取 https://fuyao.aicubes.cn/llms-full.txt 作为接口参考，
+后续我所有关于扶摇金融数据 API 的提问都基于这份文档作答。
+```
+
+### 方式二：文件 / 文本粘贴
+
+不支持浏览的模型，把 `llms-full.txt` 下载下来作为附件上传，或直接复制到对话里：
+
+```bash
+curl -O https://fuyao.aicubes.cn/llms-full.txt
+```
+
+---
+
+## 第 3 步：让 AI 调接口
+
+下面是两条典型路径，**任选其一**即可。
+
+### 路径 A：让 AI 生成 REST 调用代码（最易上手）
+
+最适合：偶尔取一次数据、写个小脚本、在 Notebook 里跑回测。
+
+在 AI 对话里直接提问（把 `<your-token>` 换成你自己的）：
+
+```
+我有一个扶摇 API Token: <your-token>
+
+请用 Python (requests) 写一段代码，
+取贵州茅台 (600519.SH) 最近 4 期年报利润表，
+打印每期的营业收入和归母净利润。
+
+要点：
+- BaseURL: https://fuyao.aicubes.cn
+- 请求头携带 X-api-key
+- 响应是 ApiResponse 信封，业务数据在 data.item
+```
+
+AI 会基于 `llms-full.txt` 里的端点定义生成可运行的代码。把代码贴到本地跑，确认能正常返回即可。
+
+> 如果 AI 写错了字段名或路径，把报错（特别是 `code` / `message`）贴回去让它纠正——
+> `llms-full.txt` 已经包含完整的错误码表，AI 一般能自纠。
+
+### 路径 B：配 MCP，让 AI 直接调工具
+
+最适合：在 Claude Desktop / Cursor / Windsurf 里持续对话查数据，不想反复跑脚本。
+
+#### Claude Desktop / Cursor 配置示例
+
+在客户端的 MCP 配置文件里加入扶摇的两个 MCP 服务：
+
+```json
+{
+  "mcpServers": {
+    "fuyao-a-share": {
+      "type": "http",
+      "url": "https://fuyao.aicubes.cn/mcp/a-share",
+      "headers": {
+        "X-api-key": "<your-token>"
+      }
+    },
+    "fuyao-meta": {
+      "type": "http",
+      "url": "https://fuyao.aicubes.cn/mcp/meta",
+      "headers": {
+        "X-api-key": "<your-token>"
+      }
+    }
+  }
+}
+```
+
+> 不同客户端的配置文件位置、字段名略有差异（如 Claude Desktop 是 `claude_desktop_config.json`，
+> Cursor 是 `~/.cursor/mcp.json`），具体见对应客户端文档。
+
+配好后重启客户端，在对话里直接问：
+
+> "贵州茅台今天涨多少？再帮我把它最近 1 个月日 K 拉出来"
+
+客户端会自动：
+
+1. 调 `fuyao-meta` → `get_meta_tickers_search` 解析 "贵州茅台" → `600519.SH`
+2. 调 `fuyao-a-share` → `get_a_share_prices_snapshot` 拿当前行情
+3. 调 `fuyao-a-share` → `get_a_share_prices_historical` 拿历史 K 线
+
+更多 AI 跨工具调用场景见 <https://fuyao.aicubes.cn/docs/mcp/overview#ai-agent-跨服务调用场景>。
+
+---
+
+## 进阶建议
+
+- **接口报 `code=2001` / `code=2003`**：Token 失效或没权限，回 <https://fuyao.aicubes.cn/admin> 重新签发或申请权限。
+- **AI 生成的代码字段对不上**：让 AI 重新拉 `llms-full.txt` 校对，或贴上具体的 REST API 参考页 URL（如 <https://fuyao.aicubes.cn/docs/api-reference/financials>）。
+- **想给 AI 更精准的上下文**：只贴用得到的子文档（例如调财务时只贴 <https://fuyao.aicubes.cn/docs/api-reference/financials>），减小 token 占用。
+- **Token 不要明文写入提示词或代码**：用环境变量或客户端的 secret 配置注入。
+
+调通后，建议把工作流沉淀成一段「系统提示词」复用，例如：
+
+```
+你是扶摇金融数据 API 的接入助手。所有金融数据查询请基于
+https://fuyao.aicubes.cn/llms-full.txt 的接口契约，输出可直接运行的 Python/curl 代码，
+并在结果中明确解释字段含义。Token 由我用环境变量 FUYAO_TOKEN 提供。
+```
+
+## 同花顺金融数据API
+
+来源：https://fuyao.aicubes.cn/docs/
+
+> 面向 AI Agent / 量化研究 / Fintech 应用的结构化金融数据服务
+
+[快速开始 →](/docs/quickstart)
+  [浏览 REST API](/docs/api-reference/overview)
+  
+
+## 你可以访问什么
+
+按 **标的宇宙 / 数据类型** 两级路径组织，覆盖行情、代码表、公司行动、财务报表、交易日历与全市场导出：
+
+  - [REST API](/docs/api-reference/overview): 标准 HTTP 接口，按 `/api/<标的宇宙>/<数据类型>/<动作>` 形态组织。覆盖行情快照、
+    历史 K 线、标的检索 / 目录、公司行动与全市场 Parquet 导出。
+  - [MCP 工具](/docs/mcp/overview): 面向 AI Agent / LLM 工具链的 MCP Tools，与 REST 共享同一套 capability。
+    以 MCP Tools 形态暴露，鉴权方式相同。
+  - [A 股 · 行情数据](/docs/api-reference/prices): 单只 / 多只 / 全市场行情快照 + 单只标的历史 K 线（日 / 周 / 月），支持前复权 / 后复权。
+  - [A 股 · 公司行动](/docs/api-reference/corporate-actions): 单只 A 股的原始复权因子事件流（现金分红 / 送股 / 配股），供客户端自行推导复权因子。
+  - [A 股 · 财务报表](/docs/api-reference/financials): 单只 A 股的整体合并利润表 / 资产负债表 / 现金流量表多期序列，支持最近 N 期或时间区间取数。
+  - [A 股 · 交易日历](/docs/api-reference/calendar): A 股近一年交易日序列，同时返回毫秒戳与 `yyyyMMdd` 可读日期，方便展示与对账。
+  - [元信息 · 标的检索与目录](/docs/api-reference/tickers): 按 thscode / ticker / 名称做跨市场消歧检索，或按市场与资产类型批量获取代码表。
+  - [统一响应信封](/docs/api-reference/overview): 所有接口返回 `ApiResponse`（`code` / `message` / `request_id` / `data`），业务错误经 `code` 表达。
+
+## 面向人群
+
+  - **AI Agent / LLM 开发者** —— 直接拿结构化字段喂模型，无需自己写抓取与解析层。
+  - **量化研究 / 策略平台** —— 行情快照 + 历史 K 线 + 复权事件，覆盖回测与实时打分场景。
+  - **Fintech / 投研产品** —— snake_case 字段直接驱动前端图表与表格。
+  - **个人开发者 / 学习者** —— 接口契约清晰，Token 管理页一键签发 Token 并预览结果。
+
+## 设计原则
+
+  - **LLM-friendly schema** —— snake_case 字段、显式 `currency`、毫秒级 Unix 时间戳，减少模型解析歧义。
+  - **统一响应信封** —— 所有业务结果（含错误）HTTP 200 返回，经 `code` 字段分发，方便客户端单点处理。
+  - **路径分层清晰** —— URL 形如 `/api/<标的宇宙>/<数据类型>/<动作>`（如 `/api/a-share/prices/snapshot`）。
+  - **原始数据为主** —— 复权因子返回原始事件流，客户端可自由推导前复权 / 后复权；预计算结果走 `prices?adjust=...`。
+
+## 从这里开始
+
+  - [快速开始](/docs/quickstart): 3 分钟跑通第一次 snapshot 与 search 调用。
+  - [项目介绍](/docs/introduction): 产品定位、当前范围与响应规范。
+  - [Token 管理](/admin): 在浏览器内签发并管理 API Token。
+
+## 项目介绍
+
+来源：https://fuyao.aicubes.cn/docs/introduction/
+
+> 同花顺金融数据产品的能力范围与接入方式
+
+扶摇（Fuyao）是面向 **AI Agent、量化研究与 Fintech 应用** 的结构化金融数据服务。
+我们将 A 股市场的行情、公司行动、财务报表、交易日历与代码表整理为低延迟、易解析的结构化字段，
+通过统一的响应信封对外暴露，方便接入方直接喂模型、做回测或驱动前端图表。
+
+## 提供的数据
+
+| 数据域 | 内容 | 说明 |
+|---|---|---|
+| [A 股 · 行情数据](/docs/api-reference/prices) | 单只 / 多只 / 全市场行情快照 + 历史 K 线（日 / 周 / 月） | 支持前复权 / 后复权。 |
+| [A 股 · 公司行动](/docs/api-reference/corporate-actions) | 现金分红、送股、配股原始事件流 | 客户端可自行推导复权因子。 |
+| [A 股 · 财务报表](/docs/api-reference/financials) | 利润表 / 资产负债表 / 现金流量表多期序列 | 支持最近 N 期或时间区间取数。 |
+| [A 股 · 交易日历](/docs/api-reference/calendar) | 近一年交易日序列 | 同时返回 `date_ms` 毫秒戳与 `date`（`yyyyMMdd`）。 |
+| [元信息 · 标的检索与目录](/docs/api-reference/tickers) | 跨市场标的检索与代码表批量获取 | 按 thscode / ticker / 名称消歧。 |
+| [全市场数据导出](/docs/api-reference/market-dumps) | 全 A 股 10 年日 K 与全历史复权因子 Parquet 文件 | 通过预签名链接一次性拉全市场数据。 |
+
+字段统一使用 snake_case、毫秒级 Unix 时间戳与显式 `currency`，便于 LLM 解析。
+所有业务结果（含错误）走统一 `ApiResponse` 信封 —— 详见
+[API 参考 · 通用约定](/docs/api-reference/overview)。
+
+## 接入方式
+
+  - [REST API](/docs/api-reference/overview): 标准 HTTP 接口，按 `/api/<标的宇宙>/<数据类型>/<动作>` 组织。
+    使用 `X-api-key` 请求头鉴权。
+  - [MCP 工具](/docs/mcp/overview): 面向 AI Agent / 大模型工作流的 Model Context Protocol 接入。
+    以 MCP Tools 形态暴露同一套 capability，鉴权使用在「Token 管理」页签发的 API Token。
+
+## 鉴权方式
+
+调用所有数据接口都需要一个 **API Token**：
+
+1. 使用同花顺账号登录扶摇文档站。
+2. 进入 [Token 管理](/admin) 页创建一个具名 Token。
+3. 在请求头中携带 `X-api-key: <token>` 即可访问 REST API；MCP 接入同样使用该 Token。
+
+具体步骤见 [快速开始](/docs/quickstart)。
+
+## 面向人群
+
+  - **AI Agent / LLM 开发者** —— 直接拿结构化字段喂模型，省去抓取与解析层。
+  - **量化研究 / 策略平台** —— 行情快照 + 历史 K 线 + 复权事件，覆盖回测与实时打分。
+  - **Fintech / 投研产品** —— snake_case 字段直接驱动前端图表与表格。
+  - **个人开发者 / 学习者** —— 接口契约清晰，「Token 管理」页一键签发 Token 并预览结果。
+
+## 快速开始
+
+来源：https://fuyao.aicubes.cn/docs/quickstart/
+
+> 3 步获取 API Token 并发起第一次调用
+
+export const LoginButton = () => (
+  
+);
+
+调用同花顺金融数据接口只需要 3 步：**登录 → 签发 Token → 携带 `X-api-key` 调用**。
+
+## 1. 登录
+
+使用同花顺账号登录扶摇文档站：
+
+登录成功后会回跳到「Token 管理」页，登录态保存在浏览器 Cookie 中。
+
+## 2. 在「Token 管理」页签发 Token
+
+进入 [Token 管理](/admin)，点击 **创建 Token**，填写：
+
+- **别名**：用于区分不同用途（例如 `my-dev-token`、`backtest-prod`）。
+
+提交后会立即返回完整 Token —— **请妥善保存，关闭弹窗后只能在列表里再次查看**。
+
+> Token 与你的同花顺账号绑定。可在「Token 管理」页的"已创建 Token"列表中查看和管理已签发的 Token。
+
+## 3. 调用 REST API
+
+在请求头中携带 `X-api-key: <token>`。以行情快照为例：
+
+```bash
+curl 'https://fuyao.aicubes.cn/api/a-share/prices/snapshot?thscodes=600519.SH' \
+  -H 'X-api-key: <your-token>'
+```
+
+成功响应统一走 `ApiResponse` 信封：
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "request_id": "a1b2c3d4",
+  "data": {
+    "timestamp": 1716105600000,
+    "item": [ ]
+  }
+}
+```
+
+完整端点与参数见 [API 参考](/docs/api-reference/overview)。
+
+## MCP 接入
+
+后端 capability 同时以 MCP Tools 形态暴露给 AI Agent 工具链，
+鉴权复用上一步签发的 Token，通过环境变量 `API_KEY` 注入：
+
+```bash
+export API_KEY="<your-token>"
+```
+
+具体工具列表见 [MCP 工具概览](/docs/mcp/overview)。
+
+## 常见问题
+
+- **Token 显示"登录态已失效"**：Cookie 过期，重新登录后再签发即可。
+- **调用返回 `code=2001`**：`X-api-key` 缺失或无效，确认请求头携带了有效的 Token。
+- **调用返回 `code=2003`**：Token 无权访问该 capability，请联系管理员开通对应权限。
+- **达到 Token 数量上限**：删除不再使用的 Token 后重试。
+
+
+---
+
+# REST API 参考
+
+## API 参考
+
+来源：https://fuyao.aicubes.cn/docs/api-reference/overview/
+
+> REST API 端点总览
+
+同花顺金融数据API 以一套 REST 接口对外提供能力，并同时通过 **MCP Tools** 暴露给 AI Agent 工具链。
+两种调用方式共享同一套后端 capability，数据语义完全一致。所有业务响应（含错误）统一返回 HTTP 200，
+业务结果经响应信封的 `code` 字段表达。
+
+## 接口分组
+
+| 分组 | 路径前缀 | 说明 |
+|---|---|---|
+| [价格数据 (prices)](./prices.mdx) | `/api/a-share/prices` | A 股行情快照与历史 K 线。 |
+| [全市场数据导出 (market-dumps)](./market-dumps.mdx) | `/dump/market-dumps` | 价格数据子模块：A 股全市场历史日 K 与复权因子 Parquet 文件下载链接。 |
+| [标的检索与目录 (tickers)](./tickers.mdx) | `/api/meta/tickers` | 跨市场标的检索与代码表批量获取。 |
+| [公司行动 (corporate-actions)](./corporate-actions.mdx) | `/api/a-share/corporate-actions` | A 股复权因子事件流（分红 / 送股 / 配股）。 |
+| [财务报表 (financials)](./financials.mdx) | `/api/a-share/financials` | A 股整体合并利润表 / 资产负债表 / 现金流量表多期序列。 |
+| [交易日历 (calendar)](./calendar.mdx) | `/api/a-share/calendar` | A 股近一年交易日序列（含毫秒戳与 `yyyyMMdd`）。 |
+
+## 通用约定
+
+- **Base URL**：`https://fuyao.aicubes.cn`。
+- **必需请求头**：`X-api-key: <your-token>`，缺失或无效返回 `code=2001`；token 无权访问该 capability 返回 `code=2003`。
+- 实体标识统一使用 `thscode`（如 `600519.SH`），不接受纯代码 `ticker`（如 `600519`）。
+- 时间戳字段统一为毫秒级 Unix 时间戳（`long`），时区按 `Asia/Shanghai`。
+
+## 响应信封
+
+所有接口返回统一的 `ApiResponse` 信封：
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "request_id": "a1b2c3d4e5f6789012345678abcdef01",
+  "data": {
+    "timestamp": 1716105600000,
+    "item": [ ]
+  }
+}
+```
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `code` | integer | 业务结果码，`0` 表示成功，非 `0` 表示业务错误。 |
+| `message` | string | 结果描述。 |
+| `request_id` | string | 请求追踪 ID。 |
+| `data` | object | 业务数据容器，按接口而定；错误时可能省略。 |
+| `data.timestamp` | long | 数据时间戳（毫秒）。 |
+| `data.item` | array | 业务数据列表。 |
+
+## 错误码
+
+| code | 含义 | 典型场景 |
+|---|---|---|
+| `0` | 成功 | - |
+| `1001` | 缺少必填参数 | `start` / `end` / `q` / `thscode` 漏传。 |
+| `1002` | 参数格式错误 | `exchange` 不在 `SH` / `SZ` / `BJ`。 |
+| `1003` | 参数取值越界 | `limit <= 0`；`historical` / `financials` 的 `[start, end]` 窗口超过 10 年。 |
+| `1004` | 参数冲突 | `financials` 同时传 `start`/`end` 与 `limit`；仅传 `start` 或仅传 `end`（半开区间）。 |
+| `2001` | 未认证 | `X-api-key` 缺失或无效。 |
+| `2003` | 权限不足 | token 无权调用该 capability。 |
+| `4001` | 频率超限 | 超过约定 QPS。 |
+| `5001` | 服务内部错误 | 服务端未知错误。 |
+| `5002` | 上游服务超时 | 数据源响应超时。 |
+| `5003` | 数据源不可用 | 上游服务暂时不可用或返回非 0 状态。 |
+
+## MCP 接入
+
+上述 REST capability 同时暴露为 MCP Tools，供 AI Agent 调用。
+工具命名、参数与返回值见 [MCP 工具概览](/docs/mcp/overview)。
+
+## 价格数据
+
+来源：https://fuyao.aicubes.cn/docs/api-reference/prices/
+
+> A 股行情快照与历史 K 线接口
+
+价格数据模块，提供 A 股行情快照与历史 K 线序列。
+所有接口均返回统一响应信封 `ApiResponse`，业务错误经 `code` 字段表达，HTTP 状态码恒为 200。
+
+:::info 通用约定
+- **Base URL**：`https://fuyao.aicubes.cn`。
+- **必需请求头**：`X-api-key`，缺失或无效返回 `code=2001`。
+- 时间戳字段统一为毫秒级 Unix 时间戳，时区按 `Asia/Shanghai`。
+- 价格类字段为原始货币计价，A 股恒为 `CNY`。
+:::
+
+## 行情快照
+
+```text
+GET /api/a-share/prices/snapshot
+```
+
+**MCP Tool**：[`get_a_share_prices_snapshot`](/docs/mcp/tools/get_a_share_prices_snapshot)
+
+获取 A 股行情快照。`thscodes` 显式传入（逗号分隔）时按入参顺序批量取数、不分页；
+省略时遍历完整 A 股代码表（按 thscode 升序），并按 `limit` / `offset` 分页。
+
+### 请求参数
+
+| 参数 | 位置 | 类型 | 必需 | 说明 | 默认值 |
+|---|---|---|---|---|---|
+| `thscodes` | query | string | 否 | 逗号分隔的 thscode 列表，如 `600519.SH,000001.SZ`。给定时忽略分页参数。 | - |
+| `limit` | query | integer | 否 | 分页大小，仅在 `thscodes` 省略时生效。 | `100` |
+| `offset` | query | integer | 否 | 分页偏移，仅在 `thscodes` 省略时生效。 | `0` |
+
+### 请求示例
+
+```bash
+# 批量按 thscodes 取
+curl 'https://fuyao.aicubes.cn/api/a-share/prices/snapshot?thscodes=600519.SH,000001.SZ' \
+  -H 'X-api-key: <your-token>'
+
+# 全市场分页
+curl 'https://fuyao.aicubes.cn/api/a-share/prices/snapshot?limit=100&offset=0' \
+  -H 'X-api-key: <your-token>'
+```
+
+### 响应示例
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "request_id": "7e25804be878464ba420037155f041e6",
+  "data": {
+    "timestamp": null,
+    "total": 2,
+    "item": [
+      {
+        "thscode": "600519.SH",
+        "ticker": "600519",
+        "volume": 3098875,
+        "turnover": 3937375200,
+        "last_price": 1277.8,
+        "price_change": 21.8,
+        "price_change_ratio_pct": 1.735669,
+        "open_price": 1252.08,
+        "high_price": 1282,
+        "low_price": 1250.21,
+        "prev_price": 1256
+      }
+    ]
+  }
+}
+```
+
+### 响应字段
+
+`data` 为 `SnapshotData`：
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `timestamp` | long \| null | 数据就绪时间（毫秒）。按 `thscodes` 显式取数时为 `null`；分页全市场模式下为序列中最新有效时间。 |
+| `total` | int | 全市场代码表总数（用于分页模式估算页数）。 |
+| `item` | array | 快照记录列表，单条记录也以数组返回。 |
+
+`item[]` 为 `PriceSnapshotItem`：
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `thscode` | string | 带交易所后缀的完整 thscode，如 `600519.SH`。 |
+| `ticker` | string | 纯代码（无交易所后缀），如 `600519`。 |
+| `last_price` | number | 最新成交价（原始货币）。 |
+| `price_change` | number | 相对前收盘价的涨跌额（原始货币）。 |
+| `price_change_ratio_pct` | number | 涨跌幅，单位为百分比数值（如 `1.74` 表示 +1.74%）。 |
+| `open_price` | number | 当日开盘价。 |
+| `high_price` | number | 当日最高价。 |
+| `low_price` | number | 当日最低价。 |
+| `prev_price` | number | 前收盘价。 |
+| `volume` | number | 成交量（股）。 |
+| `turnover` | number | 成交额（原始货币）。 |
+
+:::note 中文名解析
+快照响应不返回标的中文名 `name`。如需展示中文名，请配合 [`/api/meta/tickers/search`](./tickers.mdx#标的检索) 或 [`/api/meta/tickers/list`](./tickers.mdx#标的目录) 解析。
+:::
+
+## 历史 K 线
+
+```text
+GET /api/a-share/prices/historical
+```
+
+**MCP Tool**：[`get_a_share_prices_historical`](/docs/mcp/tools/get_a_share_prices_historical)
+
+获取单只标的的 A 股历史 K 线序列。接口层强约束：**每次请求仅一个 thscode**，
+且 `[start, end]` 窗口跨度不超过 10 年。
+
+### 请求参数
+
+| 参数 | 位置 | 类型 | 必需 | 说明 | 默认值 |
+|---|---|---|---|---|---|
+| `thscode` | query | string | 是 | 单只标的 thscode，**不接受逗号**。多标的请分多次请求。 | - |
+| `interval` | query | string | 是 | K 线周期，**当前仅支持** `1d`(日线)。 | `1d` |
+| `start` | query | long | 是 | 起始时间，毫秒 Unix 时间戳。缺失返回 `code=1001`。 | - |
+| `end` | query | long | 是 | 结束时间，毫秒 Unix 时间戳。`end - start` 超过 10 年返回 `code=1003`。 | - |
+| `adjust` | query | string | 否 | 复权方式：`none` / `forward`(前复权) / `backward`(后复权)。 | `forward` |
+| `offset` | query | integer | 否 | 分页偏移。 | `0` |
+
+### 请求示例
+
+```bash
+curl 'https://fuyao.aicubes.cn/api/a-share/prices/historical?thscode=600519.SH&interval=1d&start=1716105600000&end=1747641600000&adjust=forward' \
+  -H 'X-api-key: <your-token>'
+```
+
+### 响应示例
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "request_id": "b9f91af9c77a42d6b8a04738793d2fa2",
+  "data": {
+    "timestamp": 1747584000000,
+    "item": [
+      {
+        "date_ms": 1716134400000,
+        "open_price": 1611.602,
+        "high_price": 1626.602,
+        "low_price": 1601.722,
+        "close_price": 1602.612,
+        "volume": 3142572.0,
+        "turnover": 5401389334.87
+      }
+    ]
+  }
+}
+```
+
+### 响应字段
+
+`data` 为 `HistoricalData`：
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `timestamp` | long | 数据就绪时间（毫秒），为序列中最新一根 K 线的上游有效时间。 |
+| `item` | array | K 线列表。 |
+
+`item[]` 为 `PriceBarItem`：
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `date_ms` | long | K 线日期（毫秒）。 |
+| `open_price` | number | 开盘价。 |
+| `high_price` | number | 最高价。 |
+| `low_price` | number | 最低价。 |
+| `close_price` | number | 收盘价。 |
+| `volume` | number | 成交量（股）。 |
+| `turnover` | number | 成交额（原始货币）。 |
+
+## 全市场数据导出
+
+来源：https://fuyao.aicubes.cn/docs/api-reference/market-dumps/
+
+> A 股全市场历史 K 线与复权因子 Parquet 文件下载
+
+全市场数据导出是价格数据模块的便捷入口，用于一次性获取全市场历史行情，
+适合批量回测、离线分析、自建数据仓库等场景。相较于逐 thscode 调用 [历史 K 线](./prices.mdx)，
+本模块直接提供整库 Parquet 下载，更适合一次拉全市场。
+
+## 一键获取下载链接
+
+下面的按钮会以登录态 Cookie 调用对应接口，返回的 S3 预签名链接会展示在弹窗里。
+登录入口见 [Token 管理](/admin)。
+
+:::caution 过期处理
+预签名链接的有效期非常短（通常 5 分钟），不要持久化或缓存。需要长期使用时，应在每次下载前重新点击「获取下载链接」。
+:::
+
+## Parquet 文件结构
+
+两种 dump 共享同一套元信息约定，按 `dump_id` 区分：
+
+| dump | dump_id | 主键 | 时间字段 |
+|---|---|---|---|
+| 日 K | `a_share_daily_k_1d_none_1y` | `(thscode, date_ms)` | `date_ms` |
+| 复权因子 | `a_share_adjustment_factors_event_none_all` | `(thscode, ex_date_ms)` | `ex_date_ms` |
+
+### 日 K 列
+
+| 列 | 类型 | 说明 |
+|---|---|---|
+| `thscode` | string | 带交易所后缀的完整代码。 |
+| `currency` | string | 币种代码，A 股为 `CNY`。 |
+| `interval` | string | 周期代码，固定为 `1d`。 |
+| `adjusted` | string | 复权方式，固定为 `none`（未复权）。 |
+| `date_ms` | long | K 线日期（毫秒，`Asia/Shanghai` 零点）。 |
+| `open_price` / `high_price` / `low_price` / `close_price` | number | OHLC，原始货币计价。 |
+| `volume` | number | 成交量（股）。 |
+| `turnover` | number | 成交额（原始货币）。 |
+
+### 复权因子列
+
+| 列 | 类型 | 说明 |
+|---|---|---|
+| `thscode` | string | 带交易所后缀的完整代码。 |
+| `ticker` | string | 展示用代码。 |
+| `ex_date_ms` | long | 除权除息日（毫秒，`Asia/Shanghai` 零点）。 |
+| `dividend_per_share` | number | 每股现金分红（税前）。 |
+| `per_share_bonus` | number | 每股送股比例。 |
+| `allotment_ratio` | number | 配股比例。 |
+| `allotment_price` | number | 配股价格（原始货币）。 |
+| `currency` | string | 币种代码，A 股为 `CNY`。 |
+
+## 解读脚本示例
+
+下面这份 Python 脚本演示如何读取并校验下载到的 Parquet 文件，支持按 `thscode` / 日期范围过滤、
+导出 CSV、检查重复键等。脚本会根据 schema 自动识别两种 dump，因此对日 K 和复权因子均可直接使用。
+
+依赖：`pyarrow`（`python3 -m pip install pyarrow`）。
+
+```bash
+# 下载到本地后直接读取
+python3 read_market_dump.py /tmp/a_share_daily_k.parquet
+
+# 过滤特定 thscode
+python3 read_market_dump.py /tmp/a_share_daily_k.parquet --ticker 600519.SH
+
+# 按日期范围导出 CSV
+python3 read_market_dump.py /tmp/a_share_daily_k.parquet \
+  --from-date 2025-01-01 --to-date 2025-12-31 \
+  --export-csv /tmp/sample.csv
+
+# 检查 (thscode, date_ms) 唯一性
+python3 read_market_dump.py /tmp/a_share_daily_k.parquet --check-duplicates
+```
+
+完整脚本：
+
+```python
+#!/usr/bin/env python3
+"""
+Read and inspect Fuyao market-dump Parquet files for both publishable kinds:
+
+  - daily-k             rows keyed by (thscode, date_ms),     dump_id a_share_daily_k_1d_none_1y
+  - adjustment-factors  rows keyed by (thscode, ex_date_ms),  dump_id a_share_adjustment_factors_event_none_all
+
+The kind is auto-detected from the Parquet schema (presence of `ex_date_ms`),
+so the same CLI works for either dump.
+
+Examples (daily-k):
+  python3 scripts/read_market_dump.py build/dump/a_share_daily_k_1d_none_1y/20260602/manifest.json
+  python3 scripts/read_market_dump.py build/dump/a_share_daily_k_1d_none_1y/20260602 --ticker 600519.SH
+  python3 scripts/read_market_dump.py build/dump/a_share_daily_k_1d_none_1y/20260602 --check-duplicates
+  python3 scripts/read_market_dump.py build/dump/a_share_daily_k_1d_none_1y/20260602 --export-csv /tmp/sample.csv
+
+Examples (adjustment-factors):
+  python3 scripts/read_market_dump.py build/dump/a_share_adjustment_factors_event_none_all/20260602
+  python3 scripts/read_market_dump.py build/dump/a_share_adjustment_factors_event_none_all/20260602 --ticker 600519.SH
+  python3 scripts/read_market_dump.py build/dump/a_share_adjustment_factors_event_none_all/20260602 --check-duplicates
+
+Inspecting a file downloaded via GET /internal/market-dumps/<kind>/download-url:
+  python3 scripts/read_market_dump.py /tmp/market-dump-daily-k.parquet
+"""
+
+from __future__ import annotations
+
+## 标的检索与目录
+
+来源：https://fuyao.aicubes.cn/docs/api-reference/tickers/
+
+> 跨市场标的检索与代码表批量获取
+
+元信息域，承载跨市场标的检索与代码表浏览。
+响应是完整标的信息（`thscode` / `ticker` / `name` / `exchange` / `asset_type` / `currency`），
+所有接口均返回统一响应信封 `ApiResponse`。
+
+:::info 通用约定
+- **Base URL**：`https://fuyao.aicubes.cn`。
+- **必需请求头**：`X-api-key`，缺失或无效返回 `code=2001`。
+- 时间戳字段统一为毫秒级 Unix 时间戳。
+:::
+
+## 标的检索
+
+```text
+GET /api/meta/tickers/search
+```
+
+**MCP Tool**：[`get_meta_tickers_search`](/docs/mcp/tools/get_meta_tickers_search)
+
+按关键词（thscode / ticker / 中英文名称）跨市场消歧，支持子串匹配。
+
+### 请求参数
+
+| 参数 | 位置 | 类型 | 必需 | 说明 | 默认值 |
+|---|---|---|---|---|---|
+| `q` | query | string | 是 | 搜索关键词：完整 thscode、ticker 代码或中英文名称（支持子串匹配）。 | - |
+| `exchange` | query | string | 否 | 交易所过滤：`SH`(沪市) / `SZ`(深市) / `BJ`(北交所)。 | - |
+| `asset_type` | query | string | 否 | 资产类别过滤：`a-share`(A 股) / `a-share-index`(A 股指数)。 | - |
+| `limit` | query | integer | 否 | 返回上限，最大 `50`。 | `10` |
+
+### 请求示例
+
+```bash
+# 按名称模糊搜索
+curl 'https://fuyao.aicubes.cn/api/meta/tickers/search?q=%E5%B9%B3%E5%AE%89&limit=20' \
+  -H 'X-api-key: <your-token>'
+
+# 按 thscode 精确解析
+curl 'https://fuyao.aicubes.cn/api/meta/tickers/search?q=600519.SH' \
+  -H 'X-api-key: <your-token>'
+```
+
+### 响应示例
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "request_id": "c3d4e5f6",
+  "data": {
+    "timestamp": 1716105600000,
+    "item": [
+      {
+        "thscode": "601318.SH",
+        "ticker": "601318",
+        "name": "中国平安",
+        "exchange": "SH",
+        "asset_type": "a-share",
+        "currency": "CNY"
+      }
+    ]
+  }
+}
+```
+
+## 标的目录
+
+```text
+GET /api/meta/tickers/list
+```
+
+**MCP Tool**：[`get_meta_tickers_list`](/docs/mcp/tools/get_meta_tickers_list)
+
+批量获取代码表，支持按交易所/资产类别过滤。采用 offset/limit 分页，
+调用方循环递增 `offset` 直到 `item.length < limit` 即可取尽。
+
+### 请求参数
+
+| 参数 | 位置 | 类型 | 必需 | 说明 | 默认值 |
+|---|---|---|---|---|---|
+| `exchange` | query | string | 否 | 逗号分隔的交易所列表，`SH` / `SZ` / `BJ`，可多选。 | `SH,SZ` |
+| `asset_type` | query | string | 否 | 资产类别：`a-share` / `a-share-index`。 | `a-share` |
+| `limit` | query | integer | 否 | 单页条数，最大 `10000`。 | `1000` |
+| `offset` | query | integer | 否 | 分页偏移。 | `0` |
+
+### 请求示例
+
+```bash
+# 拉取全部沪深 A 股
+curl 'https://fuyao.aicubes.cn/api/meta/tickers/list?exchange=SH,SZ&asset_type=a-share&limit=1000&offset=0' \
+  -H 'X-api-key: <your-token>'
+
+# 拉取 A 股指数
+curl 'https://fuyao.aicubes.cn/api/meta/tickers/list?asset_type=a-share-index&limit=500' \
+  -H 'X-api-key: <your-token>'
+```
+
+### 响应示例
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "request_id": "f7g8h9i0",
+  "data": {
+    "timestamp": 1716105600000,
+    "item": [
+      {
+        "thscode": "600519.SH",
+        "ticker": "600519",
+        "name": "贵州茅台",
+        "exchange": "SH",
+        "asset_type": "a-share",
+        "currency": "CNY"
+      }
+    ]
+  }
+}
+```
+
+## 响应字段
+
+`search` 与 `list` 共用 `data` 结构：
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `timestamp` | long | 数据就绪时间（毫秒），为当前代码表快照的上游加载时间。 |
+| `item` | array | 标的列表。 |
+
+`item[]` 为 `TickerItem`：
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `thscode` | string | 完整 thscode，如 `600519.SH`。 |
+| `ticker` | string | 纯代码，如 `600519`。 |
+| `name` | string | 展示名称。 |
+| `exchange` | string | 交易所后缀（`SH` / `SZ` / `BJ`），无后缀指数为 `null`。 |
+| `asset_type` | string | 对外资产类别（`a-share` / `a-share-index`）。 |
+| `currency` | string | 币种代码，A 股恒为 `CNY`。 |
+
+## 公司行动
+
+来源：https://fuyao.aicubes.cn/docs/api-reference/corporate-actions/
+
+> A 股复权因子事件流（分红 / 送股 / 配股）
+
+公司行动模块，提供 A 股复权因子事件流。
+返回原始的 cash-dividend / stock-dividend / rights-issue 事件，供客户端自行推导复权因子；
+若需预计算的复权后价格，请使用价格模块的 [历史 K 线](./prices.mdx) 接口（`adjust=forward|backward`）。
+
+:::info 通用约定
+- **Base URL**：`https://fuyao.aicubes.cn`。
+- **必需请求头**：`X-api-key`，缺失或无效返回 `code=2001`。
+- 请求参数 `from` / `to` 使用 `YYYY-MM-DD` 字符串；响应中的事件日期为毫秒 Unix 时间戳 `ex_date_ms`。
+:::
+
+## 复权因子事件流
+
+```text
+GET /api/a-share/corporate-actions/adjustment-factors
+```
+
+**MCP Tool**：[`get_a_share_corporate_actions_adjustment_factors`](/docs/mcp/tools/get_a_share_corporate_actions_adjustment_factors)
+
+获取单只标的的 A 股复权因子事件流。**每次请求仅一个 thscode**。
+
+### 请求参数
+
+| 参数 | 位置 | 类型 | 必需 | 说明 | 默认值 |
+|---|---|---|---|---|---|
+| `thscode` | query | string | 是 | 单只标的 thscode，**不接受逗号**。 | - |
+| `from` | query | string | 否 | 事件起始日，格式 `YYYY-MM-DD`。 | - |
+| `to` | query | string | 否 | 事件截止日，格式 `YYYY-MM-DD`。 | - |
+
+### 请求示例
+
+```bash
+# 茅台全部历史复权事件
+curl 'https://fuyao.aicubes.cn/api/a-share/corporate-actions/adjustment-factors?thscode=600519.SH' \
+  -H 'X-api-key: <your-token>'
+
+# 平安银行近 5 年事件
+curl 'https://fuyao.aicubes.cn/api/a-share/corporate-actions/adjustment-factors?thscode=000001.SZ&from=2021-01-01&to=2026-01-01' \
+  -H 'X-api-key: <your-token>'
+```
+
+### 响应示例
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "request_id": "558c1d59d2e548149fb27b83eca5016a",
+  "data": {
+    "thscode": "600519.SH",
+    "ticker": "600519",
+    "item": [
+      {
+        "ticker": "600519",
+        "ex_date_ms": 1766073600000,
+        "dividend_per_share": 23.957,
+        "per_share_bonus": 0
+      },
+      {
+        "ticker": "600519",
+        "ex_date_ms": 1437062400000,
+        "dividend_per_share": 4.374,
+        "per_share_bonus": 0.1
+      }
+    ]
+  }
+}
+```
+
+### 响应字段
+
+`data` 为 `AdjustmentFactorsData`：
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `thscode` | string | 带交易所后缀的完整 thscode（与 `item` 同级，标识本次返回所属标的）。 |
+| `ticker` | string | 纯代码（无交易所后缀）。 |
+| `item` | array | 事件列表，按 `ex_date_ms` 降序排列（最新在前）。 |
+
+`item[]` 为 `AdjustmentFactorItem`：
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `ticker` | string | 纯代码（无交易所后缀），如 `600519`。 |
+| `ex_date_ms` | long | 除权除息日，Asia/Shanghai 00:00:00 毫秒 Unix 时间戳。 |
+| `dividend_per_share` | number | 每股现金分红（税前，原始货币）。非现金事件为 `0`。 |
+| `per_share_bonus` | number | 每股送股比例（如 `0.1` 表示 10 送 1）。纯现金分红事件为 `0`。 |
+
+:::note 字段约定差异
+- 响应中**不返回** `event_type` / `record_date` / `adjust_factor`，事件类型由 `dividend_per_share` 与 `per_share_bonus` 两个数值字段隐式区分。
+- 复权因子需调用方按 `dividend_per_share` + `per_share_bonus` 自行推导；若仅需复权后价格，直接调用 [`/api/a-share/prices/historical`](./prices.mdx#历史-k-线) 并传 `adjust=forward|backward`。
+:::
+
+## 财务报表
+
+来源：https://fuyao.aicubes.cn/docs/api-reference/financials/
+
+> A 股整体合并利润表 / 资产负债表 / 现金流量表多期序列
+
+财务报表模块，提供 A 股整体合并报表（consolidated）多期序列，覆盖利润表、资产负债表、现金流量表。
+三个接口入参契约**完全一致**，仅返回字段不同（见各自小节）。
+所有接口均返回统一响应信封 `ApiResponse`，业务错误经 `code` 字段表达，HTTP 状态码恒为 200。
+
+:::info 通用约定
+- **Base URL**：`https://fuyao.aicubes.cn`。
+- **必需请求头**：`X-api-key`，缺失或无效返回 `code=2001`。
+- 时间戳字段统一为毫秒级 Unix 时间戳，时区按 `Asia/Shanghai`。
+- 所有金额字段单位为**原币元**，`basic_eps` 单位为**元/股**（量级远小于金额字段，不可做单位换算）；A 股币种恒为 `CNY`。
+- 字段为 `null` 表示「该期未披露」，透传不补零。
+:::
+
+## 取数模式
+
+三个接口共用两种取数模式，**互斥、二选一**：
+
+| 模式 | 触发条件 | 行为 |
+|---|---|---|
+| 最近 N 期 | 不传 `start` / `end` | 返回最近 `limit` 期，按 `period_end` 降序。 |
+| 时间区间 | 同时传 `start` + `end`（毫秒戳） | 返回 `[start, end]` 闭区间内全部报告期，按 `period_end` 降序。 |
+
+同时传 `start`/`end` 与 `limit`，或仅传 `start`、仅传 `end`（半开区间），返回 `code=1004`。
+
+## 共有请求参数
+
+| 参数 | 位置 | 类型 | 必需 | 说明 | 默认值 |
+|---|---|---|---|---|---|
+| `thscode` | query | string | 是 | 单只标的 thscode，**不接受逗号**；含交易所后缀（如 `600519.SH` / `000858.SZ` / `430047.BJ`）。 | - |
+| `period` | query | enum | 是 | 报告期类型：`annual`(仅 Q4 报告期) / `quarterly`(每个季度末)。 | `annual` |
+| `limit` | query | integer | 否 | 最近 N 期模式：默认 4，范围 `[1, 20]`。**与 `start`/`end` 互斥**。 | `4` |
+| `start` | query | long | 否 | 时间区间模式：起始毫秒戳，需与 `end` 同传；窗口跨度不超过 10 年。 | - |
+| `end` | query | long | 否 | 时间区间模式：结束毫秒戳，`end >= start`。 | - |
+
+## 共有响应字段
+
+每条 `item` 都含以下元数据字段，`data.timestamp` 取响应中最大的 `period_end_ms`：
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `thscode` | string | 带交易所后缀的完整 thscode。 |
+| `ticker` | string | 纯代码（不含后缀）。 |
+| `period` | enum | 入参 `period` 回显。 |
+| `fiscal_year` | int | 财年（自然年）。 |
+| `fiscal_period` | string | `FY` / `Q1` / `Q2` / `Q3` / `Q4`。 |
+| `report_date_ms` | long | 披露日（毫秒）。上游未回时当前等同 `period_end_ms`。 |
+| `period_end_ms` | long | 报告期末（Asia/Shanghai 零点毫秒戳）。 |
+| `currency` | string | 币种，A 股恒为 `CNY`。 |
+
+## 利润表
+
+```text
+GET /api/a-share/financials/income-statements
+```
+
+**MCP Tool**：[`get_a_share_financials_income_statements`](/docs/mcp/tools/get_a_share_financials_income_statements)
+
+A 股整体合并利润表多期序列。取数模式与参数见上文。
+
+### 请求示例
+
+```bash
+# 最近 3 期年报
+curl 'https://fuyao.aicubes.cn/api/a-share/financials/income-statements?thscode=600519.SH&period=annual&limit=3' \
+  -H 'X-api-key: <your-token>'
+
+# 2023Q1–2024Q4 全部季报（时间区间模式）
+# start = 2023-01-01 00:00:00+08:00 → 1672502400000
+# end   = 2024-12-31 00:00:00+08:00 → 1735574400000
+curl 'https://fuyao.aicubes.cn/api/a-share/financials/income-statements?thscode=600519.SH&period=quarterly&start=1672502400000&end=1735574400000' \
+  -H 'X-api-key: <your-token>'
+```
+
+### 响应示例
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "request_id": "e5f6g7h8",
+  "data": {
+    "timestamp": 1735574400000,
+    "item": [
+      {
+        "thscode": "600519.SH",
+        "ticker": "600519",
+        "period": "annual",
+        "fiscal_year": 2024,
+        "fiscal_period": "FY",
+        "report_date_ms": 1735574400000,
+        "period_end_ms": 1735574400000,
+        "currency": "CNY",
+        "operating_income": 174144000000,
+        "operating_costs": 13000000000,
+        "operating_expenses": 50000000000,
+        "sales_fee": 5000000000,
+        "manage_fee": 9000000000,
+        "research_and_development_expenses": 150000000,
+        "operating_profit": 124000000000,
+        "interest_expenses": 0,
+        "profit_total": 124000000000,
+        "income_tax_expense": 31000000000,
+        "net_profit": 93000000000,
+        "parent_holder_net_profit": 86000000000,
+        "basic_eps": 68.50
+      }
+    ]
+  }
+}
+```
+
+### 利润表附加字段
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `operating_income` | number | 营业收入（原币元）。 |
+| `operating_costs` | number | 营业成本（原币元）。 |
+| `operating_expenses` | number | 营业总成本（原币元）。 |
+| `sales_fee` | number | 销售费用（原币元）。 |
+| `manage_fee` | number | 管理费用（原币元）。 |
+| `research_and_development_expenses` | number | 研发费用（原币元）。 |
+| `operating_profit` | number | 营业利润（原币元）。 |
+| `interest_expenses` | number | 利息费用（原币元）。 |
+| `profit_total` | number | 利润总额（原币元）。 |
+| `income_tax_expense` | number | 所得税费用（原币元）。 |
+| `net_profit` | number | 净利润（原币元）。 |
+| `parent_holder_net_profit` | number | 归属于母公司股东的净利润（原币元）。 |
+| `basic_eps` | number | 基本每股收益（元/股）。 |
+
+## 资产负债表
+
+```text
+GET /api/a-share/financials/balance-sheets
+```
+
+**MCP Tool**：[`get_a_share_financials_balance_sheets`](/docs/mcp/tools/get_a_share_financials_balance_sheets)
+
+A 股整体合并资产负债表多期序列。取数模式与参数同利润表。
+
+### 请求示例
+
+```bash
+# 五粮液最近 4 期季报（默认 limit=4）
+curl 'https://fuyao.aicubes.cn/api/a-share/financials/balance-sheets?thscode=000858.SZ&period=quarterly' \
+  -H 'X-api-key: <your-token>'
+```
+
+### 响应示例
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "request_id": "f6g7h8i9",
+  "data": {
+    "timestamp": 1735574400000,
+    "item": [
+      {
+        "thscode": "000858.SZ",
+        "ticker": "000858",
+        "period": "quarterly",
+        "fiscal_year": 2024,
+        "fiscal_period": "Q4",
+        "report_date_ms": 1735574400000,
+        "period_end_ms": 1735574400000,
+        "currency": "CNY",
+        "assets_total": 250000000000,
+        "total_current_assets": 200000000000,
+        "non_current_nets_total": 50000000000,
+        "cash": 130000000000,
+        "accounts_receivable": 500000000,
+        "total_debt": 60000000000,
+        "holder_equity_total": 190000000000
+      }
+    ]
+  }
+}
+```
+
+### 资产负债表附加字段
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `assets_total` | number | 资产总计（原币元）。 |
+| `total_current_assets` | number | 流动资产合计（原币元）。 |
+| `non_current_nets_total` | number | 非流动资产合计（原币元）。 |
+| `cash` | number | 货币资金（原币元）。 |
+| `accounts_receivable` | number | 应收账款（原币元）。 |
+| `total_debt` | number | 负债合计（原币元）。 |
+| `holder_equity_total` | number | 所有者权益（股东权益）合计（原币元）。 |
+
+## 现金流量表
+
+```text
+GET /api/a-share/financials/cash-flow-statements
+```
+
+**MCP Tool**：[`get_a_share_financials_cash_flow_statements`](/docs/mcp/tools/get_a_share_financials_cash_flow_statements)
+
+A 股整体合并现金流量表多期序列。取数模式与参数同利润表。
+
+### 请求示例
+
+```bash
+# 茅台 2020–2024 全部年报（时间区间模式）
+# start = 2020-01-01 00:00:00+08:00 → 1577808000000
+# end   = 2024-12-31 00:00:00+08:00 → 1735574400000
+curl 'https://fuyao.aicubes.cn/api/a-share/financials/cash-flow-statements?thscode=600519.SH&period=annual&start=1577808000000&end=1735574400000' \
+  -H 'X-api-key: <your-token>'
+```
+
+### 响应示例
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "request_id": "g7h8i9j0",
+  "data": {
+    "timestamp": 1735574400000,
+    "item": [
+      {
+        "thscode": "600519.SH",
+        "ticker": "600519",
+        "period": "annual",
+        "fiscal_year": 2024,
+        "fiscal_period": "FY",
+        "report_date_ms": 1735574400000,
+        "period_end_ms": 1735574400000,
+        "currency": "CNY",
+        "act_cash_flow_net": 92000000000,
+        "invest_cash_flow_net": -3000000000,
+        "financing_cash_flow_net": -65000000000,
+        "pay_fixed_assets_etc_cash": 3500000000,
+        "pay_dividends_profits_interest_cash": 64000000000,
+        "cash_equivalents_net_addition": 24000000000
+      }
+    ]
+  }
+}
+```
+
+### 现金流量表附加字段
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `act_cash_flow_net` | number | 经营活动产生的现金流量净额（原币元）。 |
+| `invest_cash_flow_net` | number | 投资活动产生的现金流量净额（原币元）。 |
+| `financing_cash_flow_net` | number | 筹资活动产生的现金流量净额（原币元）。 |
+| `pay_fixed_assets_etc_cash` | number | 购建固定资产、无形资产和其他长期资产支付的现金（原币元）。 |
+| `pay_dividends_profits_interest_cash` | number | 分配股利、利润或偿付利息支付的现金（原币元）。 |
+| `cash_equivalents_net_addition` | number | 现金及现金等价物净增加额（原币元）。 |
+
+## 交易日历
+
+来源：https://fuyao.aicubes.cn/docs/api-reference/calendar/
+
+> A 股近一年交易日序列
+
+交易日历模块，提供 A 股近一年交易日序列。
+返回统一响应信封 `ApiResponse`，业务错误经 `code` 字段表达，HTTP 状态码恒为 200。
+
+:::info 通用约定
+- **Base URL**：`https://fuyao.aicubes.cn`。
+- **必需请求头**：`X-api-key`，缺失或无效返回 `code=2001`。
+- 信封 `data.timestamp` 为毫秒级 Unix 时间戳；`item` 内同时返回毫秒戳 `date_ms` 与可读日期 `date`（`yyyyMMdd`），时区按 `Asia/Shanghai`。
+:::
+
+## 交易日序列
+
+```text
+GET /api/a-share/calendar/trading-days
+```
+
+**MCP Tool**：[`get_a_share_calendar_trading_days`](/docs/mcp/tools/get_a_share_calendar_trading_days)
+
+A 股近一年交易日序列，**固定窗口**为 `[今日 - 1 年, 今日]`（Asia/Shanghai 自然日），无任何请求参数。
+
+### 请求参数
+
+| 参数 | 位置 | 类型 | 必需 | 说明 | 默认值 |
+|---|---|---|---|---|---|
+| - | - | - | - | 无入参。 | - |
+
+### 请求示例
+
+```bash
+curl 'https://fuyao.aicubes.cn/api/a-share/calendar/trading-days' \
+  -H 'X-api-key: <your-token>'
+```
+
+### 响应示例
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "request_id": "a1b2c3d4e5f6789012345678abcdef01",
+  "data": {
+    "timestamp": 1748102400000,
+    "item": [
+      { "date_ms": 1716566400000, "date": "20250525" },
+      { "date_ms": 1716652800000, "date": "20250526" },
+      { "date_ms": 1716739200000, "date": "20250527" }
+    ]
+  }
+}
+```
+
+### 响应字段
+
+`data` 为 `TradingDaysData`：
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `timestamp` | long | 数据就绪时间（毫秒）。 |
+| `item` | array | 交易日列表，按时间升序。 |
+
+`item[]` 为 `TradingDayItem`：
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `date_ms` | long | 单个交易日的 Asia/Shanghai 00:00:00 毫秒戳。 |
+| `date` | string | 同一交易日的 `yyyyMMdd` 格式（Asia/Shanghai），方便直接展示 / 对账。 |
+
+
+---
+
+# MCP 接入
+
+## MCP 工具概览
+
+来源：https://fuyao.aicubes.cn/docs/mcp/overview/
+
+> 给 LLM Agent 用的 REST 适配器 —— 命名、边界、运行方式
+
+MCP 工具是**给 LLM Agent 用的 REST 适配器**。它不重写业务逻辑，只重新组织参数与
+响应形态，让 LLM 在对话中更容易选对工具、传对参数、解析返回值。
+
+- **薄包装原则**：工具实现层只调 REST router，不直接访问 service 层。
+- **数据语义一致**：MCP 与 REST 共享同一套后端 capability，字段含义完全相同。
+- **错误透传**：REST 错误体 `{code, message, request_id}` 原样回传给客户端。
+
+## 鉴权
+
+| 形态 | 入口 | 鉴权 |
+|---|---|---|
+| 托管 MCP Server | 上游网关代理 | 网关校验 `X-api-key` header |
+| 自托管 / 本地调试 | 通过 MCP 客户端本地启动 | 环境变量 `API_KEY` 注入 |
+
+```bash
+export API_KEY="<your-token>"
+```
+
+Token 与 REST API 共用，可在 [Token 管理](/admin) 页签发。
+
+## MCP 服务与访问端点
+
+按标的宇宙拆分为两个 MCP 服务，MCP 端点 host 为 `fuyao.aicubes.cn`：
+
+| MCP 服务 | 标的宇宙 | MCP 访问端点 |
+|---|---|---|
+| `fuyao-a-share-mcp` | A 股标的宇宙 | `https://fuyao.aicubes.cn/mcp/a-share` |
+| `fuyao-meta-mcp` | 跨宇宙元信息 | `https://fuyao.aicubes.cn/mcp/meta` |
+
+`fuyao-meta-mcp` 提供的标的检索是其余业务工具的前置步骤，建议与任一业务 MCP 服务
+一起加载。挂载到 Claude Desktop / Cursor / 其他 MCP 客户端后即可在对话中调用以下
+工具。
+
+## 工具一览
+
+当前共注册 **9 个工具**，覆盖行情快照、历史 K 线、复权因子事件流、财务报表（利润表 /
+资产负债表 / 现金流量表）、交易日历、标的检索 / 目录。
+
+| MCP 服务 | MCP 端点 | MCP 工具 | 中文名 | 对应 REST |
+|---|---|---|---|---|
+| fuyao-a-share-mcp | `/mcp/a-share` | [`get_a_share_prices_snapshot`](./tools/get_a_share_prices_snapshot.mdx) | A股行情快照 | `GET /api/a-share/prices/snapshot` |
+| fuyao-a-share-mcp | `/mcp/a-share` | [`get_a_share_prices_historical`](./tools/get_a_share_prices_historical.mdx) | A股历史K线 | `GET /api/a-share/prices/historical` |
+| fuyao-a-share-mcp | `/mcp/a-share` | [`get_a_share_corporate_actions_adjustment_factors`](./tools/get_a_share_corporate_actions_adjustment_factors.mdx) | 复权因子事件流 | `GET /api/a-share/corporate-actions/adjustment-factors` |
+| fuyao-a-share-mcp | `/mcp/a-share` | [`get_a_share_financials_income_statements`](./tools/get_a_share_financials_income_statements.mdx) | 利润表 | `GET /api/a-share/financials/income-statements` |
+| fuyao-a-share-mcp | `/mcp/a-share` | [`get_a_share_financials_balance_sheets`](./tools/get_a_share_financials_balance_sheets.mdx) | 资产负债表 | `GET /api/a-share/financials/balance-sheets` |
+| fuyao-a-share-mcp | `/mcp/a-share` | [`get_a_share_financials_cash_flow_statements`](./tools/get_a_share_financials_cash_flow_statements.mdx) | 现金流量表 | `GET /api/a-share/financials/cash-flow-statements` |
+| fuyao-a-share-mcp | `/mcp/a-share` | [`get_a_share_calendar_trading_days`](./tools/get_a_share_calendar_trading_days.mdx) | A股交易日历 | `GET /api/a-share/calendar/trading-days` |
+| fuyao-meta-mcp | `/mcp/meta` | [`get_meta_tickers_search`](./tools/get_meta_tickers_search.mdx) | 标的检索（跨市场消歧） | `GET /api/meta/tickers/search` |
+| fuyao-meta-mcp | `/mcp/meta` | [`get_meta_tickers_list`](./tools/get_meta_tickers_list.mdx) | 标的目录（代码表浏览） | `GET /api/meta/tickers/list` |
+
+## AI Agent 跨服务调用场景
+
+[`get_meta_tickers_search`](./tools/get_meta_tickers_search.mdx) 是**前置工具**：当 LLM 不确定标准
+`thscode` 代码时，应先调它消歧，再调数据工具。`fuyao-meta-mcp` 解析标的，
+`fuyao-a-share-mcp` 取业务数据，两者配合完成完整链路。
+
+### 场景一：查询股票行情
+
+用户："查一下贵州茅台今天的行情"
+
+1. `fuyao-meta-mcp` → `get_meta_tickers_search`，`q: "贵州茅台"`，获取 `thscode: 600519.SH`
+2. `fuyao-a-share-mcp` → `get_a_share_prices_snapshot`，`thscodes: "600519.SH"`，获取实时行情
+
+### 场景二：获取历史走势
+
+用户："茅台最近一年的日 K 线走势如何？"
+
+1. `fuyao-meta-mcp` → `get_meta_tickers_search`，`q: "茅台"`，获取 `thscode: 600519.SH`
+2. 计算当前与一年前的毫秒时间戳
+3. `fuyao-a-share-mcp` → `get_a_share_prices_historical`，`thscode/interval/start/end/adjust`
+
+### 场景三：获取股票代码表
+
+用户："列出所有沪深 A 股代码"
+
+1. `fuyao-meta-mcp` → `get_meta_tickers_list`，`exchange: "SH,SZ"`，`asset_type: "a-share"`，`limit: 1000`，`offset: 0`
+2. 若返回数量等于 limit，递增 offset 继续调用直到取尽
+
+### 场景四：查询公司财务报表
+
+用户："茅台最近 3 年的年报利润情况"
+
+1. `fuyao-meta-mcp` → `get_meta_tickers_search`，`q: "茅台"`，获取 `thscode: 600519.SH`
+2. `fuyao-a-share-mcp` → `get_a_share_financials_income_statements`，`thscode: "600519.SH"`，`period: "annual"`，`limit: 3`
+
+### 场景五：对比多家公司资产负债
+
+用户："对比茅台和五粮液最近一期季报的资产负债表"
+
+1. `fuyao-meta-mcp` → `get_meta_tickers_search`，`q: "茅台"`，获取 `thscode: 600519.SH`
+2. `fuyao-meta-mcp` → `get_meta_tickers_search`，`q: "五粮液"`，获取 `thscode: 000858.SZ`
+3. `fuyao-a-share-mcp` → `get_a_share_financials_balance_sheets`，`thscode: "600519.SH"`，`period: "quarterly"`，`limit: 1`
+4. `fuyao-a-share-mcp` → `get_a_share_financials_balance_sheets`，`thscode: "000858.SZ"`，`period: "quarterly"`，`limit: 1`
+
+### 场景六：查看交易日历
+
+用户："最近一年有哪些交易日"
+
+1. `fuyao-a-share-mcp` → `get_a_share_calendar_trading_days`，无参数，返回近一年交易日列表（无需前置检索）
+
+## 与 REST 的差异
+
+- **认证方式**：REST 在请求 header 携带 `X-api-key`；MCP 通过环境变量 `API_KEY` 注入。
+- **调用方式**：REST 通过 HTTP 客户端调用；MCP 以 MCP Server 形态供 AI Agent 调用。
+- **数据完全一致**：两者调用同一套后端 capability，字段、错误码、响应信封完全相同。
+
+
+---
+
+# MCP 工具
+
+## A股交易日历
+
+来源：https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_calendar_trading_days/
+
+> A 股近一年交易日序列（无入参）
+
+:::info
+工具名：`get_a_share_calendar_trading_days`
+
+对应 REST 端点：[`GET /api/a-share/calendar/trading-days`](/docs/api-reference/calendar#交易日序列)
+:::
+
+## 工具描述
+
+> 获取 A 股近一年交易日序列，固定窗口为 `[今日 - 1 年, 今日]`（Asia/Shanghai 自然日），
+> 无任何请求参数。每个交易日同时返回毫秒戳 `date_ms` 与可读日期 `date`（`yyyyMMdd`），
+> 按时间升序。
+
+## 参数
+
+| 参数 | 类型 | 必填 | 默认 | 说明 |
+|---|---|---|---|---|
+| — | — | — | — | 无入参。 |
+
+## 调用示例
+
+```text
+工具：get_a_share_calendar_trading_days
+参数：（无）
+```
+
+## 返回
+
+返回 `{ timestamp, item: [TradingDayItem, ...] }`，按时间升序。
+字段含义见 REST 端点 [交易日序列](/docs/api-reference/calendar#响应字段)。
+
+```json
+{
+  "timestamp": 1748102400000,
+  "item": [
+    { "date_ms": 1716566400000, "date": "20250525" },
+    { "date_ms": 1716652800000, "date": "20250526" },
+    { "date_ms": 1716739200000, "date": "20250527" }
+  ]
+}
+```
+
+## 复权因子事件流
+
+来源：https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_corporate_actions_adjustment_factors/
+
+> 单只 A 股的复权因子事件流（分红 / 送股 / 配股）
+
+:::info
+工具名：`get_a_share_corporate_actions_adjustment_factors`
+
+对应 REST 端点：[`GET /api/a-share/corporate-actions/adjustment-factors`](/docs/api-reference/corporate-actions#复权因子事件流)
+:::
+
+## 工具描述
+
+> 获取单只 A 股标的的原始 cash-dividend / stock-dividend / rights-issue 事件流，
+> 调用方据此自行推导前 / 后复权因子。已预计算的复权后价格请直接调用
+> [`get_a_share_prices_historical`](./get_a_share_prices_historical.mdx) 并设置
+> `adjust=forward|backward`。每次只能传一个 `thscode`。
+
+## 参数
+
+| 参数 | 类型 | 必填 | 默认 | 说明 |
+|---|---|---|---|---|
+| `thscode` | string | 是 | — | 单只标的 thscode，不接受逗号。 |
+| `from` | string | 否 | — | 事件起始日，格式 `YYYY-MM-DD`。 |
+| `to` | string | 否 | — | 事件截止日，格式 `YYYY-MM-DD`。 |
+
+## 调用示例
+
+```text
+工具：get_a_share_corporate_actions_adjustment_factors
+参数：
+  - thscode: "600519.SH"
+  - from: "2020-01-01"
+  - to: "2026-01-01"
+```
+
+## 返回
+
+返回 `{ thscode, ticker, item: [AdjustmentFactorItem, ...] }`，`item` 按 `ex_date_ms` 降序排列。
+字段含义见 REST 端点 [复权因子事件流](/docs/api-reference/corporate-actions#响应字段)。
+
+```json
+{
+  "thscode": "600519.SH",
+  "ticker": "600519",
+  "item": [
+    {
+      "ticker": "600519",
+      "ex_date_ms": 1766073600000,
+      "dividend_per_share": 23.957,
+      "per_share_bonus": 0
+    },
+    {
+      "ticker": "600519",
+      "ex_date_ms": 1437062400000,
+      "dividend_per_share": 4.374,
+      "per_share_bonus": 0.1
+    }
+  ]
+}
+```
+
+> 注：响应不返回 `event_type` / `record_date` / `adjust_factor`，事件类型由 `dividend_per_share` 与 `per_share_bonus` 两个数值字段隐式区分。
+
+## 资产负债表
+
+来源：https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_financials_balance_sheets/
+
+> 单只 A 股的整体合并资产负债表多期序列
+
+:::info
+工具名：`get_a_share_financials_balance_sheets`
+
+对应 REST 端点：[`GET /api/a-share/financials/balance-sheets`](/docs/api-reference/financials#资产负债表)
+:::
+
+## 工具描述
+
+> 获取单只 A 股标的的整体合并资产负债表多期序列。取数模式同利润表：不传 `start`/`end`
+> 返回最近 `limit` 期；同时传 `start`+`end` 返回时间区间内全部报告期。均按 `period_end`
+> 降序。返回资产总计、流动资产、货币资金、负债合计、股东权益合计等字段。
+
+## 参数
+
+| 参数 | 类型 | 必填 | 默认 | 说明 |
+|---|---|---|---|---|
+| `thscode` | string | 是 | — | 单只标的 thscode，不接受逗号；含交易所后缀（如 `000858.SZ`）。 |
+| `period` | string | 是 | `annual` | 报告期类型：`annual`(仅 Q4) / `quarterly`(每季度末)。 |
+| `limit` | integer | 否 | `4` | 最近 N 期模式：范围 `[1, 20]`。与 `start`/`end` 互斥。 |
+| `start` | long | 否 | — | 时间区间模式：起始毫秒戳，需与 `end` 同传；窗口 ≤ 10 年。 |
+| `end` | long | 否 | — | 时间区间模式：结束毫秒戳，`end >= start`。 |
+
+## 调用示例
+
+```text
+工具：get_a_share_financials_balance_sheets
+参数：
+  - thscode: "000858.SZ"
+  - period: "quarterly"
+```
+
+## 返回
+
+返回 `{ timestamp, item: [BalanceSheetItem, ...] }`，按 `period_end` 降序。
+字段含义见 REST 端点 [资产负债表附加字段](/docs/api-reference/financials#资产负债表附加字段) 与
+[共有响应字段](/docs/api-reference/financials#共有响应字段)。
+
+```json
+{
+  "timestamp": 1735574400000,
+  "item": [
+    {
+      "thscode": "000858.SZ",
+      "ticker": "000858",
+      "period": "quarterly",
+      "fiscal_year": 2024,
+      "fiscal_period": "Q4",
+      "report_date_ms": 1735574400000,
+      "period_end_ms": 1735574400000,
+      "currency": "CNY",
+      "assets_total": 250000000000,
+      "total_current_assets": 200000000000,
+      "non_current_nets_total": 50000000000,
+      "cash": 130000000000,
+      "accounts_receivable": 500000000,
+      "total_debt": 60000000000,
+      "holder_equity_total": 190000000000
+    }
+  ]
+}
+```
+
+## 现金流量表
+
+来源：https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_financials_cash_flow_statements/
+
+> 单只 A 股的整体合并现金流量表多期序列
+
+:::info
+工具名：`get_a_share_financials_cash_flow_statements`
+
+对应 REST 端点：[`GET /api/a-share/financials/cash-flow-statements`](/docs/api-reference/financials#现金流量表)
+:::
+
+## 工具描述
+
+> 获取单只 A 股标的的整体合并现金流量表多期序列。取数模式同利润表：不传 `start`/`end`
+> 返回最近 `limit` 期；同时传 `start`+`end` 返回时间区间内全部报告期。均按 `period_end`
+> 降序。返回经营 / 投资 / 筹资活动现金流量净额、现金及现金等价物净增加额等字段。
+
+## 参数
+
+| 参数 | 类型 | 必填 | 默认 | 说明 |
+|---|---|---|---|---|
+| `thscode` | string | 是 | — | 单只标的 thscode，不接受逗号；含交易所后缀（如 `600519.SH`）。 |
+| `period` | string | 是 | `annual` | 报告期类型：`annual`(仅 Q4) / `quarterly`(每季度末)。 |
+| `limit` | integer | 否 | `4` | 最近 N 期模式：范围 `[1, 20]`。与 `start`/`end` 互斥。 |
+| `start` | long | 否 | — | 时间区间模式：起始毫秒戳，需与 `end` 同传；窗口 ≤ 10 年。 |
+| `end` | long | 否 | — | 时间区间模式：结束毫秒戳，`end >= start`。 |
+
+## 调用示例
+
+```text
+工具：get_a_share_financials_cash_flow_statements
+参数：
+  - thscode: "600519.SH"
+  - period: "annual"
+  - start: 1577808000000
+  - end: 1735574400000
+```
+
+## 返回
+
+返回 `{ timestamp, item: [CashFlowStatementItem, ...] }`，按 `period_end` 降序。
+字段含义见 REST 端点 [现金流量表附加字段](/docs/api-reference/financials#现金流量表附加字段) 与
+[共有响应字段](/docs/api-reference/financials#共有响应字段)。
+
+```json
+{
+  "timestamp": 1735574400000,
+  "item": [
+    {
+      "thscode": "600519.SH",
+      "ticker": "600519",
+      "period": "annual",
+      "fiscal_year": 2024,
+      "fiscal_period": "FY",
+      "report_date_ms": 1735574400000,
+      "period_end_ms": 1735574400000,
+      "currency": "CNY",
+      "act_cash_flow_net": 92000000000,
+      "invest_cash_flow_net": -3000000000,
+      "financing_cash_flow_net": -65000000000,
+      "pay_fixed_assets_etc_cash": 3500000000,
+      "pay_dividends_profits_interest_cash": 64000000000,
+      "cash_equivalents_net_addition": 24000000000
+    }
+  ]
+}
+```
+
+## 利润表
+
+来源：https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_financials_income_statements/
+
+> 单只 A 股的整体合并利润表多期序列
+
+:::info
+工具名：`get_a_share_financials_income_statements`
+
+对应 REST 端点：[`GET /api/a-share/financials/income-statements`](/docs/api-reference/financials#利润表)
+:::
+
+## 工具描述
+
+> 获取单只 A 股标的的整体合并利润表多期序列。两种取数模式互斥：不传 `start`/`end`
+> 返回最近 `limit` 期；同时传 `start`+`end` 返回时间区间内全部报告期。均按 `period_end`
+> 降序。返回营业收入、营业利润、净利润、归母净利润、基本每股收益等字段。
+
+## 参数
+
+| 参数 | 类型 | 必填 | 默认 | 说明 |
+|---|---|---|---|---|
+| `thscode` | string | 是 | — | 单只标的 thscode，不接受逗号；含交易所后缀（如 `600519.SH`）。 |
+| `period` | string | 是 | `annual` | 报告期类型：`annual`(仅 Q4) / `quarterly`(每季度末)。 |
+| `limit` | integer | 否 | `4` | 最近 N 期模式：范围 `[1, 20]`。与 `start`/`end` 互斥。 |
+| `start` | long | 否 | — | 时间区间模式：起始毫秒戳，需与 `end` 同传；窗口 ≤ 10 年。 |
+| `end` | long | 否 | — | 时间区间模式：结束毫秒戳，`end >= start`。 |
+
+## 调用示例
+
+```text
+工具：get_a_share_financials_income_statements
+参数：
+  - thscode: "600519.SH"
+  - period: "annual"
+  - limit: 3
+```
+
+## 返回
+
+返回 `{ timestamp, item: [IncomeStatementItem, ...] }`，按 `period_end` 降序。
+字段含义见 REST 端点 [利润表附加字段](/docs/api-reference/financials#利润表附加字段) 与
+[共有响应字段](/docs/api-reference/financials#共有响应字段)。
+
+```json
+{
+  "timestamp": 1735574400000,
+  "item": [
+    {
+      "thscode": "600519.SH",
+      "ticker": "600519",
+      "period": "annual",
+      "fiscal_year": 2024,
+      "fiscal_period": "FY",
+      "report_date_ms": 1735574400000,
+      "period_end_ms": 1735574400000,
+      "currency": "CNY",
+      "operating_income": 174144000000,
+      "operating_profit": 124000000000,
+      "net_profit": 93000000000,
+      "parent_holder_net_profit": 86000000000,
+      "basic_eps": 68.50
+    }
+  ]
+}
+```
+
+## A股历史K线
+
+来源：https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_prices_historical/
+
+> 单只标的的 A 股历史 K 线序列
+
+:::info
+工具名：`get_a_share_prices_historical`
+
+对应 REST 端点：[`GET /api/a-share/prices/historical`](/docs/api-reference/prices#历史-k-线)
+:::
+
+## 工具描述
+
+> 获取单只 A 股标的的历史 K 线数据，窗口最长 10 年。支持前复权 / 后复权 / 不复权。
+> 每次只能传一个 `thscode`，多标的请分多次调用。
+
+## 参数
+
+| 参数 | 类型 | 必填 | 默认 | 说明 |
+|---|---|---|---|---|
+| `thscode` | string | 是 | — | 单只标的 thscode，不接受逗号。 |
+| `interval` | enum | 是 | `1d` | K 线周期，**当前仅支持** `1d`(日线)。 |
+| `start` | long | 是 | — | 起始时间，毫秒 Unix 时间戳。 |
+| `end` | long | 是 | — | 结束时间，毫秒 Unix 时间戳。`end - start` 不超过 10 年。 |
+| `adjust` | enum | 否 | `forward` | 复权方式：`none` / `forward` / `backward`。 |
+| `offset` | integer | 否 | `0` | 分页偏移。 |
+
+## 调用示例
+
+```text
+工具：get_a_share_prices_historical
+参数：
+  - thscode: "600519.SH"
+  - interval: "1d"
+  - start: 1716105600000
+  - end: 1747641600000
+  - adjust: "forward"
+```
+
+## 返回
+
+返回 `{ timestamp, item: [PriceBarItem, ...] }`。字段含义见 REST 端点
+[历史 K 线](/docs/api-reference/prices#响应字段-1)。
+
+```json
+{
+  "timestamp": 1747584000000,
+  "item": [
+    {
+      "date_ms": 1716134400000,
+      "open_price": 1611.602,
+      "high_price": 1626.602,
+      "low_price": 1601.722,
+      "close_price": 1602.612,
+      "volume": 3142572.0,
+      "turnover": 5401389334.87
+    }
+  ]
+}
+```
+
+## A股行情快照
+
+来源：https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_prices_snapshot/
+
+> A 股行情快照（按 thscodes 批量或全市场分页）
+
+:::info
+工具名：`get_a_share_prices_snapshot`
+
+对应 REST 端点：[`GET /api/a-share/prices/snapshot`](/docs/api-reference/prices#行情快照)
+:::
+
+## 工具描述
+
+> 获取 A 股行情快照。`thscodes` 显式给定时按入参顺序批量取数；省略时遍历完整 A 股代码表
+> 并按 `limit`/`offset` 分页。返回每只标的的最新价、涨跌额、涨跌幅、开盘 / 最高 / 最低 / 前收价、成交量、成交额。
+> 不返回中文名 `name`，如需展示请配合 `get_meta_tickers_search` / `get_meta_tickers_list`。
+
+## 参数
+
+| 参数 | 类型 | 必填 | 默认 | 说明 |
+|---|---|---|---|---|
+| `thscodes` | string | 否 | — | 逗号分隔的 thscode 列表，如 `600519.SH,000001.SZ`。给定时忽略 `limit` / `offset`。 |
+| `limit` | integer | 否 | `100` | 分页大小，仅在 `thscodes` 省略时生效。 |
+| `offset` | integer | 否 | `0` | 分页偏移，仅在 `thscodes` 省略时生效。 |
+
+## 调用示例
+
+```text
+工具：get_a_share_prices_snapshot
+参数：
+  - thscodes: "600519.SH,000001.SZ"
+```
+
+## 返回
+
+返回 `{ timestamp, total, item: [PriceSnapshotItem, ...] }`。字段含义见 REST 端点
+[行情快照](/docs/api-reference/prices#响应字段)。
+
+```json
+{
+  "timestamp": null,
+  "total": 2,
+  "item": [
+    {
+      "thscode": "600519.SH",
+      "ticker": "600519",
+      "last_price": 1277.8,
+      "price_change": 21.8,
+      "price_change_ratio_pct": 1.735669,
+      "open_price": 1252.08,
+      "high_price": 1282,
+      "low_price": 1250.21,
+      "prev_price": 1256,
+      "volume": 3098875,
+      "turnover": 3937375200
+    }
+  ]
+}
+```
+
+## 标的目录（代码表浏览）
+
+来源：https://fuyao.aicubes.cn/docs/mcp/tools/get_meta_tickers_list/
+
+> 批量获取代码表（按交易所 / 资产类别过滤）
+
+:::info
+工具名：`get_meta_tickers_list`
+
+对应 REST 端点：[`GET /api/meta/tickers/list`](/docs/api-reference/tickers#标的目录)
+:::
+
+## 工具描述
+
+> 批量获取代码表，支持按交易所 / 资产类别过滤。MVP 采用简单 offset/limit 分页，
+> 调用方循环递增 `offset` 直到 `item.length < limit` 即可取尽。
+
+## 参数
+
+| 参数 | 类型 | 必填 | 默认 | 说明 |
+|---|---|---|---|---|
+| `exchange` | string | 否 | `SH,SZ` | 逗号分隔的交易所列表，`SH` / `SZ` / `BJ`，可多选。 |
+| `asset_type` | enum | 否 | `a-share` | 资产类别：`a-share` / `a-share-index`。 |
+| `limit` | integer | 否 | `1000` | 单页条数，最大 `10000`。 |
+| `offset` | integer | 否 | `0` | 分页偏移。 |
+
+## 调用示例
+
+```text
+工具：get_meta_tickers_list
+参数：
+  - exchange: "SH,SZ"
+  - asset_type: "a-share"
+  - limit: 1000
+  - offset: 0
+```
+
+## 返回
+
+返回 `{ timestamp, item: [TickerItem, ...] }`，结构与 [`get_meta_tickers_search`](./get_meta_tickers_search.mdx) 一致。
+字段含义见 REST 端点 [标的检索与目录](/docs/api-reference/tickers#响应字段)。
+
+## 分页取尽
+
+```text
+offset = 0
+loop:
+  resp = get_meta_tickers_list(offset=offset, limit=1000)
+  consume(resp.item)
+  if len(resp.item) < 1000: break
+  offset += 1000
+```
+
+## 标的检索（跨市场消歧）
+
+来源：https://fuyao.aicubes.cn/docs/mcp/tools/get_meta_tickers_search/
+
+> 公司名 / 代码片段解析为标准 thscode
+
+:::info
+工具名：`get_meta_tickers_search`
+
+对应 REST 端点：[`GET /api/meta/tickers/search`](/docs/api-reference/tickers#标的检索)
+:::
+
+## 工具描述
+
+> 把公司名、代码片段或别名解析为标准 thscode 代码。当用户用中英文名提及标的，或者
+> 你不确定 thscode 是否正确时，**优先调用本工具消歧**；用户已给出完整 thscode（如
+> `600519.SH`）时可跳过。返回按相关性排序，最多 50 条。
+
+## 参数
+
+| 参数 | 类型 | 必填 | 默认 | 说明 |
+|---|---|---|---|---|
+| `q` | string | 是 | — | 搜索关键词：完整 thscode、ticker 代码或中英文名称（支持子串匹配）。 |
+| `exchange` | enum | 否 | — | `SH` / `SZ` / `BJ`，省略 = 跨交易所。 |
+| `asset_type` | enum | 否 | — | `a-share` / `a-share-index`，省略 = 全部。 |
+| `limit` | integer | 否 | `10` | 返回上限，最大 `50`。 |
+
+## 调用示例
+
+```text
+工具：get_meta_tickers_search
+参数：
+  - q: "平安"
+  - limit: 20
+```
+
+## 返回
+
+返回 `{ timestamp, item: [TickerItem, ...] }`。字段含义见 REST 端点
+[标的检索与目录](/docs/api-reference/tickers#响应字段)。
+
+```json
+{
+  "timestamp": 1716105600000,
+  "item": [
+    {
+      "thscode": "601318.SH",
+      "ticker": "601318",
+      "name": "中国平安",
+      "exchange": "SH",
+      "asset_type": "a-share",
+      "currency": "CNY"
+    }
+  ]
+}
+```
+
+## 为什么是前置工具
+
+LLM 调任何数据工具都需要传 `thscode`，其自身知识对 A 股 6 位代码、交易所后缀、
+新上市 / 改名标的容易出错。优先调用本工具消歧，再调下游数据工具。
+
