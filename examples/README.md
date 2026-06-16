@@ -6,12 +6,12 @@
 
 ```bash
 # 1. 装包并构建本地 DB（一次性）
-./bootstrap.sh
+python bootstrap.py
 
 # 2. 确认本地 DB 有数据
 marketdb status --db data/market.duckdb
 
-# 3.（可选，仅 example 03 需要）配置扶摇 token
+# 3.（可选，仅 example 03 需要）配置同花顺金融数据 API token
 export FUYAO_TOKEN=<token>     # 在 https://fuyao.aicubes.cn/admin 签发
 ```
 
@@ -30,7 +30,7 @@ python3 examples/01_quickstart.py
 | --- | --- | --- | --- | --- |
 | 01 | [`01_quickstart.py`](01_quickstart.py) | `toolkit/marketdb` | SDK 单股 `get_daily`、前复权、基本统计 | ❌ |
 | 02 | [`02_cross_section.py`](02_cross_section.py) | `toolkit/marketdb` | 全市场截面 `get_panel`、按 ADV 选股、大结果落盘 | ❌ |
-| 03 | [`03_fundamentals_join.py`](03_fundamentals_join.py) | `toolkit/marketdb` + `toolkit/fuyao` | 跨 toolkit 组合：财报（fuyao CLI）+ 行情（marketdb SDK） | ✅ |
+| 03 | [`03_fundamentals_join.py`](03_fundamentals_join.py) | `toolkit/marketdb` + `toolkit/fuyao` | 跨 toolkit 组合：财报（远端 API CLI）+ 行情（marketdb SDK） | ✅ |
 
 每个脚本都自带顶部 docstring，说明它在演示什么。
 
@@ -88,7 +88,7 @@ python3 examples/03_fundamentals_join.py
 - `MarketDB.get_daily(thscode, adjust="forward")` —— 拉历史 qfq 行情
 - `pd.merge_asof` —— 把每期财报对齐到最近的交易日
 
-没设 token 时脚本不会报错，会跳过 fuyao 部分只跑 marketdb 部分。
+没设 token 时脚本不会报错，会跳过远端 API 部分只跑 marketdb 部分。
 
 ---
 

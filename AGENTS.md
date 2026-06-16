@@ -7,7 +7,7 @@
 - **`marketdb/`** — local DuckDB-backed A-share data warehouse (Parquet → DuckDB → SQL/SDK). See `feature/2026-06-09-本地行情数据库与回测分析应用/` for design.
 - **`toolkit/`** — tool-agnostic toolkits for both data sources. Start at `toolkit/README.md` (unified router):
   - **`toolkit/marketdb/`** — local DB queries (历史 OHLCV、复权、面板、因子). Use whenever the answer lives in `data/market.duckdb`.
-  - **`toolkit/fuyao/`** — upstream 扶摇 (fuyao.aicubes.cn) REST + MCP API. Use whenever you need fresh data (snapshots, financials, ticker catalog).
+  - **`toolkit/fuyao/`** — upstream 同花顺金融数据 API (fuyao.aicubes.cn) REST + MCP. Use whenever you need fresh data (snapshots, financials, ticker catalog).
 - **`examples/`** — runnable end-to-end Python scripts. Best first stop when learning the repo.
 - **`feature/`** — dated iteration workspaces; each contains its own `01-requirement.md` → `05-summary.md` decision record.
 - **`tests/`**, **`docs/`**, **`refer-to/`** — standard.
@@ -21,6 +21,11 @@
 | "Where's the data? How do I start?" | `toolkit/README.md` (decision tree) + `examples/README.md` |
 
 Full responsibility boundary + routing rules: [`toolkit/README.md`](toolkit/README.md).
+
+## Project-local skill
+
+For financial data tasks in this repository, first use `skills/financial-api/SKILL.md`.
+That skill must treat `toolkit/README.md` as the source of truth and scan current toolkit support before assuming the requested asset class or data type is available.
 
 ## Auth (for `toolkit/fuyao/`)
 

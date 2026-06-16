@@ -1,6 +1,6 @@
 # toolkit/fuyao
 
-A tool-agnostic toolkit for calling **扶摇 (fuyao.aicubes.cn)** — a structured A-share financial data service offering 9 capabilities over REST + MCP. **Use this for remote / live data (snapshots, financials, ticker catalog). For local historical OHLCV go to [`../marketdb/`](../marketdb/README.md).**
+A tool-agnostic toolkit for calling the **同花顺金融数据 API (fuyao.aicubes.cn)** — a structured A-share financial data service offering 9 capabilities over REST + MCP. **Use this for remote / live data (snapshots, financials, ticker catalog). For local historical OHLCV go to [`../marketdb/`](../marketdb/README.md).**
 
 This folder is **the entry point for the remote API** for any human or AI agent (Claude Code, Codex, Cursor, ChatGPT, scripts in CI, Jupyter, …). It contains:
 
@@ -16,7 +16,7 @@ This folder is **the entry point for the remote API** for any human or AI agent 
 
 Trigger keywords (for AI agents reading this file in-context):
 
-- 扶摇 / fuyao / fuyao.aicubes.cn
+- 同花顺金融数据 API / fuyao.aicubes.cn
 - A股 / thscode / 贵州茅台 类的代码、涨跌幅、行情快照、历史 K 线、复权事件
 - 利润表 / 资产负债表 / 现金流量表 / 财报 / 营收 / 净利润
 - A 股代码表、交易日历
@@ -131,7 +131,7 @@ Exit codes: `0` success · `2` `FuyaoApiError` (business code != 0) · `3` `Valu
 
 ### Pattern C — Hosted MCP (no code; in-conversation)
 
-Configure your MCP client (Claude Desktop / Cursor / Windsurf) to point at fuyao's hosted endpoints. Snippets in `docs/mcp-config.md`. This bypasses `scripts/` entirely and is the lightest integration for interactive use.
+Configure your MCP client (Claude Desktop / Cursor / Windsurf) to point at the API's hosted endpoints. Snippets in `docs/mcp-config.md`. This bypasses `scripts/` entirely and is the lightest integration for interactive use.
 
 ---
 
@@ -194,7 +194,7 @@ Each tool has a different auto-loading convention. Since this skill keeps the fr
 
 | Tool | How to surface this skill |
 | --- | --- |
-| Claude Code | In conversation: "use `toolkit/fuyao/` for fuyao queries — start by reading `toolkit/fuyao/README.md`." Or add a project-level `.claude/skills/<name>/SKILL.md` that points here. |
+| Claude Code | In conversation: "use `toolkit/fuyao/` for remote API queries — start by reading `toolkit/fuyao/README.md`." Or add a project-level `.claude/skills/<name>/SKILL.md` that points here. |
 | Codex CLI / OpenAI Agents | Put a top-level `AGENTS.md` saying "for A-share data use `toolkit/fuyao/` — see `toolkit/fuyao/README.md`." Codex auto-reads `AGENTS.md`. |
 | Cursor | Add `.cursor/rules/fuyao.mdc` pointing at this README; or paste this README into the project system prompt. |
 | Windsurf / Codeium | `.windsurf/rules/*.md` similarly. |

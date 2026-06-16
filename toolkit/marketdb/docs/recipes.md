@@ -129,7 +129,7 @@ merged["check"] = (merged["close"] * merged["forward_factor"]).round(4) == merge
 print(merged["check"].value_counts())
 ```
 
-## 8. 跨 toolkit 组合：用 fuyao 刷财报，再用 marketdb 分析
+## 8. 跨 toolkit 组合：用远端 API 刷财报，再用 marketdb 分析
 
 ```bash
 # 用 toolkit/fuyao 拉最新的利润表（同仓库自带）
