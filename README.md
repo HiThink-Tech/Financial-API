@@ -56,29 +56,27 @@ curl 'https://fuyao.aicubes.cn/api/a-share/prices/snapshot?thscodes=600519.SH' \
 克隆本仓库后，安装依赖并配置 API Key：
 
 ```bash
-python3 -m pip install -e .
+python -m pip install -e .
 
-# 推荐：拷贝 .env.example 为 .env，按需填入 API_KEY / BASE_URL 等
+# 推荐：拷贝 .env.example 为 .env，按需填入 API_KEY  等
 cp .env.example .env
 
-# 或者直接通过环境变量传入
-export API_KEY="<your-api-key>"
 ```
 
-常用 CLI：
+常用 命令：
 
 ```bash
 # 标的检索
-python3 toolkit/fuyao/scripts/fuyao.py tickers-search --q "贵州茅台"
+python toolkit/fuyao/scripts/fuyao.py tickers-search --q "贵州茅台"
 
 # 实时行情快照
-python3 toolkit/fuyao/scripts/fuyao.py prices-snapshot --thscodes 600519.SH
+python toolkit/fuyao/scripts/fuyao.py prices-snapshot --thscodes 600519.SH
 
 # 利润表
-python3 toolkit/fuyao/scripts/fuyao.py financials-income --thscode 600519.SH --limit 4
+python toolkit/fuyao/scripts/fuyao.py financials-income --thscode 600519.SH --limit 4
 ```
 
-Python 调用（`fuyao_client` 以脚本形式提供，不随 `pip install` 入包，需要注入 `sys.path`）：
+Python 调用：
 
 ```python
 import sys
@@ -92,13 +90,13 @@ hit = tickers_search("贵州茅台", limit=1)[0]
 snapshot = prices_snapshot([hit["thscode"]])
 ```
 
-### 3. 构建本地 marketdb
+### 3. 构建本地行情数据库
 
 适用于历史研究、因子分析、回测和大批量 SQL 查询。
 
 1. 从 [全市场数据导出](https://fuyao.aicubes.cn/docs/api-reference/market-dumps/) 下载 Parquet 文件。
 2. 放入 `refer-to/data/`。
-3. 执行初始化（跨平台 Python 脚本，幂等）。
+3. 执行初始化。
 
 ```bash
 python bootstrap.py              # 完整初始化：安装 + .env + 建库 + 导入 + 校验
@@ -176,26 +174,18 @@ pyproject.toml           Python 包定义
 .env.example             环境变量样例
 ```
 
-## 版本更新
-
-<!-- FEATURE-ITERATION-LOG:START -->
-| 日期 | 新增能力 | 对用户的价值 |
-| --- | --- | --- |
-| 2026-06-09 | 落地 Python + DuckDB 本地行情库 `marketdb`，支持全量 Parquet 导入、复权因子计算、前/后复权视图、REST 增量更新、CLI/SDK 与测试套件 | 可以在本地高效查询 A 股 10 年日 K 与复权数据，适合研究、回测和批量分析 |
-| 2026-06-12 | 落地工具无关的 `toolkit/fuyao` 与官方 Agent Skill `skills/financial-api`，封装同花顺金融数据 API 的 REST/MCP capability，提供 Python 函数库、JSON CLI、MCP 配置文档、错误码与协议说明 | 人类开发者和 AI Agent 都可以用同一套官方入口调用同花顺金融数据 API |
-<!-- FEATURE-ITERATION-LOG:END -->
 
 ## 测试
 
 ```bash
-python3 -m pytest tests/
+python -m pytest tests/
 ```
 
 当前测试覆盖 schema、Parquet 导入、数据质量、复权因子和新鲜度守门等关键路径。
 
 ## 安全与合规
 
-- API Key 只通过 `API_KEY` 环境变量传入。
+- API Key 只通过 `API_KEY` 环境变量形式传入。
 - 不要把 API Key 写入代码、README、Issue、提示词或 Git commit。
 - 本项目提供金融数据访问与本地分析工具，不提供投资建议。
 - 数据权限、可访问 capability、调用频率与使用边界以同花顺金融数据 API 官网和账号授权为准。
