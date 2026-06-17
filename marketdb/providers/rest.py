@@ -91,7 +91,6 @@ class RestProvider:
     def list_symbols(
         self,
         *,
-        exchange: str = "SH,SZ",
         asset_type: str = "a-share",
         page_size: int = 1000,
     ) -> Iterator[dict[str, Any]]:
@@ -100,7 +99,6 @@ class RestProvider:
             data = self._request(
                 "/api/meta/tickers/list",
                 {
-                    "exchange": exchange,
                     "asset_type": asset_type,
                     "limit": page_size,
                     "offset": offset,
