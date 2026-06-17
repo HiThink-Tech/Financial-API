@@ -69,12 +69,20 @@ def update_daily(
     *,
     max_lag_trading_days: int,
     target_date: date | None = None,
+    sync_symbols_first: bool = True,
 ) -> dict:
     """Pull a small incremental window of daily K-line and merge into raw_kline_daily.
 
     Stops with an error if local data lags the target by more than the
     configured threshold — the operator must then re-download the full parquet.
+
+    By default refreshes dim_symbol first so newly-listed tickers are picked up
+    in the same run; pass ``sync_symbols_first=False`` to skip (e.g. in tests).
     """
+    symbols_synced: int | None = None
+    if sync_symbols_first:
+        symbols_synced = sync_symbols(con, provider)
+
     trading_days = [_ms_to_date(d["date_ms"]) for d in provider.trading_days()]
     if not trading_days:
         raise RuntimeError("REST returned an empty trading-days calendar")
@@ -158,4 +166,5 @@ def update_daily(
         "window_start": start.isoformat(),
         "window_end": end.isoformat(),
         "rows_pulled": total_rows,
+        "symbols_synced": symbols_synced,
     }

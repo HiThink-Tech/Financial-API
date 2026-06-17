@@ -25,6 +25,7 @@ class Settings:
     db_path: Path
     data_root: Path
     max_lag_trading_days: int
+    rest_min_interval_seconds: float
 
     @classmethod
     def load(
@@ -46,7 +47,7 @@ class Settings:
         ).expanduser()
         return cls(
             api_key=os.getenv("API_KEY") or None,
-            base_url=os.getenv("BASE_URL", "https://api.example.com").rstrip("/"),
+            base_url=os.getenv("BASE_URL", "https://fuyao.aicubes.cn").rstrip("/"),
             mcp_base_url=os.getenv(
                 "MCP_BASE_URL", "https://fuyao.aicubes.cn/mcp/a-share"
             ).rstrip("/"),
@@ -56,4 +57,7 @@ class Settings:
             db_path=resolved_db,
             data_root=resolved_data_root,
             max_lag_trading_days=int(os.getenv("MARKETDB_MAX_LAG_TRADING_DAYS", "7")),
+            rest_min_interval_seconds=float(
+                os.getenv("MARKETDB_REST_MIN_INTERVAL_SECONDS", "0.2")
+            ),
         )

@@ -157,7 +157,11 @@ def sync_symbols_cmd(
         console.print("[red]missing API_KEY[/red] — set it in .env or env vars")
         raise typer.Exit(code=2)
     con = connect(settings.db_path)
-    provider = RestProvider(base_url=settings.base_url, api_key=settings.api_key)
+    provider = RestProvider(
+        base_url=settings.base_url,
+        api_key=settings.api_key,
+        min_interval_seconds=settings.rest_min_interval_seconds,
+    )
     n = sync_symbols(con, provider)
     console.print(f"[green]dim_symbol[/green] upserted rows={n}")
     con.close()
@@ -167,6 +171,11 @@ def sync_symbols_cmd(
 def update_daily_cmd(
     db: Path = typer.Option(None, "--db", help="DuckDB file path"),
     target: str = typer.Option(None, "--target", help="Target trading day YYYY-MM-DD"),
+    sync_symbols_first: bool = typer.Option(
+        True,
+        "--sync-symbols/--no-sync-symbols",
+        help="Refresh dim_symbol before pulling K-line so new listings are picked up.",
+    ),
 ) -> None:
     """Pull recent daily K-line via REST and merge incrementally."""
     settings = _settings(db)
@@ -176,12 +185,17 @@ def update_daily_cmd(
     from datetime import date as _date
     target_date = _date.fromisoformat(target) if target else None
     con = connect(settings.db_path)
-    provider = RestProvider(base_url=settings.base_url, api_key=settings.api_key)
+    provider = RestProvider(
+        base_url=settings.base_url,
+        api_key=settings.api_key,
+        min_interval_seconds=settings.rest_min_interval_seconds,
+    )
     result = update_daily(
         con,
         provider,
         max_lag_trading_days=settings.max_lag_trading_days,
         target_date=target_date,
+        sync_symbols_first=sync_symbols_first,
     )
     console.print_json(json.dumps(result))
     con.close()
