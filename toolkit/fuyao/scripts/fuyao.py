@@ -23,8 +23,14 @@ from fuyao_client import (  # noqa: E402
     financials_balance_sheets,
     financials_cash_flow_statements,
     financials_income_statements,
+    index_catalog_ths_index_list,
+    index_constituents_ths_stock_list,
+    index_prices_historical,
+    index_prices_snapshot,
     prices_historical,
     prices_snapshot,
+    special_data_limit_up_ladder,
+    special_data_limit_up_pool,
     tickers_list,
     tickers_search,
 )
@@ -125,6 +131,45 @@ def cmd_calendar(_args):
     return calendar_trading_days()
 
 
+def cmd_index_catalog(args):
+    return index_catalog_ths_index_list(tag=args.tag)
+
+
+def cmd_index_constituents(args):
+    return index_constituents_ths_stock_list(thscode=args.thscode)
+
+
+def cmd_index_snapshot(args):
+    if args.thscodes_file:
+        codes = _read_codes_file(args.thscodes_file)
+    else:
+        codes = args.thscodes.split(",")
+    return index_prices_snapshot(thscodes=codes)
+
+
+def cmd_index_historical(args):
+    return index_prices_historical(
+        thscode=args.thscode,
+        start_ms=args.start_ms,
+        end_ms=args.end_ms,
+        interval=args.interval,
+    )
+
+
+def cmd_limit_up_pool(args):
+    return special_data_limit_up_pool(
+        date_ms=args.date_ms,
+        page=args.page,
+        size=args.size,
+        sort_field=args.sort_field,
+        sort_dir=args.sort_dir,
+    )
+
+
+def cmd_limit_up_ladder(_args):
+    return special_data_limit_up_ladder()
+
+
 # ---------------------------------------------------------------------------
 # argparse wiring
 # ---------------------------------------------------------------------------
@@ -147,7 +192,7 @@ def _add_financials_subparser(sub, name: str, help_text: str, handler):
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="fuyao",
-        description="Fuyao A-share data CLI (9 capabilities). JSON-only stdout. "
+        description="Fuyao A-share data CLI (15 capabilities). JSON-only stdout. "
         "Auth: FUYAO_TOKEN env var.",
     )
     parser.add_argument("--compact", action="store_true", help="emit single-line JSON")
@@ -227,6 +272,80 @@ def build_parser() -> argparse.ArgumentParser:
     # calendar
     p = sub.add_parser("calendar-trading-days", help="A-share trading-day calendar (~1 year)")
     p.set_defaults(func=cmd_calendar)
+
+    # index-catalog
+    p = sub.add_parser(
+        "index-catalog",
+        help="THS index catalog by tag (cn_concept/region/tszs/industry)",
+    )
+    p.add_argument(
+        "--tag",
+        default="cn_concept",
+        choices=["cn_concept", "region", "tszs", "industry"],
+    )
+    p.set_defaults(func=cmd_index_catalog)
+
+    # index-constituents
+    p = sub.add_parser(
+        "index-constituents",
+        help="current constituents of one index (THS block or standard, e.g. 000300.SH)",
+    )
+    p.add_argument("--thscode", required=True)
+    p.set_defaults(func=cmd_index_constituents)
+
+    # index-snapshot
+    p = sub.add_parser("index-snapshot", help="index snapshot (batch by thscodes)")
+    g = p.add_mutually_exclusive_group(required=True)
+    g.add_argument("--thscodes", help="comma-separated index thscodes")
+    g.add_argument(
+        "--thscodes-file",
+        dest="thscodes_file",
+        help="file with one index thscode per line",
+    )
+    p.set_defaults(func=cmd_index_snapshot)
+
+    # index-historical
+    p = sub.add_parser(
+        "index-historical",
+        help="index historical K-line for a single thscode; auto-slices windows >10y",
+    )
+    p.add_argument("--thscode", required=True)
+    p.add_argument("--start-ms", dest="start_ms", type=int, required=True)
+    p.add_argument("--end-ms", dest="end_ms", type=int, required=True)
+    p.add_argument("--interval", default="1d", choices=["1d", "1w", "1mo"])
+    p.set_defaults(func=cmd_index_historical)
+
+    # special-data limit-up-pool
+    p = sub.add_parser(
+        "limit-up-pool",
+        help="A-share 涨停股票池（按日，分页+排序）",
+    )
+    p.add_argument(
+        "--date-ms",
+        dest="date_ms",
+        type=int,
+        default=None,
+        help="交易日 00:00 毫秒戳；省略走服务端当前自然日",
+    )
+    p.add_argument("--page", type=int, default=1)
+    p.add_argument("--size", type=int, default=50, help="1..200")
+    p.add_argument(
+        "--sort-field",
+        dest="sort_field",
+        default="last_price",
+        choices=["last_price", "continue_day_cnt", "seal_money", "limit_up_time"],
+    )
+    p.add_argument(
+        "--sort-dir", dest="sort_dir", default="desc", choices=["asc", "desc"]
+    )
+    p.set_defaults(func=cmd_limit_up_pool)
+
+    # special-data limit-up-ladder
+    p = sub.add_parser(
+        "limit-up-ladder",
+        help="A-share 连板天梯（近 30 个交易日 × 6 板位矩阵；无入参）",
+    )
+    p.set_defaults(func=cmd_limit_up_ladder)
 
     return parser
 

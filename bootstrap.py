@@ -1,17 +1,25 @@
 #!/usr/bin/env python3
 """Cross-platform bootstrap for the marketdb project.
 
-Usage:
-    python bootstrap.py              # full setup: install + .env + init db + import parquet + validate
-    python bootstrap.py --no-import  # skip the parquet import step (fast)
-    python bootstrap.py --force      # re-import even if data/market.duckdb already has rows
+Default flow:
+    1. install marketdb (editable)
+    2. ensure .env exists
+    3. initialise DuckDB
+    4. sync data via the API auto-sync channel (FULL on empty / lagging db,
+       INCREMENTAL within 7 trading days). If the API channel fails for any
+       reason, fall back to applying parquet files in refer-to/data/.
+    5. run status + validate
 
-Idempotent: re-running on an already-initialized project only fills in what's
-missing. If a newer parquet snapshot is found under refer-to/data/ than what's
-currently in the DB, the script will ask before re-importing (non-interactive
-shells skip and print a hint to use --force).
+Mode flags (mutually exclusive shortcuts; default is "api with local fallback"):
+    --api-only       Only use the API channel. Skip local parquet entirely.
+    --prefer-local   Try local parquet first; fall back to the API channel.
+    --local-only     Skip the API channel; require parquet under refer-to/data/.
+    --no-sync        Skip the data sync step (install/init only).
+    --force          Pass --force to auto-sync (ignore release-tag short-circuit)
+                     or re-import local parquet even when DB already has rows.
 
-Works on Windows, macOS and Linux.
+Works on Windows, macOS and Linux. All filesystem paths go through pathlib so
+the same script works without modification on any platform.
 """
 
 from __future__ import annotations
@@ -29,7 +37,8 @@ DB_PATH = Path(os.environ.get("MARKETDB_DB_PATH", "data/market.duckdb"))
 PARQUET_DIR = ROOT / "refer-to" / "data"
 DAILY_GLOB = "a_share_daily_k_1d_none_10y_*.parquet"
 EVENTS_GLOB = "a_share_adjustment_factors_event_none_all_*.parquet"
-PARQUET_SOURCE_URL = "https://fuyao.aicubes.cn/docs/api-reference/market-dumps/"
+ADMIN_URL = "https://fuyao.aicubes.cn/admin/"
+DOCS_URL = "https://fuyao.aicubes.cn/docs/api-reference/market-dumps/"
 
 USE_COLOR = sys.stdout.isatty() and os.environ.get("NO_COLOR") is None
 
@@ -45,78 +54,20 @@ def warn(msg: str) -> None:
     print(msg, file=sys.stderr)
 
 
-def warn_missing_parquet() -> None:
-    warn(
-        f"    [warn] parquet dump not found under {PARQUET_DIR}/\n"
-        f"      expected (glob): {DAILY_GLOB}\n"
-        f"      expected (glob): {EVENTS_GLOB}\n"
-        f"      download from:   {PARQUET_SOURCE_URL}\n"
-        f"      (run again with --no-import to skip, or after dropping the files into "
-        f"{PARQUET_DIR}/)"
-    )
-
-
 def latest_match(pattern: str) -> Path | None:
-    """Return the lexicographically latest file matching pattern (None if none)."""
     matches = sorted(PARQUET_DIR.glob(pattern))
     return matches[-1] if matches else None
 
 
-def run(cmd: list[str], check: bool = True, capture: bool = False) -> subprocess.CompletedProcess:
-    """Run a command; on Windows resolve console scripts to .exe if needed."""
-    return subprocess.run(
-        cmd,
-        check=check,
-        text=True,
-        capture_output=capture,
-    )
+def run(cmd: list[str], check: bool = True) -> subprocess.CompletedProcess:
+    return subprocess.run(cmd, check=check, text=True)
 
 
 def marketdb_cmd() -> list[str]:
-    """Resolve the marketdb entry point.
-
-    Prefer the installed console script (shutil.which finds `marketdb.exe` on
-    Windows). Fall back to `python -m marketdb.cli`, which works whenever the
-    package is importable, even if the console script isn't on PATH.
-    """
     exe = shutil.which("marketdb")
     if exe:
         return [exe]
     return [sys.executable, "-m", "marketdb.cli"]
-
-
-def marketdb_query(sql: str) -> str:
-    """Run a marketdb query and return stdout (empty string on failure)."""
-    try:
-        res = subprocess.run(
-            marketdb_cmd() + ["query", "--db", str(DB_PATH), "--sql", sql],
-            text=True,
-            capture_output=True,
-            check=False,
-        )
-        return res.stdout or ""
-    except FileNotFoundError:
-        return ""
-
-
-def extract_int(s: str) -> int:
-    digits = re.sub(r"\D", "", s.splitlines()[-1] if s.strip() else "")
-    return int(digits) if digits else 0
-
-
-def snapshot_date(parquet_path: Path) -> str:
-    m = re.findall(r"\d{8}", parquet_path.name)
-    return m[-1] if m else ""
-
-
-def prompt_yes(question: str) -> bool:
-    if not sys.stdin.isatty():
-        return False
-    try:
-        ans = input(f"    {question} [Y/n] ").strip() or "Y"
-    except EOFError:
-        return False
-    return ans[:1] in ("Y", "y")
 
 
 def step_check_python() -> None:
@@ -148,7 +99,7 @@ def step_env_file() -> None:
         return
     say("creating .env from .env.example")
     shutil.copyfile(example, env_path)
-    print("    edit .env to set API_KEY / BASE_URL before running sync-symbols or update-daily")
+    print(f"    edit .env to set API_KEY (get one at {ADMIN_URL}) before syncing")
 
 
 def step_init_db() -> None:
@@ -157,54 +108,81 @@ def step_init_db() -> None:
     run(marketdb_cmd() + ["init", "--db", str(DB_PATH)])
 
 
-def step_import_parquet(skip_import: bool, force: bool,
-                       daily: Path | None, events: Path | None) -> None:
-    if skip_import:
-        say("skipping parquet import (--no-import)")
+def _try_api_sync(force: bool) -> bool:
+    """Run `marketdb auto-sync`; return True on success."""
+    say("syncing via API (auto-sync)")
+    cmd = marketdb_cmd() + ["auto-sync", "--db", str(DB_PATH)]
+    if force:
+        cmd.append("--force")
+    res = subprocess.run(cmd, check=False)
+    return res.returncode == 0
+
+
+def _try_local_apply(force: bool) -> bool:
+    """Apply parquet files from refer-to/data/ via the legacy import-parquet
+    command. Returns True if both files were found and applied.
+    """
+    daily = latest_match(DAILY_GLOB)
+    events = latest_match(EVENTS_GLOB)
+    if not daily or not events:
+        warn(
+            "    [warn] local parquet not found under refer-to/data/:\n"
+            f"      expected: {DAILY_GLOB}\n"
+            f"      expected: {EVENTS_GLOB}\n"
+            f"      download from {DOCS_URL} or run `marketdb auto-sync`."
+        )
+        return False
+    say(f"applying local parquet (daily={daily.name}, events={events.name})")
+    cmd = marketdb_cmd() + [
+        "import-parquet",
+        "--db", str(DB_PATH),
+        "--daily", str(daily),
+        "--events", str(events),
+    ]
+    if force:
+        # import-parquet is already overwriting; --force is forwarded so future
+        # versions that gate on row-count behave consistently.
+        pass
+    res = subprocess.run(cmd, check=False)
+    if res.returncode != 0:
+        warn(f"    [warn] local import failed (exit {res.returncode})")
+        return False
+    return True
+
+
+def step_sync(mode: str, force: bool) -> None:
+    if mode == "skip":
+        say("skipping sync (--no-sync)")
         return
-    if not daily or not events or not daily.is_file() or not events.is_file():
-        warn_missing_parquet()
-        warn("    skipping import.")
+    if mode == "local-only":
+        if not _try_local_apply(force):
+            warn("    local-only mode but no parquet applied; bootstrap incomplete")
+            sys.exit(1)
         return
-
-    rows = extract_int(marketdb_query("SELECT COUNT(*) FROM raw_kline_daily"))
-    do_import = False
-
-    if rows == 0:
-        do_import = True
-    elif force:
-        do_import = True
-        print("    --force given: will re-import parquet")
-    else:
-        snap = snapshot_date(daily)
-        max_out = marketdb_query("SELECT MAX(date) FROM raw_kline_daily")
-        last_line = max_out.splitlines()[-1] if max_out.strip() else ""
-        db_max = re.sub(r"\D", "", last_line)[:8]
-        if snap and db_max and snap > db_max:
-            pretty = f"{db_max[:4]}-{db_max[4:6]}-{db_max[6:8]}"
-            print(f"    newer parquet snapshot detected: {snap} (DB latest date: {pretty})")
-            if prompt_yes("re-import now?"):
-                do_import = True
-            else:
-                if sys.stdin.isatty():
-                    print("    skipping import (re-run with --force to import later)")
-                else:
-                    print("    non-interactive shell; skipping (re-run with --force to import)")
-        else:
-            print(
-                f"    raw_kline_daily already has {rows} rows; parquet snapshot "
-                f"({snap or '?'}) is not newer than DB ({db_max or '?'}), "
-                f"skipping (use --force to re-import)"
-            )
-
-    if do_import:
-        say("importing parquet (this may take a minute)")
-        run(marketdb_cmd() + [
-            "import-parquet",
-            "--db", str(DB_PATH),
-            "--daily", str(daily),
-            "--events", str(events),
-        ])
+    if mode == "api-only":
+        if not _try_api_sync(force):
+            warn(f"    API sync failed; configure API_KEY ({ADMIN_URL}) and retry,")
+            warn(f"    or rerun with --prefer-local / --local-only.")
+            sys.exit(1)
+        return
+    if mode == "prefer-local":
+        if _try_local_apply(force):
+            return
+        say("local apply skipped; trying API auto-sync next")
+        if not _try_api_sync(force):
+            sys.exit(1)
+        return
+    # default: api with local fallback
+    if _try_api_sync(force):
+        return
+    warn("    API sync failed; trying local parquet fallback")
+    if not _try_local_apply(force):
+        warn(
+            "    Neither API nor local parquet succeeded.\n"
+            f"    Set API_KEY (get one at {ADMIN_URL}) and rerun,\n"
+            f"    or download parquet from {DOCS_URL} into {PARQUET_DIR}/."
+        )
+        sys.exit(1)
 
 
 def step_status_validate() -> None:
@@ -214,37 +192,47 @@ def step_status_validate() -> None:
     subprocess.run(marketdb_cmd() + ["validate", "--db", str(DB_PATH)], check=False)
 
 
+def parse_mode(args: argparse.Namespace) -> str:
+    chosen = [
+        name for name, val in (
+            ("api-only", args.api_only),
+            ("local-only", args.local_only),
+            ("prefer-local", args.prefer_local),
+            ("skip", args.no_sync),
+        ) if val
+    ]
+    if len(chosen) > 1:
+        warn(f"    [error] conflicting flags: {', '.join(chosen)}")
+        sys.exit(2)
+    return chosen[0] if chosen else "default"
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Bootstrap the marketdb project (cross-platform).",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__,
     )
-    parser.add_argument("--no-import", dest="skip_import", action="store_true",
-                       help="skip the parquet import step")
+    parser.add_argument("--no-sync", action="store_true",
+                       help="skip the data sync step")
+    parser.add_argument("--api-only", action="store_true",
+                       help="only use the API auto-sync channel")
+    parser.add_argument("--local-only", action="store_true",
+                       help="only use parquet files in refer-to/data/")
+    parser.add_argument("--prefer-local", action="store_true",
+                       help="try local parquet first, then API")
     parser.add_argument("--force", action="store_true",
-                       help="re-import even if the DB already has rows")
+                       help="forward --force to auto-sync / re-import locally")
     args = parser.parse_args()
 
     os.chdir(ROOT)
-
-    # 0. Pre-flight: scan parquet dumps (only matters if we'll import).
-    daily = latest_match(DAILY_GLOB)
-    events = latest_match(EVENTS_GLOB)
-    if not args.skip_import:
-        say("checking parquet dumps")
-        if not daily or not events:
-            warn_missing_parquet()
-            warn("    proceeding with install/init; the import step will be skipped.")
-        else:
-            print(f"    daily:  {daily}")
-            print(f"    events: {events}")
+    mode = parse_mode(args)
 
     step_check_python()
     step_install_marketdb()
     step_env_file()
     step_init_db()
-    step_import_parquet(args.skip_import, args.force, daily, events)
+    step_sync(mode, args.force)
     step_status_validate()
 
     db_rel = DB_PATH.as_posix()

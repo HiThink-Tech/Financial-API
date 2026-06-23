@@ -34,8 +34,8 @@ AI agent 读到本文件后，匹配以下关键词时应该触发：
 | 全市场 / 单交易所截面 | SDK `get_panel` | `db.get_panel(start="2025-06-12", adjust="forward", exchange="SH")` |
 | 任意 SQL（含 JOIN / 聚合） | CLI `query --json` 或 `db.query_sql` | `marketdb query --json --sql "SELECT date, AVG(close) FROM v_daily_qfq WHERE ..."` |
 | 单股 CSV 落盘 | CLI `export` | `marketdb export --thscode 300033.SZ --out out/300033.csv --adjust forward` |
-| 当天 / 最近几天补数据 | CLI `update-daily` | `marketdb update-daily --db data/market.duckdb` |
-| 落后太久 / 直接全量重建 | `bootstrap.sh` | 下载最新 parquet → `./bootstrap.sh`（自动检测）或 `./bootstrap.sh --force` |
+| 当天 / 最近几天补数据 | CLI `auto-sync` | `marketdb auto-sync --db data/market.duckdb` |
+| 落后太久 / 直接全量重建 | CLI `auto-sync` 或 `bootstrap.py` | `marketdb auto-sync`（自动判 FULL/INCREMENTAL）或 `python bootstrap.py --force` |
 | 看 DB 当前状态 | CLI `status --json` | `marketdb status --json --db data/market.duckdb` |
 | 自动探查 schema | CLI `describe` | `marketdb describe --db data/market.duckdb` |
 | 数据质量校验 | CLI `validate --json` | `marketdb validate --json --db data/market.duckdb` |
@@ -47,17 +47,20 @@ AI agent 读到本文件后，匹配以下关键词时应该触发：
 ## 准备工作（任何调用前都得先做）
 
 ```bash
-./bootstrap.sh                   # 安装包 + 建库 + 导入 parquet
+python bootstrap.py             # 安装包 + 建库 + auto-sync 拉数据（API 优先，本地兜底）
 # 如果包已经装好：
 marketdb status --db data/market.duckdb
 ```
 
-DB 缺失或太旧时，两条路径（完整流程见 [`../README.md#数据文件来源`](../README.md)）：
+DB 缺失或太旧时，一条命令即可：
 
-1. **本地有更新的 parquet** → 重跑 `./bootstrap.sh`，它会检测到新快照并询问是否重导。
-2. **REST 增量** → `marketdb update-daily --db data/market.duckdb`（需要 `.env` 里配好 `API_KEY`）。
+```bash
+marketdb auto-sync --db data/market.duckdb    # 需 .env 配好 API_KEY；不需要任何本地 Parquet
+```
 
-`update-daily` 在本地落后超过 `MARKETDB_MAX_LAG_TRADING_DAYS`（默认 7 个交易日）时会拒绝运行，提示回到路径 1。
+`auto-sync` 自动判定：本地为空 → FULL；落后 ≤ 7 个交易日 → INCREMENTAL（10 日增量 dump 合并）；落后 > 7 → 回退 FULL。复权事件每次都重拉。下载的临时 Parquet 落到 `data/.cache/dumps/`，应用后立即删除；下载失败自动重试 1 次，仍失败会提示到 [全市场数据导出](https://fuyao.aicubes.cn/docs/api-reference/market-dumps/) 手动下载并 `python bootstrap.py --prefer-local`。
+
+> 旧命令 `marketdb update-daily`（逐 thscode 走 REST）作为兼容入口保留。
 
 ---
 

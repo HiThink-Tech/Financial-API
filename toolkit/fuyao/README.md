@@ -1,6 +1,6 @@
 # toolkit/fuyao
 
-A tool-agnostic toolkit for calling the **同花顺金融数据 API (fuyao.aicubes.cn)** — a structured A-share financial data service offering 9 capabilities over REST + MCP. **Use this for remote / live data (snapshots, financials, ticker catalog). For local historical OHLCV go to [`../marketdb/`](../marketdb/README.md).**
+A tool-agnostic toolkit for calling the **同花顺金融数据 API (fuyao.aicubes.cn)** — a structured A-share financial data service offering 15 capabilities over REST + MCP. **Use this for remote / live data (snapshots, financials, ticker catalog, indices, 涨跌停). For local historical OHLCV go to [`../marketdb/`](../marketdb/README.md).**
 
 This folder is **the entry point for the remote API** for any human or AI agent (Claude Code, Codex, Cursor, ChatGPT, scripts in CI, Jupyter, …). It contains:
 
@@ -20,6 +20,8 @@ Trigger keywords (for AI agents reading this file in-context):
 - A股 / thscode / 贵州茅台 类的代码、涨跌幅、行情快照、历史 K 线、复权事件
 - 利润表 / 资产负债表 / 现金流量表 / 财报 / 营收 / 净利润
 - A 股代码表、交易日历
+- 同花顺指数 / 概念板块 / 行业指数 / 沪深 300 等指数的列表、成分股、行情快照、历史 K 线
+- 涨停股票池 / 连板天梯 / 涨跌停盘面复盘 / 短线情绪分析
 - 量化、回测、对账类脚本要拉 A 股结构化数据
 
 Do **not** trigger for: 宏观经济、海外行情、个股新闻 / 公告原文 / 研报。
@@ -56,6 +58,10 @@ from fuyao_client import (
     financials_balance_sheets,
     financials_cash_flow_statements,
     calendar_trading_days,
+    index_catalog_ths_index_list,
+    index_constituents_ths_stock_list,
+    index_prices_snapshot, index_prices_historical,
+    special_data_limit_up_pool, special_data_limit_up_ladder,
     FuyaoApiError,
 )
 
@@ -118,6 +124,19 @@ python3 toolkit/fuyao/scripts/fuyao.py financials-balance \
 # Corporate actions / calendar
 python3 toolkit/fuyao/scripts/fuyao.py corp-actions --thscode 600519.SH
 python3 toolkit/fuyao/scripts/fuyao.py calendar-trading-days
+
+# 指数 — 列表 / 成分股 / 快照 / 历史 K
+python3 toolkit/fuyao/scripts/fuyao.py index-catalog --tag cn_concept
+python3 toolkit/fuyao/scripts/fuyao.py index-constituents --thscode 000300.SH
+python3 toolkit/fuyao/scripts/fuyao.py index-snapshot --thscodes 000001.SH,399001.SZ,886042.TI
+python3 toolkit/fuyao/scripts/fuyao.py index-historical \
+    --thscode 000001.SH \
+    --start-ms 1716105600000 --end-ms 1747641600000
+
+# 涨跌停 — 涨停股票池（按日，分页+排序）/ 连板天梯（近 30 日 × 6 板位矩阵）
+python3 toolkit/fuyao/scripts/fuyao.py limit-up-pool \
+    --page 1 --size 50 --sort-field limit_up_time --sort-dir desc > /tmp/limit-up.json
+python3 toolkit/fuyao/scripts/fuyao.py limit-up-ladder > /tmp/ladder.json
 ```
 
 CLI emits JSON to stdout only (default `indent=2`, `--compact` for one-line). Persisting / format conversion is the caller's responsibility — there's intentionally **no** built-in csv / parquet writer. Convert outside:
@@ -135,7 +154,7 @@ Configure your MCP client (Claude Desktop / Cursor / Windsurf) to point at the A
 
 ---
 
-## Capability matrix (9 endpoints)
+## Capability matrix (15 endpoints)
 
 | Function | CLI subcommand | Notes |
 | --- | --- | --- |
@@ -148,6 +167,12 @@ Configure your MCP client (Claude Desktop / Cursor / Windsurf) to point at the A
 | `financials_balance_sheets` | `financials-balance` | same modes |
 | `financials_cash_flow_statements` | `financials-cashflow` | same modes |
 | `calendar_trading_days` | `calendar-trading-days` | No input; fixed `[today−1y, today]` |
+| `index_catalog_ths_index_list` | `index-catalog` | THS 指数清单；`tag` ∈ {cn_concept, region, tszs, industry}，单 tag 全量返回 |
+| `index_constituents_ths_stock_list` | `index-constituents` | 单只指数当前成分股；同时支持 THS 板块（`886042.TI`）和标准指数（`000300.SH`） |
+| `index_prices_snapshot` | `index-snapshot` | 指数快照；**只支持 batch by thscodes**，不支持全市场分页 |
+| `index_prices_historical` | `index-historical` | 指数历史 K 线；**无 adjust / offset**；窗口 >10y 自动切片去重 |
+| `special_data_limit_up_pool` | `limit-up-pool` | 涨停股票池；`size` 1-200，`sort_field` ∈ {last_price, continue_day_cnt, seal_money, limit_up_time}；省略 `date_ms` 取当日 |
+| `special_data_limit_up_ladder` | `limit-up-ladder` | 连板天梯；无入参，固定返回近 30 个交易日 × 6 板位矩阵 |
 
 Full per-endpoint contract: [`docs/api-cheatsheet.md`](docs/api-cheatsheet.md).
 Full field semantics: [`docs/llms-full.txt`](docs/llms-full.txt).

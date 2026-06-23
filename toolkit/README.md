@@ -37,6 +37,10 @@ toolkit/
 | 利润表 / 资产负债表 / 现金流量表 | ❌ | ✅ `financials-*` |
 | 标的目录（thscode → 名称） | ✅ `dim_symbol`（先 `sync-symbols`） | ✅ `tickers-list` |
 | 交易日历 | ✅ 通过 `raw_kline_daily.date` 推导 | ✅ `calendar-trading-days` |
+| 同花顺指数列表（概念/区域/特色/行业） | ❌ | ✅ `index-catalog` |
+| 指数成分股（沪深 300 / 板块 / 行业） | ❌ | ✅ `index-constituents` |
+| 指数行情快照 / 历史 K 线 | ❌ | ✅ `index-snapshot` / `index-historical` |
+| 涨停股票池 / 连板天梯 | ❌ | ✅ `limit-up-pool` / `limit-up-ladder` |
 | 分钟 K / tick | ❌ | ❌（本仓库不覆盖） |
 
 ### 按"动作"分
@@ -55,6 +59,10 @@ toolkit/
 | 拉某只票的财报 | `fuyao.py financials-income --thscode ...` | 远端 API |
 | 把名字翻成 thscode | `fuyao.py tickers-search --q "贵州茅台"` | 远端 API |
 | 查交易日历 | `fuyao.py calendar-trading-days` | 远端 API |
+| 查某个同花顺概念 / 板块的成分股 | `fuyao.py index-constituents --thscode 886042.TI` | 远端 API |
+| 查沪深 300 等标准指数的成分股 | `fuyao.py index-constituents --thscode 000300.SH` | 远端 API |
+| 拉指数行情 / 指数 K 线 | `fuyao.py index-snapshot` / `index-historical` | 远端 API |
+| 查当日涨停股票池 / 复盘短线情绪 | `fuyao.py limit-up-pool` / `limit-up-ladder` | 远端 API |
 
 ---
 

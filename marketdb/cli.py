@@ -10,6 +10,11 @@ from rich.console import Console
 from rich.table import Table
 
 from marketdb._version import SCHEMA_VERSION, __version__
+from marketdb.auth import (
+    MissingApiKeyError,
+    render_auth_failure,
+    require_api_key,
+)
 from marketdb.calculations.adjustment import rebuild_adjustment_factors
 from marketdb.checks.quality import run_quality_checks
 from marketdb.config import Settings
@@ -18,6 +23,12 @@ from marketdb.importers.parquet import (
     import_adjustment_events_parquet,
     import_kline_daily_parquet,
 )
+from marketdb.providers.dump import (
+    DumpAuthError,
+    DumpDownloader,
+    DumpDownloadError,
+    DumpNotReadyError,
+)
 from marketdb.providers.rest import RestProvider
 from marketdb.schema import (
     check_compatibility,
@@ -25,6 +36,7 @@ from marketdb.schema import (
     init_schema,
     rebuild_views,
 )
+from marketdb.updaters.auto import auto_sync as _auto_sync_run
 from marketdb.updaters.daily import sync_symbols, update_daily
 
 app = typer.Typer(
@@ -164,6 +176,78 @@ def sync_symbols_cmd(
     )
     n = sync_symbols(con, provider)
     console.print(f"[green]dim_symbol[/green] upserted rows={n}")
+    con.close()
+
+
+@app.command("auto-sync")
+def auto_sync_cmd(
+    db: Path = typer.Option(None, "--db", help="DuckDB file path"),
+    cache_dir: Path = typer.Option(
+        None, "--cache-dir",
+        help="Override the dump cache directory (default: <db>/.cache/dumps).",
+    ),
+    keep_cache: bool = typer.Option(
+        False, "--keep-cache",
+        help="Keep downloaded parquet files after apply (debug only).",
+    ),
+    force: bool = typer.Option(
+        False, "--force",
+        help="Escalate SKIP to FULL: even when local data is up to date, "
+             "re-download daily-k and re-apply.",
+    ),
+    target: str = typer.Option(
+        None, "--target", help="Override target trading day (YYYY-MM-DD).",
+    ),
+) -> None:
+    """Auto-decide FULL vs INCREMENTAL dump download, apply, and clean up."""
+    settings = _settings(db)
+    try:
+        api_key = require_api_key(settings.api_key, console=console)
+    except MissingApiKeyError:
+        raise typer.Exit(code=2)
+    from datetime import date as _date
+    target_date = _date.fromisoformat(target) if target else None
+    con = connect(settings.db_path)
+    check_compatibility(con)
+    downloader = DumpDownloader(
+        api_base_url=settings.api_base_url,
+        api_key=api_key,
+        cache_dir=Path(cache_dir) if cache_dir else settings.dump_cache_dir,
+        retries=settings.dump_download_retries,
+    )
+    provider = RestProvider(
+        base_url=settings.base_url,
+        api_key=api_key,
+        min_interval_seconds=settings.rest_min_interval_seconds,
+    )
+    try:
+        result = _auto_sync_run(
+            con,
+            downloader=downloader,
+            provider=provider,
+            keep_cache=keep_cache or settings.dump_keep_cache,
+            force=force,
+            target=target_date,
+            log=lambda m: console.print(f"[dim]{m}[/dim]"),
+        )
+    except DumpAuthError as exc:
+        render_auth_failure(exc.message, console=console)
+        con.close()
+        raise typer.Exit(code=2)
+    except DumpNotReadyError as exc:
+        console.print(f"[yellow]dump not ready:[/yellow] {exc}")
+        con.close()
+        raise typer.Exit(code=3)
+    except DumpDownloadError as exc:
+        console.print(
+            f"[red]dump download failed after retry:[/red] {exc}\n"
+            f"  请到 https://fuyao.aicubes.cn/docs/api-reference/market-dumps/ 手动下载对应 Parquet,\n"
+            f"  放入 {settings.dump_cache_dir} 或自定义路径, 然后重跑\n"
+            f"  `marketdb auto-sync` 或 `python bootstrap.py --prefer-local`."
+        )
+        con.close()
+        raise typer.Exit(code=1)
+    console.print_json(json.dumps(result, ensure_ascii=False))
     con.close()
 
 

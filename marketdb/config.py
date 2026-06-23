@@ -26,6 +26,11 @@ class Settings:
     data_root: Path
     max_lag_trading_days: int
     rest_min_interval_seconds: float
+    # Dump (Parquet) download channel — see docs/api-market-dumps-download-url.md.
+    api_base_url: str
+    dump_cache_dir: Path
+    dump_keep_cache: bool
+    dump_download_retries: int
 
     @classmethod
     def load(
@@ -45,6 +50,14 @@ class Settings:
             or os.getenv("MARKETDB_DATA_ROOT")
             or "./refer-to/data"
         ).expanduser()
+        cache_override = os.getenv("MARKETDB_DUMP_CACHE_DIR")
+        # Cache lives under the project data root (./data/.cache/dumps by default)
+        # so it stays close to the DB and is easy to clean.
+        resolved_cache = (
+            Path(cache_override).expanduser()
+            if cache_override
+            else resolved_db.parent / ".cache" / "dumps"
+        )
         return cls(
             api_key=os.getenv("API_KEY") or None,
             base_url=os.getenv("BASE_URL", "https://fuyao.aicubes.cn").rstrip("/"),
@@ -60,4 +73,10 @@ class Settings:
             rest_min_interval_seconds=float(
                 os.getenv("MARKETDB_REST_MIN_INTERVAL_SECONDS", "0.2")
             ),
+            api_base_url=os.getenv(
+                "MARKETDB_API_BASE_URL", "https://fuyao.aicubes.cn"
+            ).rstrip("/"),
+            dump_cache_dir=resolved_cache,
+            dump_keep_cache=os.getenv("MARKETDB_DUMP_KEEP_CACHE", "0") not in ("", "0", "false", "False"),
+            dump_download_retries=int(os.getenv("MARKETDB_DUMP_DOWNLOAD_RETRIES", "1")),
         )

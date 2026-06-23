@@ -8,17 +8,26 @@
 - [用 AI 助手快速接入](https://fuyao.aicubes.cn/ai-quickstart.md): 让 ChatGPT / Claude / Cursor 帮你 3 分钟内完成第一次 API 或 MCP 调用
 - [同花顺金融数据API](https://fuyao.aicubes.cn/docs/): 面向 AI Agent / 量化研究 / Fintech 应用的结构化金融数据服务
 - [项目介绍](https://fuyao.aicubes.cn/docs/introduction/): 同花顺金融数据产品的能力范围与接入方式
-- [快速开始](https://fuyao.aicubes.cn/docs/quickstart/): 3 步获取 API Token 并发起第一次调用
+- [快速开始](https://fuyao.aicubes.cn/docs/quickstart/): 3 步获取 API Key 并发起第一次调用
 
 ## REST API 参考
 
 - [API 参考](https://fuyao.aicubes.cn/docs/api-reference/overview/): REST API 端点总览
 - [价格数据](https://fuyao.aicubes.cn/docs/api-reference/prices/): A 股行情快照与历史 K 线接口
-- [全市场数据导出](https://fuyao.aicubes.cn/docs/api-reference/market-dumps/): A 股全市场历史 K 线与复权因子 Parquet 文件下载
-- [标的检索与目录](https://fuyao.aicubes.cn/docs/api-reference/tickers/): 跨市场标的检索与代码表批量获取
-- [公司行动](https://fuyao.aicubes.cn/docs/api-reference/corporate-actions/): A 股复权因子事件流（分红 / 送股 / 配股）
+- [全市场数据导出](https://fuyao.aicubes.cn/docs/api-reference/market-dumps/): A 股全市场 10 年日 K、最近 10 交易日日 K 与复权因子 Parquet 文件下载
+- [标的检索](https://fuyao.aicubes.cn/docs/api-reference/ticker-search/): 按 thscode / ticker / 名称做跨市场消歧检索
+- [除复权](https://fuyao.aicubes.cn/docs/api-reference/corporate-actions/): A 股复权因子事件流（分红 / 送股 / 配股）
+- [标的列表获取](https://fuyao.aicubes.cn/docs/api-reference/ticker-list/): 按交易所 / 资产类别批量获取代码表
 - [财务报表](https://fuyao.aicubes.cn/docs/api-reference/financials/): A 股整体合并利润表 / 资产负债表 / 现金流量表多期序列
 - [交易日历](https://fuyao.aicubes.cn/docs/api-reference/calendar/): A 股近一年交易日序列
+- [指数数据](https://fuyao.aicubes.cn/docs/api-reference/a-share-index/): 同花顺指数 / 板块的列表、成分股、行情快照与历史 K 线
+- [特色数据](https://fuyao.aicubes.cn/docs/api-reference/special-data/): A 股涨跌停数据：涨停股票池与连板天梯
+- [财务指标数据](https://fuyao.aicubes.cn/docs/api-reference/financial-indicators/): A 股财务指标接口（敬请期待）
+- [指数概况](https://fuyao.aicubes.cn/docs/api-reference/index-overview/): 指数基本信息、成分股、权重接口（敬请期待）
+- [资金流向](https://fuyao.aicubes.cn/docs/api-reference/money-flow/): A 股资金流向接口（敬请期待）
+- [股票基础信息](https://fuyao.aicubes.cn/docs/api-reference/stock-basics/): A 股标的基础信息接口（敬请期待）
+- [股票所属同花顺指数查询](https://fuyao.aicubes.cn/docs/api-reference/ths-index-membership/): 按个股反查所属同花顺行业/概念指数（敬请期待）
+- [估值数据](https://fuyao.aicubes.cn/docs/api-reference/valuations/): A 股估值数据接口（敬请期待）
 
 ## MCP 接入
 
@@ -31,8 +40,20 @@
 - [资产负债表](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_financials_balance_sheets/): 单只 A 股的整体合并资产负债表多期序列
 - [现金流量表](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_financials_cash_flow_statements/): 单只 A 股的整体合并现金流量表多期序列
 - [利润表](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_financials_income_statements/): 单只 A 股的整体合并利润表多期序列
+- [财务指标数据](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_financials_indicators/): A 股财务指标 MCP 工具（敬请期待）
+- [同花顺指数列表](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_index_catalog_ths_index_list/): 按 tag 列出同花顺指数清单
+- [同花顺指数成分股](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_index_constituents_ths_stock_list/): 按指数 thscode 取当前成分股清单
+- [指数概况](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_index_overview/): 指数基本信息、成分股、权重 MCP 工具（敬请期待）
+- [指数历史K线](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_index_prices_historical/): 单只 A 股指数、同花顺板块或行业指数的历史 K 线序列
+- [指数行情快照](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_index_prices_snapshot/): 按 thscodes 批量获取 A 股指数、同花顺板块或行业指数的最新行情
+- [资金流向](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_money_flow/): A 股资金流向 MCP 工具（敬请期待）
 - [A股历史K线](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_prices_historical/): 单只标的的 A 股历史 K 线序列
 - [A股行情快照](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_prices_snapshot/): A 股行情快照（按 thscodes 批量或全市场分页）
-- [标的目录（代码表浏览）](https://fuyao.aicubes.cn/docs/mcp/tools/get_meta_tickers_list/): 批量获取代码表（按交易所 / 资产类别过滤）
+- [A股连板天梯](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_special_data_limit_up_ladder/): 返回近 30 个交易日的连板梯队矩阵
+- [A股涨停股票池](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_special_data_limit_up_pool/): 按交易日返回 A 股涨停 / 连板股票池
+- [股票基础信息查询](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_stock_basics/): A 股标的基础信息查询 MCP 工具（敬请期待）
+- [股票所属同花顺指数查询](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_ths_index_membership/): 按个股反查所属同花顺行业/概念指数 MCP 工具（敬请期待）
+- [估值数据](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_valuations/): A 股估值数据 MCP 工具（敬请期待）
+- [标的列表获取](https://fuyao.aicubes.cn/docs/mcp/tools/get_meta_tickers_list/): 批量获取代码表（按交易所 / 资产类别过滤）
 - [标的检索（跨市场消歧）](https://fuyao.aicubes.cn/docs/mcp/tools/get_meta_tickers_search/): 公司名 / 代码片段解析为标准 thscode
 

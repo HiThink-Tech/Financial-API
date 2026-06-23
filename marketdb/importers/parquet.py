@@ -22,11 +22,40 @@ def _shanghai_date_expr(column: str) -> str:
 def import_kline_daily_parquet(
     con: duckdb.DuckDBPyConnection,
     parquet_path: str | Path,
+    *,
+    overwrite: bool = True,
 ) -> int:
-    """Load full daily-K parquet into raw_kline_daily via DuckDB read_parquet."""
+    """Load a daily-K parquet file into raw_kline_daily.
+
+    When ``overwrite=True`` (full dump), rows are upserted by primary key.
+    When ``overwrite=False`` (incremental 10d dump), the window covered by the
+    file is deleted first so a re-merged file produces no duplicates and no
+    stale rows past the window edge.
+    """
     path = str(Path(parquet_path))
     batch_id = new_batch_id("parquet-kline")
     record_batch_start(con, batch_id=batch_id, source="parquet", kind="kline_daily", notes=path)
+
+    if not overwrite:
+        # Compute the dump's date window once and clear that slice. We only
+        # touch the unadjusted rows because that's the slice the dump writes.
+        window = con.execute(
+            f"""
+            SELECT
+                MIN({_shanghai_date_expr('date_ms')}) AS min_d,
+                MAX({_shanghai_date_expr('date_ms')}) AS max_d
+            FROM read_parquet(?)
+            WHERE adjusted = 'none'
+            """,
+            [path],
+        ).fetchone()
+        min_d, max_d = (window[0], window[1]) if window else (None, None)
+        if min_d is not None and max_d is not None:
+            con.execute(
+                "DELETE FROM raw_kline_daily WHERE adjusted = 'none' "
+                "AND date BETWEEN ? AND ?",
+                [min_d, max_d],
+            )
 
     con.execute(
         f"""
@@ -63,7 +92,12 @@ def import_adjustment_events_parquet(
     con: duckdb.DuckDBPyConnection,
     parquet_path: str | Path,
 ) -> int:
-    """Load full adjustment-factors parquet into raw_adjustment_events."""
+    """Replace raw_adjustment_events with the contents of a full event dump.
+
+    Adjustment events are published as a full snapshot, so each import wipes the
+    table before inserting — this guarantees deletions on the server side are
+    reflected locally and keeps factor recomputation deterministic.
+    """
     path = str(Path(parquet_path))
     batch_id = new_batch_id("parquet-adj")
     record_batch_start(
@@ -74,6 +108,7 @@ def import_adjustment_events_parquet(
         notes=path,
     )
 
+    con.execute("DELETE FROM raw_adjustment_events")
     con.execute(
         f"""
         INSERT OR REPLACE INTO raw_adjustment_events

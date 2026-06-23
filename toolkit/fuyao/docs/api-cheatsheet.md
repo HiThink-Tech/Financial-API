@@ -1,4 +1,4 @@
-# Fuyao API Cheatsheet (9 capabilities)
+# Fuyao API Cheatsheet (15 capabilities)
 
 Base URL: `https://fuyao.aicubes.cn`
 Auth: `X-api-key: <token>` (REST) · `API_KEY` env var (MCP)
@@ -59,11 +59,51 @@ Field conventions:
 - Window is fixed: `[today - 1 year, today]` (Asia/Shanghai).
 - Returns: `{timestamp, item: [{date_ms, date "yyyyMMdd"}...]}` sorted ASC.
 
+## 10. `GET /api/a-share-index/catalog/ths-index-list`
+- MCP tool: `get_a_share_index_catalog_ths_index_list`
+- Optional: `tag` ∈ {cn_concept (default), region, tszs, industry}. Case-insensitive.
+- Whole-tag dump (no paging).
+- Returns: `{timestamp, item: [{thscode, name}...]}`. 指数维度不暴露纯 `ticker`。
+
+## 11. `GET /api/a-share-index/constituents/ths-stock-list`
+- MCP tool: `get_a_share_index_constituents_ths_stock_list`
+- Required: `thscode` (single — `886042.TI` 同花顺板块 OR `000300.SH` 沪深 300 等标准指数). 不接受逗号。
+- Returns: `{timestamp, item: [{thscode, ticker, name}...]}`.
+
+## 12. `GET /api/a-share-index/prices/snapshot`
+- MCP tool: `get_a_share_index_prices_snapshot`
+- Required: `thscodes` (comma-list — index thscodes). **No full-market mode**; empty input is rejected.
+- `limit` / `offset` exist for signature parity with a-share snapshot but have **no effect**.
+- Returns: same `SnapshotData` shape as `/api/a-share/prices/snapshot`.
+
+## 13. `GET /api/a-share-index/prices/historical`
+- MCP tool: `get_a_share_index_prices_historical`
+- Required: `thscode` (single, no comma), `interval` ∈ {1d (default), 1w, 1mo}, `start` (ms), `end` (ms).
+- No `adjust`, no `offset` — indices don't have 复权 semantics; response `data.adjust` is always `null`.
+- **HARD LIMIT**: `end - start` ≤ 10 years → otherwise `code=1003`. Client auto-slices.
+- Returns: same `PriceBarItem` shape as a-share historical.
+
+## 14. `GET /api/a-share/special-data/limit-up-pool`
+- MCP tool: `get_a_share_special_data_limit_up_pool`
+- Optional: `date_ms` (00:00 Asia/Shanghai; omit → server today), `page` ≥1 (default 1), `size` 1-200 (default 50), `sort_field` ∈ {last_price (default), continue_day_cnt, seal_money, limit_up_time}, `sort_dir` ∈ {asc, desc (default)}.
+- Backend pool is fixed to all 连板 + `main,chinext,ssestar,north` 四类板块 — not configurable.
+- Returns: `{timestamp, pagination:{total, pages, size, page}, item: [{thscode, ticker, name, is_st, is_new, last_price, price_change_ratio_pct, limit_up_time, limit_up_reason, continue_day_text, continue_day_cnt, seal_money, max_seal_money}...]}`.
+- Errors: bad `sort_field` → `1002`; `page<1` or `size∉[1,200]` → `1003`.
+
+## 15. `GET /api/a-share/special-data/limit-up-ladder`
+- MCP tool: `get_a_share_special_data_limit_up_ladder`
+- No input parameters.
+- Returns 近 30 个交易日的连板矩阵：`{timestamp, window:{length, date_list, board_caps}, item: [{date, boards:{two_board, three_board, four_board, five_board, six_board, seven_over}}...]}`.
+- Each `boards.*` is capped at 4 stocks; missing boards return `[]`.
+- `boards.*[].seal_nextday` is `null` for the most recent trading day (no next-day reference).
+
 ---
 
 ## Common pitfalls
 - HTTP 200 + non-zero `code` is a business error. Check `code` first.
 - Don't pass pure 6-digit codes — always include exchange suffix.
 - For financials, choose ONE mode: recent-N (`limit`) OR date-range (`start`+`end`). Mixing returns `1004`.
-- Historical K-line: split windows >10y on the client. `fuyao_client.prices_historical` handles this automatically.
-- Snapshot full-market mode: loop pages until `len(item) < limit`.
+- Historical K-line: split windows >10y on the client. `fuyao_client.prices_historical` / `index_prices_historical` handle this automatically.
+- Snapshot full-market mode: loop pages until `len(item) < limit`. **Index snapshot has no full-market mode** — you must supply `thscodes`.
+- Index endpoints have no `adjust` / no `offset`. Index thscode supports both THS suffixes (`.TI`) and standard exchange suffixes (`.SH` / `.SZ`).
+- Limit-up pool defaults to today; pass `date_ms` for historical days. The pool is sorted by `last_price desc` by default — pass `--sort-field limit_up_time` for time-of-day ordering.

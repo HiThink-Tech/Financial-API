@@ -1,6 +1,6 @@
 ---
 name: financial-api
-description: Use when working with financial data in this repository, including market data, historical prices, live snapshots, financial statements, symbol lookup, trading calendars, adjustment factors, local databases, remote APIs, SQL queries, exports, or toolkit-based data access. 适用于本仓库内金融数据取数、查询、分析、导出等任务；必须先扫描 toolkit 判断当前支持的数据类型和资产范围。
+description: Use when working with financial data in this repository, including market data, historical prices, live snapshots, financial statements, symbol lookup, trading calendars, adjustment factors, THS index catalogs / constituents / index K-lines (含沪深 300 / 概念板块 / 行业指数), limit-up stock pool / consecutive-board ladder (涨停股票池 / 连板天梯), local databases, remote APIs, SQL queries, exports, or toolkit-based data access. 适用于本仓库内金融数据取数、查询、分析、导出等任务；必须先扫描 toolkit 判断当前支持的数据类型和资产范围。
 ---
 
 # Financial API
@@ -25,7 +25,7 @@ description: Use when working with financial data in this repository, including 
 
 - 本地历史行情、复权因子、面板、因子研究、对本地数据库写 SQL：
   读取 `toolkit/marketdb/README.md`
-- 远端或新鲜数据、实时快照、财报、标的目录、交易日历：
+- 远端或新鲜数据、实时快照、财报、标的目录、交易日历、**同花顺指数（含板块/行业/沪深 300）的列表与成分股 / 指数行情**、**涨停股票池 / 连板天梯**：
   读取 `toolkit/fuyao/README.md`
 
 如果 `toolkit/README.md` 后续新增了其他数据域或资产类别，按那里的最新路由执行。

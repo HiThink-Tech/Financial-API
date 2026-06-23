@@ -1,4 +1,4 @@
-"""Fuyao (fuyao.aicubes.cn) API client — 9 capabilities as typed functions.
+"""Fuyao (fuyao.aicubes.cn) API client — 15 capabilities as typed functions.
 
 Design contract (so AI tools can use this without re-reading llms-full.txt):
 - Every capability is a top-level function with full type annotations.
@@ -521,6 +521,149 @@ def calendar_trading_days() -> list[dict]:
     return data.get("item", [])
 
 
+# ---------------------------------------------------------------------------
+# 10/11. A-share index — catalog & constituents
+# ---------------------------------------------------------------------------
+
+
+_THS_INDEX_TAGS = ("cn_concept", "region", "tszs", "industry")
+
+
+def index_catalog_ths_index_list(
+    tag: Literal["cn_concept", "region", "tszs", "industry"] = "cn_concept",
+) -> list[dict]:
+    """List 同花顺指数 (whole tag dump, no paging)."""
+    if tag.lower() not in _THS_INDEX_TAGS:
+        raise ValueError(f"tag must be one of {_THS_INDEX_TAGS}; got {tag!r}")
+    data = _get(
+        "/api/a-share-index/catalog/ths-index-list", {"tag": tag.lower()}
+    )
+    return data.get("item", [])
+
+
+def index_constituents_ths_stock_list(thscode: str) -> list[dict]:
+    """Current constituents of a single index (THS block or standard index like 000300.SH)."""
+    _validate_thscode(thscode)
+    data = _get(
+        "/api/a-share-index/constituents/ths-stock-list", {"thscode": thscode}
+    )
+    return data.get("item", [])
+
+
+# ---------------------------------------------------------------------------
+# 12/13. A-share index — prices snapshot & historical
+# ---------------------------------------------------------------------------
+
+
+def index_prices_snapshot(thscodes: Iterable[str]) -> list[dict]:
+    """Index snapshot — batch by thscodes ONLY. Empty input is rejected upstream
+    (unlike a-share snapshot, there is no full-market mode for indices).
+    """
+    codes = list(thscodes) if thscodes is not None else []
+    if not codes:
+        raise ValueError("index_prices_snapshot requires non-empty thscodes")
+    data = _get(
+        "/api/a-share-index/prices/snapshot", {"thscodes": ",".join(codes)}
+    )
+    return data.get("item", [])
+
+
+def index_prices_historical(
+    thscode: str,
+    start_ms: int,
+    end_ms: int,
+    *,
+    interval: Literal["1d", "1w", "1mo"] = "1d",
+) -> list[dict]:
+    """Index historical K-line for a single thscode. Auto-slices >10y windows.
+
+    Indices have no adjust / offset semantics; both are absent from the upstream contract.
+    """
+    _validate_thscode(thscode)
+    if interval not in ("1d", "1w", "1mo"):
+        raise ValueError(f"interval must be one of 1d/1w/1mo; got {interval!r}")
+    if not isinstance(start_ms, int) or not isinstance(end_ms, int):
+        raise ValueError("start_ms / end_ms must be int milliseconds")
+    if end_ms < start_ms:
+        raise ValueError("end_ms must be >= start_ms")
+
+    slices: list[tuple[int, int]] = []
+    cur = start_ms
+    while cur < end_ms:
+        nxt = min(cur + TEN_YEARS_MS, end_ms)
+        slices.append((cur, nxt))
+        cur = nxt + 1
+
+    all_bars: list[dict] = []
+    seen: set[int] = set()
+    for s, e in slices:
+        data = _get(
+            "/api/a-share-index/prices/historical",
+            {"thscode": thscode, "interval": interval, "start": s, "end": e},
+        )
+        for bar in data.get("item", []):
+            d = bar.get("date_ms")
+            if d in seen:
+                continue
+            seen.add(d)
+            all_bars.append(bar)
+    all_bars.sort(key=lambda b: b.get("date_ms", 0))
+    return all_bars
+
+
+# ---------------------------------------------------------------------------
+# 14/15. Special data — limit-up pool & limit-up ladder
+# ---------------------------------------------------------------------------
+
+
+_LIMIT_UP_SORT_FIELDS = ("last_price", "continue_day_cnt", "seal_money", "limit_up_time")
+
+
+def special_data_limit_up_pool(
+    *,
+    date_ms: int | None = None,
+    page: int = 1,
+    size: int = 50,
+    sort_field: Literal[
+        "last_price", "continue_day_cnt", "seal_money", "limit_up_time"
+    ] = "last_price",
+    sort_dir: Literal["asc", "desc"] = "desc",
+) -> dict[str, Any]:
+    """涨停股票池 — returns the full envelope {timestamp, pagination, item: [...]}.
+
+    Pagination is exposed (size 1-200) so callers can drive their own loop.
+    Omit date_ms to fall back to today (Asia/Shanghai).
+    """
+    if page < 1:
+        raise ValueError("page must be >= 1")
+    if not (1 <= size <= 200):
+        raise ValueError("size must be in [1, 200]")
+    if sort_field not in _LIMIT_UP_SORT_FIELDS:
+        raise ValueError(
+            f"sort_field must be one of {_LIMIT_UP_SORT_FIELDS}; got {sort_field!r}"
+        )
+    if sort_dir not in ("asc", "desc"):
+        raise ValueError("sort_dir must be 'asc' or 'desc'")
+    return _get(
+        "/api/a-share/special-data/limit-up-pool",
+        {
+            "date_ms": date_ms,
+            "page": page,
+            "size": size,
+            "sort_field": sort_field,
+            "sort_dir": sort_dir,
+        },
+    )
+
+
+def special_data_limit_up_ladder() -> dict[str, Any]:
+    """连板天梯 — returns full envelope {timestamp, window, item: [...]}.
+
+    No input params; upstream fixes the window at 30 trading days, board cap 4 each.
+    """
+    return _get("/api/a-share/special-data/limit-up-ladder", {})
+
+
 __all__ = [
     "FuyaoApiError",
     "tickers_search",
@@ -532,4 +675,10 @@ __all__ = [
     "financials_balance_sheets",
     "financials_cash_flow_statements",
     "calendar_trading_days",
+    "index_catalog_ths_index_list",
+    "index_constituents_ths_stock_list",
+    "index_prices_snapshot",
+    "index_prices_historical",
+    "special_data_limit_up_pool",
+    "special_data_limit_up_ladder",
 ]
