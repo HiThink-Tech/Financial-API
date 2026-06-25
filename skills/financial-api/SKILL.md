@@ -44,6 +44,7 @@ description: Use when working with financial data in this repository, including 
 - 可以机会性检查 GitHub 公网快照是否有更新，但不得打断用户当前任务。
 - 更新提示基于本地缓存中的 `HiThink-Tech/Financial-API` `main` commit 结果；缓存过期时只触发异步刷新，不等待 GitHub 请求完成。
 - 如果缓存显示公网 `main` commit 新于本地 checkout，在任务完成后再询问用户是否需要更新。
+- 同一个本地完整 SHA 和同一个远端完整 SHA 在提示冷却期内最多提示一次；不要在频繁金融查询或连续工具调用中重复占用用户终端或 agent 上下文。
 - 展示版本时使用短 SHA 和 commit 时间；内部比较必须使用完整 SHA。
 - 不要自动执行 `git pull`，除非用户明确同意。
 - 检查失败、网络不可用、非 git 安装或源码下载包场景全部静默；失败后进入本地冷却期，避免反复访问 GitHub。

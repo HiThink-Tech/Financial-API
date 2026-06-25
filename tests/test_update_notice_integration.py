@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import subprocess
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -18,6 +19,21 @@ def test_marketdb_main_emits_update_notice_after_app(monkeypatch) -> None:
     cli.main()
 
     assert calls == ["app", "notice"]
+
+
+def test_update_notice_import_does_not_load_pandas() -> None:
+    proc = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "import sys; import marketdb.update_notice; print('pandas' in sys.modules)",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    assert proc.stdout.strip() == "False"
 
 
 def test_fuyao_main_keeps_stdout_json_and_notice_on_stderr(monkeypatch, capsys) -> None:

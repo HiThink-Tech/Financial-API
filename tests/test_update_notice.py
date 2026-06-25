@@ -54,6 +54,25 @@ def test_check_for_update_returns_none_for_non_git_directory(tmp_path) -> None:
     assert notice is None
 
 
+def test_get_local_version_uses_single_git_call(tmp_path, monkeypatch) -> None:
+    from marketdb import update_notice
+
+    calls = []
+
+    def fake_run_git(repo_path, *args):
+        calls.append(args)
+        return "a" * 40 + "\x00" + "2026-06-25T10:00:00+00:00"
+
+    monkeypatch.setattr(update_notice, "_run_git", fake_run_git)
+
+    local = update_notice.get_local_version(tmp_path)
+
+    assert local is not None
+    assert local.sha == "a" * 40
+    assert local.commit_time == "2026-06-25T10:00:00+00:00"
+    assert calls == [("show", "-s", "--format=%H%x00%cI", "HEAD")]
+
+
 def test_check_for_update_uses_fresh_cache_without_remote_fetch(tmp_path) -> None:
     from marketdb.update_notice import check_for_update
 
@@ -279,3 +298,163 @@ def test_render_notice_writes_to_stderr_style_stream() -> None:
     assert "2222222" in text
     assert "1111111" in text
     assert "git pull origin main" in text
+
+
+def test_maybe_emit_update_notice_records_notice_and_suppresses_repeat(tmp_path) -> None:
+    from io import StringIO
+
+    from marketdb import update_notice
+
+    repo, _local_sha = _make_git_repo(tmp_path)
+    cache_path = tmp_path / "cache.json"
+    now = datetime(2026, 6, 25, 10, 0, tzinfo=timezone.utc)
+    update_notice._write_cached_remote(
+        cache_path,
+        update_notice.RemoteVersion(
+            sha="f" * 40,
+            short_sha="fffffff",
+            commit_time="2026-06-25T01:00:00Z",
+        ),
+        now,
+    )
+
+    first = StringIO()
+    update_notice.maybe_emit_update_notice(
+        repo_path=repo,
+        cache_path=cache_path,
+        now=now,
+        stream=first,
+    )
+
+    second = StringIO()
+    update_notice.maybe_emit_update_notice(
+        repo_path=repo,
+        cache_path=cache_path,
+        now=now + timedelta(minutes=1),
+        stream=second,
+    )
+
+    assert "[update]" in first.getvalue()
+    assert second.getvalue() == ""
+    payload = json.loads(cache_path.read_text(encoding="utf-8"))
+    assert payload["notice_shown_at"] == now.isoformat()
+    assert payload["notice_remote_sha"] == "f" * 40
+
+
+def test_notice_ttl_expired_allows_repeat_notice(tmp_path) -> None:
+    from io import StringIO
+
+    from marketdb import update_notice
+
+    repo, _local_sha = _make_git_repo(tmp_path)
+    cache_path = tmp_path / "cache.json"
+    now = datetime(2026, 6, 25, 10, 0, tzinfo=timezone.utc)
+    update_notice._write_cached_remote(
+        cache_path,
+        update_notice.RemoteVersion(
+            sha="f" * 40,
+            short_sha="fffffff",
+            commit_time="2026-06-25T01:00:00Z",
+        ),
+        now,
+    )
+
+    update_notice.maybe_emit_update_notice(
+        repo_path=repo,
+        cache_path=cache_path,
+        now=now,
+        notice_ttl_seconds=60,
+        stream=StringIO(),
+    )
+    repeated = StringIO()
+    update_notice.maybe_emit_update_notice(
+        repo_path=repo,
+        cache_path=cache_path,
+        now=now + timedelta(seconds=61),
+        notice_ttl_seconds=60,
+        stream=repeated,
+    )
+
+    assert "[update]" in repeated.getvalue()
+
+
+def test_remote_sha_change_allows_repeat_notice_within_ttl(tmp_path) -> None:
+    from io import StringIO
+
+    from marketdb import update_notice
+
+    repo, _local_sha = _make_git_repo(tmp_path)
+    cache_path = tmp_path / "cache.json"
+    now = datetime(2026, 6, 25, 10, 0, tzinfo=timezone.utc)
+    update_notice._write_cached_remote(
+        cache_path,
+        update_notice.RemoteVersion(
+            sha="f" * 40,
+            short_sha="fffffff",
+            commit_time="2026-06-25T01:00:00Z",
+        ),
+        now,
+    )
+    update_notice.maybe_emit_update_notice(
+        repo_path=repo,
+        cache_path=cache_path,
+        now=now,
+        stream=StringIO(),
+    )
+
+    update_notice._write_cached_remote(
+        cache_path,
+        update_notice.RemoteVersion(
+            sha="e" * 40,
+            short_sha="eeeeeee",
+            commit_time="2026-06-25T02:00:00Z",
+        ),
+        now + timedelta(minutes=1),
+    )
+    repeated = StringIO()
+    update_notice.maybe_emit_update_notice(
+        repo_path=repo,
+        cache_path=cache_path,
+        now=now + timedelta(minutes=2),
+        stream=repeated,
+    )
+
+    assert "eeeeeee" in repeated.getvalue()
+
+
+def test_local_sha_change_allows_repeat_notice_within_ttl(tmp_path) -> None:
+    from io import StringIO
+
+    from marketdb import update_notice
+
+    repo, _local_sha = _make_git_repo(tmp_path)
+    cache_path = tmp_path / "cache.json"
+    now = datetime(2026, 6, 25, 10, 0, tzinfo=timezone.utc)
+    update_notice._write_cached_remote(
+        cache_path,
+        update_notice.RemoteVersion(
+            sha="f" * 40,
+            short_sha="fffffff",
+            commit_time="2026-06-25T01:00:00Z",
+        ),
+        now,
+    )
+    update_notice.maybe_emit_update_notice(
+        repo_path=repo,
+        cache_path=cache_path,
+        now=now,
+        stream=StringIO(),
+    )
+
+    (repo / "README.md").write_text("hello again\n", encoding="utf-8")
+    _git(repo, "add", "README.md")
+    _git(repo, "commit", "-m", "second")
+    repeated = StringIO()
+    update_notice.maybe_emit_update_notice(
+        repo_path=repo,
+        cache_path=cache_path,
+        now=now + timedelta(minutes=1),
+        stream=repeated,
+    )
+
+    assert "[update]" in repeated.getvalue()

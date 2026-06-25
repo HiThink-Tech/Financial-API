@@ -17,6 +17,7 @@ DEFAULT_TTL_SECONDS = 86400
 DEFAULT_FAILURE_TTL_SECONDS = 21600
 DEFAULT_REFRESH_TTL_SECONDS = 300
 DEFAULT_TIMEOUT_SECONDS = 3.0
+DEFAULT_NOTICE_TTL_SECONDS = 86400
 
 
 @dataclass(frozen=True)
@@ -73,13 +74,14 @@ def _default_repo_path() -> Path:
 
 def get_local_version(repo_path: Path | None = None) -> LocalVersion | None:
     repo = (repo_path or _default_repo_path()).resolve()
-    top_level = _run_git(repo, "rev-parse", "--show-toplevel")
-    if not top_level:
+    output = _run_git(repo, "show", "-s", "--format=%H%x00%cI", "HEAD")
+    if not output:
         return None
-    sha = _run_git(repo, "rev-parse", "HEAD")
-    if not sha:
+    parts = output.split("\x00", 1)
+    sha = parts[0]
+    if len(parts) != 2 or not sha:
         return None
-    commit_time = _run_git(repo, "log", "-1", "--format=%cI")
+    commit_time = parts[1] or None
     return LocalVersion(sha=sha, short_sha=sha[:7], commit_time=commit_time)
 
 
@@ -197,6 +199,38 @@ def _write_cached_remote(cache_path: Path, remote: RemoteVersion, now: datetime)
     _write_cache_payload(cache_path, payload)
 
 
+def _notice_recently_shown(
+    *,
+    cache_path: Path,
+    notice: UpdateNotice,
+    now: datetime,
+    notice_ttl_seconds: int,
+) -> bool:
+    if notice_ttl_seconds <= 0:
+        return False
+    payload = _load_cache_payload(cache_path)
+    shown_at = _parse_cached_datetime(payload.get("notice_shown_at"))
+    if shown_at is None:
+        return False
+    if payload.get("notice_local_sha") != notice.local_sha:
+        return False
+    if payload.get("notice_remote_sha") != notice.remote_sha:
+        return False
+    return (now - shown_at).total_seconds() <= notice_ttl_seconds
+
+
+def record_notice_shown(cache_path: Path, notice: UpdateNotice, now: datetime | None = None) -> None:
+    payload = _load_cache_payload(cache_path)
+    payload.update(
+        {
+            "notice_shown_at": (now or datetime.now(timezone.utc)).isoformat(),
+            "notice_local_sha": notice.local_sha,
+            "notice_remote_sha": notice.remote_sha,
+        }
+    )
+    _write_cache_payload(cache_path, payload)
+
+
 def mark_refresh_started(cache_path: Path, now: datetime | None = None) -> None:
     payload = _load_cache_payload(cache_path)
     payload["refresh_started_at"] = (now or datetime.now(timezone.utc)).isoformat()
@@ -290,6 +324,7 @@ def check_for_update(
     cache_path: Path | None = None,
     now: datetime | None = None,
     ttl_seconds: int | None = None,
+    notice_ttl_seconds: int | None = None,
 ) -> UpdateNotice | None:
     if _truthy(os.environ.get("FINANCIAL_API_NO_VERSION_CHECK")):
         return None
@@ -301,9 +336,11 @@ def check_for_update(
         return None
 
     effective_now = now or datetime.now(timezone.utc)
-    effective_ttl = DEFAULT_TTL_SECONDS if ttl_seconds is None else ttl_seconds
-    if ttl_seconds is None:
-        effective_ttl = _parse_ttl_seconds(os.environ.get("FINANCIAL_API_VERSION_CHECK_TTL_SECONDS"))
+    effective_ttl = (
+        _parse_ttl_seconds(os.environ.get("FINANCIAL_API_VERSION_CHECK_TTL_SECONDS"))
+        if ttl_seconds is None
+        else ttl_seconds
+    )
     effective_failure_ttl = _parse_int_seconds(
         os.environ.get("FINANCIAL_API_VERSION_CHECK_FAILURE_TTL_SECONDS"),
         DEFAULT_FAILURE_TTL_SECONDS,
@@ -311,6 +348,14 @@ def check_for_update(
     effective_refresh_ttl = _parse_int_seconds(
         os.environ.get("FINANCIAL_API_VERSION_CHECK_REFRESH_TTL_SECONDS"),
         DEFAULT_REFRESH_TTL_SECONDS,
+    )
+    effective_notice_ttl = (
+        _parse_int_seconds(
+            os.environ.get("FINANCIAL_API_VERSION_NOTICE_TTL_SECONDS"),
+            DEFAULT_NOTICE_TTL_SECONDS,
+        )
+        if notice_ttl_seconds is None
+        else notice_ttl_seconds
     )
     effective_cache_path = cache_path or default_cache_path()
 
@@ -331,7 +376,7 @@ def check_for_update(
         return None
     if remote.sha == local.sha:
         return None
-    return UpdateNotice(
+    notice = UpdateNotice(
         local_sha=local.sha,
         local_short_sha=local.short_sha,
         remote_sha=remote.sha,
@@ -339,6 +384,14 @@ def check_for_update(
         remote_time=remote.commit_time,
         repo_url=remote.repo_url,
     )
+    if _notice_recently_shown(
+        cache_path=effective_cache_path,
+        notice=notice,
+        now=effective_now,
+        notice_ttl_seconds=effective_notice_ttl,
+    ):
+        return None
+    return notice
 
 
 def render_notice(notice: UpdateNotice, *, stream: TextIO | None = None) -> None:
@@ -353,11 +406,28 @@ def render_notice(notice: UpdateNotice, *, stream: TextIO | None = None) -> None
     print("  git pull origin main", file=target)
 
 
-def maybe_emit_update_notice(*, repo_path: Path | None = None, stream: TextIO | None = None) -> None:
+def maybe_emit_update_notice(
+    *,
+    repo_path: Path | None = None,
+    cache_path: Path | None = None,
+    now: datetime | None = None,
+    ttl_seconds: int | None = None,
+    notice_ttl_seconds: int | None = None,
+    stream: TextIO | None = None,
+) -> None:
     try:
-        notice = check_for_update(repo_path=repo_path)
+        effective_now = now or datetime.now(timezone.utc)
+        effective_cache_path = cache_path or default_cache_path()
+        notice = check_for_update(
+            repo_path=repo_path,
+            cache_path=effective_cache_path,
+            now=effective_now,
+            ttl_seconds=ttl_seconds,
+            notice_ttl_seconds=notice_ttl_seconds,
+        )
         if notice is not None:
             render_notice(notice, stream=stream)
+            record_notice_shown(effective_cache_path, notice, effective_now)
     except Exception:
         return
 
