@@ -49,6 +49,15 @@ def _emit(obj: Any, compact: bool) -> None:
     sys.stdout.write("\n")
 
 
+def _emit_update_notice() -> None:
+    try:
+        from marketdb.update_notice import maybe_emit_update_notice
+
+        maybe_emit_update_notice()
+    except Exception:
+        return
+
+
 # ---------------------------------------------------------------------------
 # Subcommand handlers
 # ---------------------------------------------------------------------------
@@ -353,6 +362,7 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
+    exit_code = 0
     try:
         result = args.func(args)
     except FuyaoApiError as e:
@@ -360,15 +370,18 @@ def main(argv: list[str] | None = None) -> int:
             f"[fuyao error] code={e.code} message={e.message} request_id={e.request_id}",
             file=sys.stderr,
         )
-        return 2
+        exit_code = 2
     except ValueError as e:
         print(f"[fuyao input error] {e}", file=sys.stderr)
-        return 3
+        exit_code = 3
     except RuntimeError as e:
         print(f"[fuyao runtime error] {e}", file=sys.stderr)
-        return 4
-    _emit(result, compact=args.compact)
-    return 0
+        exit_code = 4
+    else:
+        _emit(result, compact=args.compact)
+    finally:
+        _emit_update_notice()
+    return exit_code
 
 
 if __name__ == "__main__":

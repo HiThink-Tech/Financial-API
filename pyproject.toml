@@ -27,7 +27,7 @@ dev = [
 ]
 
 [project.scripts]
-marketdb = "marketdb.cli:app"
+marketdb = "marketdb.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["."]

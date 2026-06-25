@@ -26,7 +26,6 @@ from __future__ import annotations
 
 import argparse
 import os
-import re
 import shutil
 import subprocess
 import sys
@@ -70,6 +69,30 @@ def marketdb_cmd() -> list[str]:
     return [sys.executable, "-m", "marketdb.cli"]
 
 
+def _marketdb_child_env() -> dict[str, str]:
+    env = os.environ.copy()
+    env["FINANCIAL_API_CHILD_PROCESS"] = "1"
+    return env
+
+
+def run_marketdb(args: list[str], check: bool = True) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        marketdb_cmd() + args,
+        check=check,
+        text=True,
+        env=_marketdb_child_env(),
+    )
+
+
+def _emit_update_notice() -> None:
+    try:
+        from marketdb.update_notice import maybe_emit_update_notice
+
+        maybe_emit_update_notice()
+    except Exception:
+        return
+
+
 def step_check_python() -> None:
     say("checking python version")
     if sys.version_info < (3, 11):
@@ -105,16 +128,16 @@ def step_env_file() -> None:
 def step_init_db() -> None:
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     say(f"initializing DuckDB at {DB_PATH}")
-    run(marketdb_cmd() + ["init", "--db", str(DB_PATH)])
+    run_marketdb(["init", "--db", str(DB_PATH)])
 
 
 def _try_api_sync(force: bool) -> bool:
     """Run `marketdb auto-sync`; return True on success."""
     say("syncing via API (auto-sync)")
-    cmd = marketdb_cmd() + ["auto-sync", "--db", str(DB_PATH)]
+    cmd = ["auto-sync", "--db", str(DB_PATH)]
     if force:
         cmd.append("--force")
-    res = subprocess.run(cmd, check=False)
+    res = run_marketdb(cmd, check=False)
     return res.returncode == 0
 
 
@@ -133,7 +156,7 @@ def _try_local_apply(force: bool) -> bool:
         )
         return False
     say(f"applying local parquet (daily={daily.name}, events={events.name})")
-    cmd = marketdb_cmd() + [
+    cmd = [
         "import-parquet",
         "--db", str(DB_PATH),
         "--daily", str(daily),
@@ -143,7 +166,7 @@ def _try_local_apply(force: bool) -> bool:
         # import-parquet is already overwriting; --force is forwarded so future
         # versions that gate on row-count behave consistently.
         pass
-    res = subprocess.run(cmd, check=False)
+    res = run_marketdb(cmd, check=False)
     if res.returncode != 0:
         warn(f"    [warn] local import failed (exit {res.returncode})")
         return False
@@ -162,7 +185,7 @@ def step_sync(mode: str, force: bool) -> None:
     if mode == "api-only":
         if not _try_api_sync(force):
             warn(f"    API sync failed; configure API_KEY ({ADMIN_URL}) and retry,")
-            warn(f"    or rerun with --prefer-local / --local-only.")
+            warn("    or rerun with --prefer-local / --local-only.")
             sys.exit(1)
         return
     if mode == "prefer-local":
@@ -187,9 +210,9 @@ def step_sync(mode: str, force: bool) -> None:
 
 def step_status_validate() -> None:
     say("status")
-    subprocess.run(marketdb_cmd() + ["status", "--db", str(DB_PATH)], check=False)
+    run_marketdb(["status", "--db", str(DB_PATH)], check=False)
     say("validate")
-    subprocess.run(marketdb_cmd() + ["validate", "--db", str(DB_PATH)], check=False)
+    run_marketdb(["validate", "--db", str(DB_PATH)], check=False)
 
 
 def parse_mode(args: argparse.Namespace) -> str:
@@ -241,6 +264,7 @@ def main() -> int:
         f'--sql "SELECT date, close FROM v_daily_qfq '
         f"WHERE thscode='600519.SH' ORDER BY date DESC LIMIT 5\""
     )
+    _emit_update_notice()
     return 0
 
 

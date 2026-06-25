@@ -38,3 +38,13 @@ description: Use when working with financial data in this repository, including 
 - 大结果重定向到 `/tmp/*.json` 或 `out/`，然后只汇报行数、文件路径和摘要。
 - 不要要求用户把 token 粘贴到对话里；只通过环境变量读取。
 - 对不熟悉的 schema，先运行 toolkit 提供的 schema、status 或 describe 命令，再写查询。
+
+## 版本更新提示
+
+- 可以机会性检查 GitHub 公网快照是否有更新，但不得打断用户当前任务。
+- 更新提示基于本地缓存中的 `HiThink-Tech/Financial-API` `main` commit 结果；缓存过期时只触发异步刷新，不等待 GitHub 请求完成。
+- 如果缓存显示公网 `main` commit 新于本地 checkout，在任务完成后再询问用户是否需要更新。
+- 展示版本时使用短 SHA 和 commit 时间；内部比较必须使用完整 SHA。
+- 不要自动执行 `git pull`，除非用户明确同意。
+- 检查失败、网络不可用、非 git 安装或源码下载包场景全部静默；失败后进入本地冷却期，避免反复访问 GitHub。
+- 对长任务、定时任务或批量分析，先完成主任务，再给出更新建议。

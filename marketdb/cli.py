@@ -38,6 +38,7 @@ from marketdb.schema import (
 )
 from marketdb.updaters.auto import auto_sync as _auto_sync_run
 from marketdb.updaters.daily import sync_symbols, update_daily
+from marketdb.update_notice import maybe_emit_update_notice
 
 app = typer.Typer(
     add_completion=False,
@@ -422,5 +423,12 @@ def describe(
     sys.stdout.write(json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
 
 
+def main() -> None:
+    try:
+        app()
+    finally:
+        maybe_emit_update_notice()
+
+
 if __name__ == "__main__":
-    app()
+    main()
