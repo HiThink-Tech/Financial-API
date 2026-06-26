@@ -1,7 +1,7 @@
 # ---- Project-specific (not committed) ----
 refer-to/
 feature/
-sdd-docs/
+sdd-docs/*
 
 # ---- Secrets / local env ----
 .env

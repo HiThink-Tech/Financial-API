@@ -54,23 +54,22 @@ def test_check_for_update_returns_none_for_non_git_directory(tmp_path) -> None:
     assert notice is None
 
 
-def test_get_local_version_uses_single_git_call(tmp_path, monkeypatch) -> None:
+def test_get_local_version_reads_git_metadata_without_subprocess(tmp_path, monkeypatch) -> None:
     from marketdb import update_notice
 
-    calls = []
+    repo, sha = _make_git_repo(tmp_path)
 
-    def fake_run_git(repo_path, *args):
-        calls.append(args)
-        return "a" * 40 + "\x00" + "2026-06-25T10:00:00+00:00"
+    def fail_git_call(*_args, **_kwargs):
+        raise AssertionError("local version lookup must not spawn git")
 
-    monkeypatch.setattr(update_notice, "_run_git", fake_run_git)
+    monkeypatch.setattr(update_notice.subprocess, "run", fail_git_call)
 
-    local = update_notice.get_local_version(tmp_path)
+    local = update_notice.get_local_version(repo)
 
     assert local is not None
-    assert local.sha == "a" * 40
-    assert local.commit_time == "2026-06-25T10:00:00+00:00"
-    assert calls == [("show", "-s", "--format=%H%x00%cI", "HEAD")]
+    assert local.sha == sha
+    assert local.short_sha == sha[:7]
+    assert local.commit_time is None
 
 
 def test_check_for_update_uses_fresh_cache_without_remote_fetch(tmp_path) -> None:
@@ -103,6 +102,41 @@ def test_check_for_update_uses_fresh_cache_without_remote_fetch(tmp_path) -> Non
     assert notice.local_sha == local_sha
     assert notice.remote_sha == "f" * 40
     assert notice.remote_short_sha == "fffffff"
+
+
+def test_check_for_update_uses_fresh_cache_without_git_subprocess(tmp_path, monkeypatch) -> None:
+    from marketdb import update_notice
+
+    repo, local_sha = _make_git_repo(tmp_path)
+    cache_path = tmp_path / "cache.json"
+    now = datetime(2026, 6, 25, 12, 0, tzinfo=timezone.utc)
+    cache_path.write_text(
+        json.dumps(
+            {
+                "checked_at": now.isoformat(),
+                "remote_sha": "f" * 40,
+                "remote_short_sha": "fffffff",
+                "remote_time": "2026-06-25T10:00:00+00:00",
+                "repo_url": "https://github.com/HiThink-Tech/Financial-API",
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    def fail_git_call(*_args, **_kwargs):
+        raise AssertionError("fresh cache path must not spawn git")
+
+    monkeypatch.setattr(update_notice.subprocess, "run", fail_git_call)
+
+    notice = update_notice.check_for_update(
+        repo_path=repo,
+        cache_path=cache_path,
+        now=now + timedelta(minutes=5),
+        ttl_seconds=86400,
+    )
+
+    assert notice is not None
+    assert notice.local_sha == local_sha
 
 
 def test_check_for_update_starts_background_refresh_when_cache_expired(tmp_path, monkeypatch) -> None:
@@ -297,10 +331,13 @@ def test_render_notice_writes_to_stderr_style_stream() -> None:
     text = stream.getvalue()
     assert "2222222" in text
     assert "1111111" in text
+    assert "公开版本存在差异" in text
+    assert "建议确认后再更新" in text
     assert "git pull origin main" in text
+    assert "newer" not in text
 
 
-def test_maybe_emit_update_notice_records_notice_and_suppresses_repeat(tmp_path) -> None:
+def test_maybe_emit_update_notice_records_notice_and_suppresses_repeat(tmp_path, monkeypatch) -> None:
     from io import StringIO
 
     from marketdb import update_notice
@@ -308,6 +345,14 @@ def test_maybe_emit_update_notice_records_notice_and_suppresses_repeat(tmp_path)
     repo, _local_sha = _make_git_repo(tmp_path)
     cache_path = tmp_path / "cache.json"
     now = datetime(2026, 6, 25, 10, 0, tzinfo=timezone.utc)
+
+    # 隔离后台刷新：避免测试真实 spawn 子进程或访问网络（否则在随机顺序下会互相干扰）。
+    monkeypatch.setattr(
+        update_notice,
+        "start_background_refresh",
+        lambda *, cache_path=None: True,
+    )
+
     update_notice._write_cached_remote(
         cache_path,
         update_notice.RemoteVersion(
@@ -339,6 +384,7 @@ def test_maybe_emit_update_notice_records_notice_and_suppresses_repeat(tmp_path)
     payload = json.loads(cache_path.read_text(encoding="utf-8"))
     assert payload["notice_shown_at"] == now.isoformat()
     assert payload["notice_remote_sha"] == "f" * 40
+    assert payload["local_sha"] == _git(repo, "rev-parse", "HEAD")
 
 
 def test_notice_ttl_expired_allows_repeat_notice(tmp_path) -> None:
@@ -422,7 +468,7 @@ def test_remote_sha_change_allows_repeat_notice_within_ttl(tmp_path) -> None:
     assert "eeeeeee" in repeated.getvalue()
 
 
-def test_local_sha_change_allows_repeat_notice_within_ttl(tmp_path) -> None:
+def test_local_sha_change_refreshes_cache_and_suppresses_current_notice(tmp_path, monkeypatch) -> None:
     from io import StringIO
 
     from marketdb import update_notice
@@ -445,10 +491,27 @@ def test_local_sha_change_allows_repeat_notice_within_ttl(tmp_path) -> None:
         now=now,
         stream=StringIO(),
     )
+    payload = json.loads(cache_path.read_text(encoding="utf-8"))
+    assert payload["local_sha"] == _git(repo, "rev-parse", "HEAD")
 
     (repo / "README.md").write_text("hello again\n", encoding="utf-8")
     _git(repo, "add", "README.md")
     _git(repo, "commit", "-m", "second")
+    new_local_sha = _git(repo, "rev-parse", "HEAD")
+
+    started: list[Path] = []
+
+    def fake_start_background_refresh(*, cache_path=None):
+        started.append(cache_path)
+        update_notice.mark_refresh_started(cache_path, now + timedelta(minutes=1))
+        return True
+
+    monkeypatch.setattr(
+        update_notice,
+        "start_background_refresh",
+        fake_start_background_refresh,
+    )
+
     repeated = StringIO()
     update_notice.maybe_emit_update_notice(
         repo_path=repo,
@@ -457,4 +520,8 @@ def test_local_sha_change_allows_repeat_notice_within_ttl(tmp_path) -> None:
         stream=repeated,
     )
 
-    assert "[update]" in repeated.getvalue()
+    assert repeated.getvalue() == ""
+    assert started == [cache_path]
+    payload = json.loads(cache_path.read_text(encoding="utf-8"))
+    assert payload["local_sha"] == new_local_sha
+    assert payload["refresh_started_at"] is not None

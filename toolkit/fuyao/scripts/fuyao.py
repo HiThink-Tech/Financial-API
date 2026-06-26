@@ -14,7 +14,16 @@ import sys
 from pathlib import Path
 from typing import Any
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+_SCRIPT_DIR = Path(__file__).resolve().parent
+_REPO_ROOT = _SCRIPT_DIR.parents[2]  # scripts -> fuyao -> toolkit -> repo root
+
+# Resolve sibling modules (fuyao_client) from this script's own directory.
+sys.path.insert(0, str(_SCRIPT_DIR))
+# Make this repository's `marketdb` win over any unrelated editable install that
+# points at a different clone. Anchored on __file__, so it holds no matter the
+# current working directory or how the script is launched (path vs -m).
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
 
 from fuyao_client import (  # noqa: E402
     FuyaoApiError,
