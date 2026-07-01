@@ -158,6 +158,38 @@ Agent 调用约定：
 - 大批量、全市场、多年窗口结果不要直接输出到对话上下文；应落盘到 `/tmp/*.json` 或本地数据文件，只返回摘要和文件路径。
 - MCP 客户端按 [`toolkit/fuyao/docs/mcp-config.md`](toolkit/fuyao/docs/mcp-config.md) 配置。
 
+## 灵感：用一句 Prompt 制作金融看板
+
+不知道从哪里开始时，可以先从[灵感示例库](examples/inspirations/README.md)挑选一个场景，复制其中的 Prompt 交给你的 Agent。Agent 会按项目现有能力完成取数、分析并生成一张可直接打开的金融看板。
+
+灵感覆盖单股行情、财务体检、同花顺概念板块、涨停与连板、自选股当日异动，以及本地 marketdb 全市场研究。每个灵感都提供：
+
+- 一段可直接复制并自由修改的 Prompt；
+- 页面效果截图；
+- 一份使用真实数据制作的静态 HTML 示例。
+
+截图和 HTML 只用于说明可能的效果，**不是模板或复现标准**。Agent 应根据 Prompt、你的目标和当前数据自由设计页面，不需要模仿示例样式。
+
+### 灵感示例：单股行情与趋势速览
+
+<table>
+<tr>
+<td width="440" valign="top">
+<a href="examples/inspirations/01-stock-overview/example.html"><img src="examples/inspirations/01-stock-overview/preview.jpg" alt="单股行情与趋势速览" width="420"></a>
+</td>
+<td valign="top">
+<p>从一只股票出发，把最新行情与近一年趋势放进一张可继续探索的看板。</p>
+<p><a href="examples/inspirations/01-stock-overview/README.md">查看完整说明</a> · <a href="examples/inspirations/01-stock-overview/example.html">打开静态 HTML</a></p>
+<details>
+<summary><strong>复制 Prompt</strong></summary>
+<pre><code>请在当前仓库中制作一张“单股行情与趋势速览”金融看板。先读取 AGENTS.md、skills/financial-api/SKILL.md 和 toolkit/README.md，确认当前能力后再取数。输入标的默认为“同花顺”，先通过 toolkit/fuyao 的 tickers-search 消歧为唯一 thscode，再调用 prices-snapshot 获取最新行情，并调用 prices-historical 获取最近约 250 个交易日的前复权日 K。计算区间涨跌幅、20/60/120 日均线、近 60 日最大回撤和成交额变化，生成一个可直接打开的单文件 HTML，保存到 out/inspirations/stock-overview.html。页面如何布局、配色和选择图表由你决定，但必须展示数据源、标的代码、行情时间、复权口径和非投资建议声明。不要读取或模仿 examples/inspirations 下的示例截图和 example.html；它们不是模板。不得使用模拟数据；如果某项数据不可用，在页面中说明原因。原始响应写入 out/inspirations-data/，不要把长序列输出到对话中，也不要把 API Key 写入任何文件。</code></pre>
+</details>
+</td>
+</tr>
+</table>
+
+→ [浏览全部灵感并制作第一张金融看板](examples/inspirations/README.md)
+
 ## 当前支持的数据
 
 | 数据 / 能力 | 说明 | 推荐入口 |
