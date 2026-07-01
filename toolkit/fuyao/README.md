@@ -1,6 +1,6 @@
 # toolkit/fuyao
 
-A tool-agnostic toolkit for calling the **同花顺金融数据 API (fuyao.aicubes.cn)** — a structured A-share financial data service offering 15 capabilities over REST + MCP. **Use this for remote / live data (snapshots, financials, ticker catalog, indices, 涨跌停). For local historical OHLCV go to [`../marketdb/`](../marketdb/README.md).**
+A tool-agnostic toolkit for calling the **同花顺金融数据 API (fuyao.aicubes.cn)** — a structured A-share financial data service offering 18 REST endpoints and 17 hosted MCP tools. **Use this for remote / live data (snapshots, financials, ticker catalog, indices, 涨跌停, 当日个股异动). For local historical OHLCV go to [`../marketdb/`](../marketdb/README.md).**
 
 This folder is **the entry point for the remote API** for any human or AI agent (Claude Code, Codex, Cursor, ChatGPT, scripts in CI, Jupyter, …). It contains:
 
@@ -22,6 +22,8 @@ Trigger keywords (for AI agents reading this file in-context):
 - A 股代码表、交易日历
 - 同花顺指数 / 概念板块 / 行业指数 / 沪深 300 等指数的列表、成分股、行情快照、历史 K 线
 - 涨停股票池 / 连板天梯 / 涨跌停盘面复盘 / 短线情绪分析
+- 财务指标 / 财务诊断 / 成长能力 / 盈利能力 / 偿债能力
+- 个股异动 / 异动原因 / 快速拉升 / 快速下挫 / 当日异动
 - 量化、回测、对账类脚本要拉 A 股结构化数据
 
 Do **not** trigger for: 宏观经济、海外行情、个股新闻 / 公告原文 / 研报。
@@ -57,11 +59,13 @@ from fuyao_client import (
     financials_income_statements,
     financials_balance_sheets,
     financials_cash_flow_statements,
+    financials_indicators,
     calendar_trading_days,
     index_catalog_ths_index_list,
     index_constituents_ths_stock_list,
     index_prices_snapshot, index_prices_historical,
     special_data_limit_up_pool, special_data_limit_up_ladder,
+    special_data_anomaly_analysis_list, special_data_anomaly_analysis_stock,
     FuyaoApiError,
 )
 
@@ -80,6 +84,13 @@ ranged = financials_income_statements(
     hit["thscode"], period="quarterly",
     start_ms=1672502400000, end_ms=1735574400000,
 )
+
+# Financial indicators: one stock + one report quarter
+indicators = financials_indicators("300033.SZ", "2025-1")
+
+# Same-day anomaly analysis (list is REST-only; stock also has hosted MCP)
+anomalies = special_data_anomaly_analysis_list(["LIMIT_UP", "SHARP_FALL"])
+stock_anomalies = special_data_anomaly_analysis_stock(["600519.SH", "000001.SZ"])
 
 try:
     financials_income_statements(hit["thscode"], limit=4, start_ms=1, end_ms=2)
@@ -121,6 +132,10 @@ python3 toolkit/fuyao/scripts/fuyao.py financials-balance \
     --thscode 000858.SZ --period quarterly \
     --start-ms 1672502400000 --end-ms 1735574400000
 
+# 财务指标（report 格式 YYYY-[1-4]）
+python3 toolkit/fuyao/scripts/fuyao.py financials-indicators \
+    --thscode 300033.SZ --report 2025-1
+
 # Corporate actions / calendar
 python3 toolkit/fuyao/scripts/fuyao.py corp-actions --thscode 600519.SH
 python3 toolkit/fuyao/scripts/fuyao.py calendar-trading-days
@@ -137,6 +152,12 @@ python3 toolkit/fuyao/scripts/fuyao.py index-historical \
 python3 toolkit/fuyao/scripts/fuyao.py limit-up-pool \
     --page 1 --size 50 --sort-field limit_up_time --sort-dir desc > /tmp/limit-up.json
 python3 toolkit/fuyao/scripts/fuyao.py limit-up-ladder > /tmp/ladder.json
+
+# 当日个股异动 — 全量/标签筛选，或按 1..50 个 thscode 查询
+python3 toolkit/fuyao/scripts/fuyao.py anomaly-analysis-list \
+    --tag-codes LIMIT_UP,SHARP_FALL > /tmp/anomaly-list.json
+python3 toolkit/fuyao/scripts/fuyao.py anomaly-analysis-stock \
+    --thscodes 600519.SH,000001.SZ > /tmp/anomaly-stock.json
 ```
 
 CLI emits JSON to stdout only (default `indent=2`, `--compact` for one-line). Persisting / format conversion is the caller's responsibility — there's intentionally **no** built-in csv / parquet writer. Convert outside:
@@ -154,7 +175,7 @@ Configure your MCP client (Claude Desktop / Cursor / Windsurf) to point at the A
 
 ---
 
-## Capability matrix (15 endpoints)
+## Capability matrix (18 REST endpoints / 17 hosted MCP tools)
 
 | Function | CLI subcommand | Notes |
 | --- | --- | --- |
@@ -166,6 +187,7 @@ Configure your MCP client (Claude Desktop / Cursor / Windsurf) to point at the A
 | `financials_income_statements` | `financials-income` | `limit` XOR `(start_ms, end_ms)` — enforced client-side |
 | `financials_balance_sheets` | `financials-balance` | same modes |
 | `financials_cash_flow_statements` | `financials-cashflow` | same modes |
+| `financials_indicators` | `financials-indicators` | `thscode` + `report=YYYY-[1-4]`；返回五类能力块 |
 | `calendar_trading_days` | `calendar-trading-days` | No input; fixed `[today−1y, today]` |
 | `index_catalog_ths_index_list` | `index-catalog` | THS 指数清单；`tag` ∈ {cn_concept, region, tszs, industry}，单 tag 全量返回 |
 | `index_constituents_ths_stock_list` | `index-constituents` | 单只指数当前成分股；同时支持 THS 板块（`886042.TI`）和标准指数（`000300.SH`） |
@@ -173,6 +195,8 @@ Configure your MCP client (Claude Desktop / Cursor / Windsurf) to point at the A
 | `index_prices_historical` | `index-historical` | 指数历史 K 线；**无 adjust / offset**；窗口 >10y 自动切片去重 |
 | `special_data_limit_up_pool` | `limit-up-pool` | 涨停股票池；`size` 1-200，`sort_field` ∈ {last_price, continue_day_cnt, seal_money, limit_up_time}；省略 `date_ms` 取当日 |
 | `special_data_limit_up_ladder` | `limit-up-ladder` | 连板天梯；无入参，固定返回近 30 个交易日 × 6 板位矩阵 |
+| `special_data_anomaly_analysis_list` | `anomaly-analysis-list` | 仅当日；可选六种 `tag_codes`，多值 OR；REST-only |
+| `special_data_anomaly_analysis_stock` | `anomaly-analysis-stock` | 仅当日；1–50 个原始 thscode token，去重保序；REST + MCP |
 
 Full per-endpoint contract: [`docs/api-cheatsheet.md`](docs/api-cheatsheet.md).
 Full field semantics: [`docs/llms-full.txt`](docs/llms-full.txt).

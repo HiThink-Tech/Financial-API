@@ -4,12 +4,12 @@
 
 ## Repository at a glance
 
-- **`marketdb/`** — local DuckDB-backed A-share data warehouse (Parquet → DuckDB → SQL/SDK). See `feature/2026-06-09-本地行情数据库与回测分析应用/` for design.
+- **`marketdb/`** — local DuckDB-backed A-share data warehouse (Parquet → DuckDB → SQL/SDK). See `toolkit/marketdb/README.md` for the current contract.
 - **`toolkit/`** — tool-agnostic toolkits for both data sources. Start at `toolkit/README.md` (unified router):
   - **`toolkit/marketdb/`** — local DB queries (历史 OHLCV、复权、面板、因子). Use whenever the answer lives in `data/market.duckdb`.
   - **`toolkit/fuyao/`** — upstream 同花顺金融数据 API (fuyao.aicubes.cn) REST + MCP. Use whenever you need fresh data (snapshots, financials, ticker catalog).
 - **`examples/`** — runnable end-to-end Python scripts. Best first stop when learning the repo.
-- **`feature/`** — dated iteration workspaces; each contains its own `01-requirement.md` → `05-summary.md` decision record.
+- **`sdd-docs/`** — local-only SDD specs, active workspaces, and archives. It is gitignored and must not be committed or exported.
 - **`tests/`**, **`docs/`**, **`refer-to/`** — standard.
 
 ## Which toolkit do I use?
@@ -51,7 +51,7 @@ Downstream consumers (notebooks, marketdb, pandas) read the file. This keeps con
 
 ## Conventions in this repo
 
-- **Dated iterations**: substantial features live in `feature/<YYYY-MM-DD>-<slug>/` with the 5-file decision-record template. Read those `05-summary.md` files to understand recent history.
+- **SDD development records**: substantial changes live in `sdd-docs/workspace/<id>-<slug>/`; promote stable facts to `sdd-docs/spec/` and archive completed work only after confirmation. `sdd-docs/` stays local and uncommitted.
 - **No global state writes by AI**: never install things into `~/.claude/`, `~/.config/`, etc. on behalf of the user. All deliverables ship inside this repo.
 - **No vendor lock-in in the toolkit**: both `toolkit/fuyao/` and `toolkit/marketdb/` are intentionally free of `SKILL.md` / `.cursorrules` / `.claude/`. Add tool-specific glue *outside* `toolkit/` if you need it (see each toolkit's README § "如何接入各 AI 工具").
 
@@ -71,4 +71,4 @@ Downstream consumers (notebooks, marketdb, pandas) read the file. This keeps con
 - Error codes + retry policy: `toolkit/fuyao/docs/error-codes.md`
 - MCP client config snippets: `toolkit/fuyao/docs/mcp-config.md`
 - Examples: `examples/`
-- Project history: `project-dev-log.md`, `feature/*/05-summary.md`
+- Project history: root `README.md` § Development History; local detailed records: `sdd-docs/spec/`, `sdd-docs/workspace/`, `sdd-docs/archive/`

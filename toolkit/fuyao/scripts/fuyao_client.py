@@ -1,4 +1,4 @@
-"""Fuyao (fuyao.aicubes.cn) API client — 15 capabilities as typed functions.
+"""Fuyao (fuyao.aicubes.cn) API client — 18 REST capabilities as typed functions.
 
 Design contract (so AI tools can use this without re-reading llms-full.txt):
 - Every capability is a top-level function with full type annotations.
@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -512,7 +513,26 @@ def financials_cash_flow_statements(
 
 
 # ---------------------------------------------------------------------------
-# 9. Calendar
+# 9. Financial indicators
+# ---------------------------------------------------------------------------
+
+
+_FINANCIAL_REPORT_PATTERN = re.compile(r"^[0-9]{4}-[1-4]$")
+
+
+def financials_indicators(thscode: str, report: str) -> dict[str, Any]:
+    """Aggregated financial indicators for one stock and report quarter."""
+    _validate_thscode(thscode)
+    if not isinstance(report, str) or not _FINANCIAL_REPORT_PATTERN.fullmatch(report):
+        raise ValueError("report must match YYYY-[1-4] (e.g. '2025-1')")
+    return _get(
+        "/api/a-share/financials/indicators",
+        {"thscode": thscode, "report": report},
+    )
+
+
+# ---------------------------------------------------------------------------
+# 10. Calendar
 # ---------------------------------------------------------------------------
 
 
@@ -522,7 +542,7 @@ def calendar_trading_days() -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
-# 10/11. A-share index — catalog & constituents
+# 11/12. A-share index — catalog & constituents
 # ---------------------------------------------------------------------------
 
 
@@ -551,7 +571,7 @@ def index_constituents_ths_stock_list(thscode: str) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
-# 12/13. A-share index — prices snapshot & historical
+# 13/14. A-share index — prices snapshot & historical
 # ---------------------------------------------------------------------------
 
 
@@ -612,7 +632,7 @@ def index_prices_historical(
 
 
 # ---------------------------------------------------------------------------
-# 14/15. Special data — limit-up pool & limit-up ladder
+# 15/16. Special data — limit-up pool & limit-up ladder
 # ---------------------------------------------------------------------------
 
 
@@ -664,6 +684,77 @@ def special_data_limit_up_ladder() -> dict[str, Any]:
     return _get("/api/a-share/special-data/limit-up-ladder", {})
 
 
+# ---------------------------------------------------------------------------
+# 17/18. Special data — same-day anomaly analysis
+# ---------------------------------------------------------------------------
+
+
+_ANOMALY_TAG_CODES = (
+    "LIMIT_UP",
+    "LIMIT_DOWN",
+    "SHARP_RISE",
+    "SHARP_FALL",
+    "RAPID_RALLY",
+    "RAPID_DECLINE",
+)
+_A_SHARE_THSCODE_PATTERN = re.compile(r"^[0-9]{6}\.(SH|SZ|BJ)$")
+_ANOMALY_STOCK_MAX_THSCODES = 50
+
+
+def special_data_anomaly_analysis_list(
+    tag_codes: Iterable[str] | None = None,
+) -> dict[str, Any]:
+    """Same-day anomaly list; optional tags are combined with OR semantics."""
+    raw_codes = [tag_codes] if isinstance(tag_codes, str) else list(tag_codes or [])
+    normalized: list[str] = []
+    seen: set[str] = set()
+    for raw in raw_codes:
+        code = raw.strip().upper() if isinstance(raw, str) else ""
+        if not code:
+            raise ValueError("tag_codes contains an empty token")
+        if code not in _ANOMALY_TAG_CODES:
+            raise ValueError(
+                f"tag_codes must contain only {_ANOMALY_TAG_CODES}; got {raw!r}"
+            )
+        if code not in seen:
+            seen.add(code)
+            normalized.append(code)
+    return _get(
+        "/api/a-share/special-data/anomaly-analysis-list",
+        {"tag_codes": ",".join(normalized) if normalized else None},
+    )
+
+
+def special_data_anomaly_analysis_stock(
+    thscodes: Iterable[str],
+) -> dict[str, Any]:
+    """Same-day anomaly rows for 1..50 raw A-share thscode tokens."""
+    raw_codes = [thscodes] if isinstance(thscodes, str) else list(thscodes or [])
+    if not raw_codes:
+        raise ValueError("thscodes must contain at least one code")
+    if len(raw_codes) > _ANOMALY_STOCK_MAX_THSCODES:
+        raise ValueError(
+            f"thscodes count must not exceed {_ANOMALY_STOCK_MAX_THSCODES}"
+        )
+
+    normalized: list[str] = []
+    seen: set[str] = set()
+    for raw in raw_codes:
+        code = raw.strip().upper() if isinstance(raw, str) else ""
+        if not code:
+            raise ValueError("thscodes contains an empty token")
+        if not _A_SHARE_THSCODE_PATTERN.fullmatch(code):
+            raise ValueError(f"Invalid thscode: {raw!r}")
+        if code not in seen:
+            seen.add(code)
+            normalized.append(code)
+
+    return _get(
+        "/api/a-share/special-data/anomaly-analysis-stock",
+        {"thscodes": ",".join(normalized)},
+    )
+
+
 __all__ = [
     "FuyaoApiError",
     "tickers_search",
@@ -674,6 +765,7 @@ __all__ = [
     "financials_income_statements",
     "financials_balance_sheets",
     "financials_cash_flow_statements",
+    "financials_indicators",
     "calendar_trading_days",
     "index_catalog_ths_index_list",
     "index_constituents_ths_stock_list",
@@ -681,4 +773,6 @@ __all__ = [
     "index_prices_historical",
     "special_data_limit_up_pool",
     "special_data_limit_up_ladder",
+    "special_data_anomaly_analysis_list",
+    "special_data_anomaly_analysis_stock",
 ]

@@ -21,8 +21,8 @@
 - [财务报表](https://fuyao.aicubes.cn/docs/api-reference/financials/): A 股整体合并利润表 / 资产负债表 / 现金流量表多期序列
 - [交易日历](https://fuyao.aicubes.cn/docs/api-reference/calendar/): A 股近一年交易日序列
 - [指数数据](https://fuyao.aicubes.cn/docs/api-reference/a-share-index/): 同花顺指数 / 板块的列表、成分股、行情快照与历史 K 线
-- [特色数据](https://fuyao.aicubes.cn/docs/api-reference/special-data/): A 股涨跌停数据：涨停股票池与连板天梯
-- [财务指标数据](https://fuyao.aicubes.cn/docs/api-reference/financial-indicators/): A 股财务指标接口（敬请期待）
+- [特色数据](https://fuyao.aicubes.cn/docs/api-reference/special-data/): A 股涨停股票池、连板天梯与当日个股异动原因
+- [财务指标数据](https://fuyao.aicubes.cn/docs/api-reference/financial-indicators/): 按 A 股标的与报告期返回成长、盈利、偿债、运营和现金流指标
 - [指数概况](https://fuyao.aicubes.cn/docs/api-reference/index-overview/): 指数基本信息、成分股、权重接口（敬请期待）
 - [资金流向](https://fuyao.aicubes.cn/docs/api-reference/money-flow/): A 股资金流向接口（敬请期待）
 - [股票基础信息](https://fuyao.aicubes.cn/docs/api-reference/stock-basics/): A 股标的基础信息接口（敬请期待）
@@ -40,7 +40,7 @@
 - [资产负债表](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_financials_balance_sheets/): 单只 A 股的整体合并资产负债表多期序列
 - [现金流量表](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_financials_cash_flow_statements/): 单只 A 股的整体合并现金流量表多期序列
 - [利润表](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_financials_income_statements/): 单只 A 股的整体合并利润表多期序列
-- [财务指标数据](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_financials_indicators/): A 股财务指标 MCP 工具（敬请期待）
+- [财务指标数据](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_financials_indicators/): 按 A 股标的与报告期返回五类财务指标
 - [同花顺指数列表](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_index_catalog_ths_index_list/): 按 tag 列出同花顺指数清单
 - [同花顺指数成分股](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_index_constituents_ths_stock_list/): 按指数 thscode 取当前成分股清单
 - [指数概况](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_index_overview/): 指数基本信息、成分股、权重 MCP 工具（敬请期待）
@@ -51,6 +51,7 @@
 - [A股行情快照](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_prices_snapshot/): A 股行情快照（按 thscodes 批量或全市场分页）
 - [A股连板天梯](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_special_data_limit_up_ladder/): 返回近 30 个交易日的连板梯队矩阵
 - [A股涨停股票池](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_special_data_limit_up_pool/): 按交易日返回 A 股涨停 / 连板股票池
+- [A股个股异动原因](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_special_data_anomaly_analysis_stock/): 按 1–50 个 thscode 查询当日异动原因
 - [股票基础信息查询](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_stock_basics/): A 股标的基础信息查询 MCP 工具（敬请期待）
 - [股票所属同花顺指数查询](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_ths_index_membership/): 按个股反查所属同花顺行业/概念指数 MCP 工具（敬请期待）
 - [估值数据](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_valuations/): A 股估值数据 MCP 工具（敬请期待）

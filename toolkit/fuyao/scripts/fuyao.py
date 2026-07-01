@@ -31,6 +31,7 @@ from fuyao_client import (  # noqa: E402
     corp_actions_adjustment_factors,
     financials_balance_sheets,
     financials_cash_flow_statements,
+    financials_indicators,
     financials_income_statements,
     index_catalog_ths_index_list,
     index_constituents_ths_stock_list,
@@ -40,6 +41,8 @@ from fuyao_client import (  # noqa: E402
     prices_snapshot,
     special_data_limit_up_ladder,
     special_data_limit_up_pool,
+    special_data_anomaly_analysis_list,
+    special_data_anomaly_analysis_stock,
     tickers_list,
     tickers_search,
 )
@@ -48,6 +51,10 @@ from fuyao_client import (  # noqa: E402
 def _read_codes_file(path: str) -> list[str]:
     lines = Path(path).read_text(encoding="utf-8").splitlines()
     return [ln.strip() for ln in lines if ln.strip() and not ln.startswith("#")]
+
+
+def _split_csv(value: str) -> list[str]:
+    return value.split(",")
 
 
 def _emit(obj: Any, compact: bool) -> None:
@@ -145,6 +152,10 @@ def _financials_args(fn):
     return _run
 
 
+def cmd_financials_indicators(args):
+    return financials_indicators(args.thscode, args.report)
+
+
 def cmd_calendar(_args):
     return calendar_trading_days()
 
@@ -188,6 +199,24 @@ def cmd_limit_up_ladder(_args):
     return special_data_limit_up_ladder()
 
 
+def cmd_anomaly_analysis_list(args):
+    tags = (
+        None
+        if args.tag_codes is None or not args.tag_codes.strip()
+        else _split_csv(args.tag_codes)
+    )
+    return special_data_anomaly_analysis_list(tags)
+
+
+def cmd_anomaly_analysis_stock(args):
+    codes = (
+        _read_codes_file(args.thscodes_file)
+        if args.thscodes_file
+        else _split_csv(args.thscodes)
+    )
+    return special_data_anomaly_analysis_stock(codes)
+
+
 # ---------------------------------------------------------------------------
 # argparse wiring
 # ---------------------------------------------------------------------------
@@ -210,7 +239,7 @@ def _add_financials_subparser(sub, name: str, help_text: str, handler):
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="fuyao",
-        description="Fuyao A-share data CLI (15 capabilities). JSON-only stdout. "
+        description="Fuyao A-share data CLI (18 REST capabilities). JSON-only stdout. "
         "Auth: FUYAO_TOKEN env var.",
     )
     parser.add_argument("--compact", action="store_true", help="emit single-line JSON")
@@ -286,6 +315,13 @@ def build_parser() -> argparse.ArgumentParser:
         "cash-flow-statements multi-period series",
         _financials_args(financials_cash_flow_statements),
     )
+    p = sub.add_parser(
+        "financials-indicators",
+        help="aggregated financial indicators for one stock/report quarter",
+    )
+    p.add_argument("--thscode", required=True)
+    p.add_argument("--report", required=True, help="report quarter in YYYY-[1-4] format")
+    p.set_defaults(func=cmd_financials_indicators)
 
     # calendar
     p = sub.add_parser("calendar-trading-days", help="A-share trading-day calendar (~1 year)")
@@ -364,6 +400,31 @@ def build_parser() -> argparse.ArgumentParser:
         help="A-share 连板天梯（近 30 个交易日 × 6 板位矩阵；无入参）",
     )
     p.set_defaults(func=cmd_limit_up_ladder)
+
+    # special-data anomaly analysis
+    p = sub.add_parser(
+        "anomaly-analysis-list",
+        help="same-day A-share anomaly list, optionally filtered by tags",
+    )
+    p.add_argument(
+        "--tag-codes",
+        dest="tag_codes",
+        help="comma-separated LIMIT_UP/LIMIT_DOWN/SHARP_RISE/SHARP_FALL/RAPID_RALLY/RAPID_DECLINE",
+    )
+    p.set_defaults(func=cmd_anomaly_analysis_list)
+
+    p = sub.add_parser(
+        "anomaly-analysis-stock",
+        help="same-day anomaly analysis for 1..50 A-share thscodes",
+    )
+    g = p.add_mutually_exclusive_group(required=True)
+    g.add_argument("--thscodes", help="comma-separated A-share thscodes")
+    g.add_argument(
+        "--thscodes-file",
+        dest="thscodes_file",
+        help="file with one A-share thscode per line",
+    )
+    p.set_defaults(func=cmd_anomaly_analysis_stock)
 
     return parser
 
