@@ -1,4 +1,4 @@
-"""Fuyao (fuyao.aicubes.cn) API client — 18 REST capabilities as typed functions.
+"""Fuyao (fuyao.aicubes.cn) API client — 23 REST capabilities as typed functions.
 
 Design contract (so AI tools can use this without re-reading llms-full.txt):
 - Every capability is a top-level function with full type annotations.
@@ -21,6 +21,7 @@ import os
 import re
 import time
 from dataclasses import dataclass
+from datetime import date as Date
 from pathlib import Path
 from typing import Any, Iterable, Literal, Optional
 
@@ -755,6 +756,115 @@ def special_data_anomaly_analysis_stock(
     )
 
 
+# ---------------------------------------------------------------------------
+# 19-23. Special data — hot lists, rank trend & dragon-tiger list
+# ---------------------------------------------------------------------------
+
+
+_HOT_LIST_PERIODS = ("day", "hour")
+_DRAGON_TIGER_BOARD_TYPES = ("all", "org", "hot_money")
+
+
+def _normalize_hot_list_period(period: str) -> str:
+    normalized = period.strip().lower() if isinstance(period, str) else ""
+    if normalized not in _HOT_LIST_PERIODS:
+        raise ValueError(f"period must be one of {_HOT_LIST_PERIODS}; got {period!r}")
+    return normalized
+
+
+def _parse_iso_date(value: str, field_name: str) -> Date:
+    if not isinstance(value, str) or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):
+        raise ValueError(f"{field_name} must use YYYY-MM-DD format")
+    try:
+        return Date.fromisoformat(value)
+    except ValueError as exc:
+        raise ValueError(f"{field_name} must be a valid calendar date") from exc
+
+
+def _normalize_a_share_thscode(thscode: str) -> str:
+    normalized = thscode.strip().upper() if isinstance(thscode, str) else ""
+    if not _A_SHARE_THSCODE_PATTERN.fullmatch(normalized):
+        raise ValueError(f"Invalid thscode: {thscode!r}")
+    return normalized
+
+
+def special_data_skyrocket_list(
+    period: Literal["day", "hour"] = "day",
+) -> dict[str, Any]:
+    """Current skyrocket ranking for the day or hour period."""
+    return _get(
+        "/api/a-share/special-data/skyrocket-list",
+        {"period": _normalize_hot_list_period(period)},
+    )
+
+
+def special_data_hot_stock_list(
+    period: Literal["day", "hour"] = "day",
+) -> dict[str, Any]:
+    """Current hot-stock ranking for the day or hour period."""
+    return _get(
+        "/api/a-share/special-data/hot-stock-list",
+        {"period": _normalize_hot_list_period(period)},
+    )
+
+
+def special_data_hot_stock_list_history(date: str) -> dict[str, Any]:
+    """Historical hot-stock ranking for one date within the server's window."""
+    _parse_iso_date(date, "date")
+    return _get(
+        "/api/a-share/special-data/hot-stock-list-history",
+        {"date": date},
+    )
+
+
+def special_data_hot_stock_rank_trend(
+    thscode: str,
+    start_date: str,
+    end_date: str,
+) -> dict[str, Any]:
+    """Daily hot-stock rank trend for one A-share code over at most one year."""
+    normalized_thscode = _normalize_a_share_thscode(thscode)
+    start = _parse_iso_date(start_date, "start_date")
+    end = _parse_iso_date(end_date, "end_date")
+    if start > end:
+        raise ValueError("start_date must be before or equal to end_date")
+    try:
+        one_year_later = start.replace(year=start.year + 1)
+    except ValueError:
+        one_year_later = start.replace(year=start.year + 1, day=28)
+    if end > one_year_later:
+        raise ValueError("date range must not exceed one year")
+    return _get(
+        "/api/a-share/special-data/hot-stock-rank-trend",
+        {
+            "thscode": normalized_thscode,
+            "start_date": start_date,
+            "end_date": end_date,
+        },
+    )
+
+
+def special_data_dragon_tiger_list(
+    *,
+    board_type: Literal["all", "org", "hot_money"] = "all",
+    date: str | None = None,
+) -> dict[str, Any]:
+    """Dragon-tiger list, optionally filtered by board type and trade date."""
+    normalized_board_type = (
+        board_type.strip().lower() if isinstance(board_type, str) else ""
+    )
+    if normalized_board_type not in _DRAGON_TIGER_BOARD_TYPES:
+        raise ValueError(
+            f"board_type must be one of {_DRAGON_TIGER_BOARD_TYPES}; got {board_type!r}"
+        )
+    if date is not None:
+        _parse_iso_date(date, "date")
+    return _get(
+        "/api/a-share/special-data/dragon-tiger-list",
+        {"board_type": normalized_board_type, "date": date},
+    )
+
+
 __all__ = [
     "FuyaoApiError",
     "tickers_search",
@@ -775,4 +885,9 @@ __all__ = [
     "special_data_limit_up_ladder",
     "special_data_anomaly_analysis_list",
     "special_data_anomaly_analysis_stock",
+    "special_data_skyrocket_list",
+    "special_data_hot_stock_list",
+    "special_data_hot_stock_list_history",
+    "special_data_hot_stock_rank_trend",
+    "special_data_dragon_tiger_list",
 ]

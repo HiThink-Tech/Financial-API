@@ -1,4 +1,4 @@
-# Fuyao API Cheatsheet (18 REST endpoints / 17 MCP tools)
+# Fuyao API Cheatsheet (23 REST endpoints / 22 MCP tools)
 
 Base URL: `https://fuyao.aicubes.cn`
 Auth: `X-api-key: <token>` (REST) · `API_KEY` env var (MCP)
@@ -120,6 +120,32 @@ Field conventions:
 - Missing input returns `1001`; bad/empty tokens return `1002`; more than 50 raw tokens returns `1003`.
 - Returns the same current-day `{timestamp, item}` shape and five public item fields as `anomaly-analysis-list`.
 
+## 19. `GET /api/a-share/special-data/skyrocket-list`
+- MCP tool: `get_a_share_special_data_skyrocket_list`.
+- Optional: `period` ∈ {day (default), hour}.
+- Returns: `{timestamp, item:[{thscode, ticker, name, rank, heat, rank_change, rank_trend, analyse, analyse_title, tags, topic}...]}`.
+
+## 20. `GET /api/a-share/special-data/hot-stock-list`
+- MCP tool: `get_a_share_special_data_hot_stock_list`.
+- Optional: `period` ∈ {day (default), hour}.
+- Returns the same current ranking shape as `skyrocket-list`.
+
+## 21. `GET /api/a-share/special-data/hot-stock-list-history`
+- MCP tool: `get_a_share_special_data_hot_stock_list_history`.
+- Required: `date` in `YYYY-MM-DD`, within the server's most recent one-year window.
+- Returns: `{date, date_ms, item:[{thscode, ticker, name, rank}...]}`.
+
+## 22. `GET /api/a-share/special-data/hot-stock-rank-trend`
+- MCP tool: `get_a_share_special_data_hot_stock_rank_trend`.
+- Required: one A-share `thscode`, `start_date`, `end_date`; dates use `YYYY-MM-DD`, start ≤ end, range ≤ one year, both dates within the server's most recent one-year window.
+- Returns: `{timestamp, item:[{thscode, ticker, date, date_ms, rank}...]}`; `timestamp` is the start date at Asia/Shanghai 00:00.
+
+## 23. `GET /api/a-share/special-data/dragon-tiger-list`
+- MCP tool: `get_a_share_special_data_dragon_tiger_list`.
+- Optional: `board_type` ∈ {all (default), org, hot_money}; `date` in `YYYY-MM-DD`. Omitted date resolves to the latest A-share trading day; explicit dates must be trading days within one year.
+- Returns: `{timestamp, board_type, trade_date, count, stock_count, stock_items, hot_money_items}`.
+- `stock_items[]` exposes `thscode`, `ticker`, `name`, concepts, price change, buy/sell/net values, institution/hot-money aggregates and ranking fields. `hot_money_items[]` exposes `name`, `buying`, and nested stock `rows`.
+
 ---
 
 ## Common pitfalls
@@ -131,3 +157,4 @@ Field conventions:
 - Index endpoints have no `adjust` / no `offset`. Index thscode supports both THS suffixes (`.TI`) and standard exchange suffixes (`.SH` / `.SZ`).
 - Limit-up pool defaults to today; pass `date_ms` for historical days. The pool is sorted by `last_price desc` by default — pass `--sort-field limit_up_time` for time-of-day ordering.
 - Anomaly analysis is today-only. Do not treat `anomaly-analysis-list` as an MCP tool; only the stock endpoint is exposed through hosted MCP.
+- Hot-list `period` accepts only `day` / `hour`. History, rank trend and explicit dragon-tiger dates use ISO `YYYY-MM-DD` and are limited by the server to its most recent one-year window.

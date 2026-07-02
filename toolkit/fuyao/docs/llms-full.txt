@@ -174,7 +174,7 @@ https://fuyao.aicubes.cn/llms-full.txt 的接口契约，输出可直接运行�
 
 ## 你可以访问什么
 
-按 **基础数据 + A股** 双主干组织：基础数据提供标的检索与标的列表获取，A股主干覆盖交易日历、行情、除复权、财务报表、财务指标、指数数据、涨跌停与当日个股异动、全市场数据导出。
+按 **基础数据 + A股** 双主干组织：基础数据提供标的检索与标的列表获取，A股主干覆盖交易日历、行情、除复权、财务报表、财务指标、指数数据、涨跌停、当日个股异动、市场热榜、龙虎榜与全市场数据导出。
 
   - [REST API](/docs/api-reference/overview): 标准 HTTP 接口，按 `/api/<标的宇宙>/<数据类型>/<动作>` 形态组织。覆盖行情快照、
     历史 K 线、标的检索 / 列表、除复权、财务报表与财务指标、指数数据、特色数据与全市场 Parquet 导出。
@@ -186,7 +186,7 @@ https://fuyao.aicubes.cn/llms-full.txt 的接口契约，输出可直接运行�
   - [A 股 · 财务指标](/docs/api-reference/financial-indicators): 按单只 A 股与报告季度返回成长、盈利、偿债、运营、现金流五类指标。
   - [A 股 · 交易日历](/docs/api-reference/calendar): A 股近一年交易日序列，同时返回毫秒戳与 `yyyyMMdd` 可读日期，方便展示与对账。
   - [A 股 · 同花顺指数列表和成分股](/docs/api-reference/a-share-index): 按 tag 列出同花顺指数清单，并按 thscode 取当前成分股（同时支持沪深 300 等标准指数）。
-  - [A 股 · 同花顺功能数据](/docs/api-reference/special-data): 提供涨停股票池、连板天梯与当日个股异动原因，面向盘面复盘和短线情绪分析。
+  - [A 股 · 同花顺功能数据](/docs/api-reference/special-data): 提供涨停股票池、连板天梯、当日个股异动、市场热榜与龙虎榜，面向盘面复盘和短线情绪分析。
   - [元信息 · 标的检索](/docs/api-reference/ticker-search): 按 thscode / ticker / 名称做跨市场消歧检索。
   - [元信息 · 标的列表获取](/docs/api-reference/ticker-list): 按市场与资产类型分页获取标的列表。
   - [统一响应信封](/docs/api-reference/overview): 所有接口返回 `ApiResponse`（`code` / `message` / `request_id` / `data`），业务错误经 `code` 表达。
@@ -234,7 +234,7 @@ https://fuyao.aicubes.cn/llms-full.txt 的接口契约，输出可直接运行�
 | [A 股 · 财务报表](/docs/api-reference/financials) | 利润表 / 资产负债表 / 现金流量表多期序列 | 支持最近 N 期或时间区间取数。 |
 | [A 股 · 财务指标](/docs/api-reference/financial-indicators) | 成长、盈利、偿债、运营、现金流五类指标 | 按 `thscode + report` 查询单个报告季度。 |
 | [A 股 · 指数行情与同花顺指数](/docs/api-reference/a-share-index) | 指数行情快照 / 历史 K 线、同花顺指数列表与成分股 | 同时支持沪深 300 等标准指数的成分股查询。 |
-| [A 股 · 特色数据](/docs/api-reference/special-data) | 涨停股票池、连板天梯与当日个股异动原因 | 面向盘面复盘和短线情绪分析；异动不提供历史查询。 |
+| [A 股 · 特色数据](/docs/api-reference/special-data) | 涨停股票池、连板天梯、当日个股异动、市场热榜与龙虎榜 | 面向盘面复盘和短线情绪分析；异动不提供历史查询。 |
 
 字段统一使用 snake_case、毫秒级 Unix 时间戳与显式 `currency`，便于 LLM 解析。
 所有业务结果（含错误）走统一 `ApiResponse` 信封 —— 详见
@@ -361,7 +361,7 @@ export API_KEY="<your-api-key>"
 | [除复权 (corporate-actions)](./corporate-actions.mdx) | `/api/a-share/corporate-actions` | A 股复权因子事件流（分红 / 送股 / 配股）。 |
 | [财务报表与指标 (financials)](./financials.mdx) | `/api/a-share/financials` | A 股整体合并利润表 / 资产负债表 / 现金流量表多期序列，以及单报告期财务指标。 |
 | [交易日历 (calendar)](./calendar.mdx) | `/api/a-share/calendar` | A 股近一年交易日序列（含毫秒戳与 `yyyyMMdd`）。 |
-| [特色数据 (special-data)](./special-data.mdx) | `/api/a-share/special-data` | A 股涨停股票池、连板天梯与当日个股异动原因。 |
+| [特色数据 (special-data)](./special-data.mdx) | `/api/a-share/special-data` | A 股涨停股票池、连板天梯、当日个股异动、市场热榜与龙虎榜。 |
 | [同花顺指数列表和成分股 (a-share-index)](./a-share-index.mdx) | `/api/a-share-index` | 同花顺指数列表与成分股清单（同时支持沪深 300 等标准指数）。 |
 
 ## 通用约定
@@ -1568,9 +1568,9 @@ curl 'https://fuyao.aicubes.cn/api/a-share-index/prices/historical?thscode=88604
 
 来源：https://fuyao.aicubes.cn/docs/api-reference/special-data/
 
-> A 股特色数据：涨停股票池、连板天梯与当日个股异动原因
+> A 股特色数据：涨停股票池、连板天梯、当日个股异动、市场热榜与龙虎榜
 
-特色数据模块提供 A 股盘面加工类数据。本页覆盖涨停股票池、连板天梯与只提供当日快照的个股异动原因。
+特色数据模块提供 A 股盘面加工类数据。本页覆盖涨停股票池、连板天梯、只提供当日快照的个股异动原因，以及市场热榜、热度趋势和龙虎榜。
 返回统一响应信封 `ApiResponse`，业务错误经 `code` 字段表达，HTTP 状态码恒为 200。
 
 :::info 通用约定
@@ -1787,6 +1787,55 @@ curl 'https://fuyao.aicubes.cn/api/a-share/special-data/limit-up-ladder' \
 | `board_num` | integer | 连板数。 |
 | `seal_nextday` | boolean \| null | 次一交易日是否继续封板；最近交易日没有次日参考，固定为 `null`。 |
 | `sign_level` | integer | 上游标记等级。 |
+
+## 飙升榜与热股榜
+
+```text
+GET /api/a-share/special-data/skyrocket-list
+GET /api/a-share/special-data/hot-stock-list
+```
+
+**MCP Tools**：`get_a_share_special_data_skyrocket_list`、`get_a_share_special_data_hot_stock_list`
+
+两个端点都接受可选 `period`：`day`（默认）或 `hour`。响应 `data` 为
+`{timestamp, item}`；`item[]` 包含 `thscode`、`ticker`、`name`、`rank`、`heat`、
+`rank_change`、`rank_trend`、`analyse`、`analyse_title`、`tags`、`topic`。
+
+## 历史热股榜
+
+```text
+GET /api/a-share/special-data/hot-stock-list-history
+```
+
+**MCP Tool**：`get_a_share_special_data_hot_stock_list_history`
+
+必需参数 `date` 使用 `YYYY-MM-DD`，服务端限制在最近一年内。响应为
+`{date, date_ms, item:[{thscode, ticker, name, rank}...]}`。
+
+## 热股排名趋势
+
+```text
+GET /api/a-share/special-data/hot-stock-rank-trend
+```
+
+**MCP Tool**：`get_a_share_special_data_hot_stock_rank_trend`
+
+必需参数为单只 A 股 `thscode`、`start_date`、`end_date`。日期使用 `YYYY-MM-DD`，
+起始日不得晚于结束日，区间不得超过一年，且两端都必须位于服务端最近一年窗口内。
+响应为 `{timestamp, item:[{thscode, ticker, date, date_ms, rank}...]}`。
+
+## 龙虎榜
+
+```text
+GET /api/a-share/special-data/dragon-tiger-list
+```
+
+**MCP Tool**：`get_a_share_special_data_dragon_tiger_list`
+
+可选 `board_type` 为 `all`（默认）、`org` 或 `hot_money`；可选 `date` 使用
+`YYYY-MM-DD`。省略日期时使用最近 A 股交易日，显式日期必须为最近一年内交易日。
+响应字段包括 `timestamp`、`board_type`、`trade_date`、`count`、`stock_count`、
+`stock_items` 和 `hot_money_items`；公开投影包含个股、机构和游资相关的排行与净买卖字段。
 
 ## 当日个股异动列表
 
@@ -2065,8 +2114,8 @@ API Key 与 REST API 共用，可在 [API Key 管理](/admin) 页签发。
 
 ## 工具一览
 
-当前共注册 **17 个工具**，覆盖行情快照、历史 K 线、复权因子事件流、财务报表与财务指标、
-交易日历、标的检索 / 标的列表获取、同花顺指数列表 / 成分股 / 行情，以及涨跌停和按代码查询当日个股异动。
+当前共注册 **22 个工具**，覆盖行情快照、历史 K 线、复权因子事件流、财务报表与财务指标、
+交易日历、标的检索 / 标的列表获取、同花顺指数列表 / 成分股 / 行情，以及涨跌停、按代码查询当日个股异动、市场热榜与龙虎榜。
 
 | MCP 服务 | MCP 端点 | MCP 工具 | 中文名 | 对应 REST |
 |---|---|---|---|---|
@@ -2081,6 +2130,11 @@ API Key 与 REST API 共用，可在 [API Key 管理](/admin) 页签发。
 | fuyao-a-share-mcp | `/mcp/a-share` | [`get_a_share_special_data_limit_up_pool`](./tools/get_a_share_special_data_limit_up_pool.mdx) | A股涨停股票池 | `GET /api/a-share/special-data/limit-up-pool` |
 | fuyao-a-share-mcp | `/mcp/a-share` | [`get_a_share_special_data_limit_up_ladder`](./tools/get_a_share_special_data_limit_up_ladder.mdx) | A股连板天梯 | `GET /api/a-share/special-data/limit-up-ladder` |
 | fuyao-a-share-mcp | `/mcp/a-share` | [`get_a_share_special_data_anomaly_analysis_stock`](./tools/get_a_share_special_data_anomaly_analysis_stock.mdx) | A股个股异动原因 | `GET /api/a-share/special-data/anomaly-analysis-stock` |
+| fuyao-a-share-mcp | `/mcp/a-share` | [`get_a_share_special_data_skyrocket_list`](./tools/get_a_share_special_data_skyrocket_list.mdx) | A股飙升榜 | `GET /api/a-share/special-data/skyrocket-list` |
+| fuyao-a-share-mcp | `/mcp/a-share` | [`get_a_share_special_data_hot_stock_list`](./tools/get_a_share_special_data_hot_stock_list.mdx) | A股热股榜 | `GET /api/a-share/special-data/hot-stock-list` |
+| fuyao-a-share-mcp | `/mcp/a-share` | [`get_a_share_special_data_hot_stock_list_history`](./tools/get_a_share_special_data_hot_stock_list_history.mdx) | A股历史热股榜 | `GET /api/a-share/special-data/hot-stock-list-history` |
+| fuyao-a-share-mcp | `/mcp/a-share` | [`get_a_share_special_data_hot_stock_rank_trend`](./tools/get_a_share_special_data_hot_stock_rank_trend.mdx) | A股热股排名趋势 | `GET /api/a-share/special-data/hot-stock-rank-trend` |
+| fuyao-a-share-mcp | `/mcp/a-share` | [`get_a_share_special_data_dragon_tiger_list`](./tools/get_a_share_special_data_dragon_tiger_list.mdx) | A股龙虎榜 | `GET /api/a-share/special-data/dragon-tiger-list` |
 | fuyao-a-share-index-mcp | `/mcp/a-share-index` | [`get_a_share_index_catalog_ths_index_list`](./tools/get_a_share_index_catalog_ths_index_list.mdx) | 同花顺指数列表 | `GET /api/a-share-index/catalog/ths-index-list` |
 | fuyao-a-share-index-mcp | `/mcp/a-share-index` | [`get_a_share_index_constituents_ths_stock_list`](./tools/get_a_share_index_constituents_ths_stock_list.mdx) | 同花顺指数成分股 | `GET /api/a-share-index/constituents/ths-stock-list` |
 | fuyao-a-share-index-mcp | `/mcp/a-share-index` | [`get_a_share_index_prices_snapshot`](./tools/get_a_share_index_prices_snapshot.mdx) | 指数行情快照 | `GET /api/a-share-index/prices/snapshot` |

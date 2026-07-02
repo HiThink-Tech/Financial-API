@@ -21,7 +21,7 @@
 - [财务报表](https://fuyao.aicubes.cn/docs/api-reference/financials/): A 股整体合并利润表 / 资产负债表 / 现金流量表多期序列
 - [交易日历](https://fuyao.aicubes.cn/docs/api-reference/calendar/): A 股近一年交易日序列
 - [指数数据](https://fuyao.aicubes.cn/docs/api-reference/a-share-index/): 同花顺指数 / 板块的列表、成分股、行情快照与历史 K 线
-- [特色数据](https://fuyao.aicubes.cn/docs/api-reference/special-data/): A 股涨停股票池、连板天梯与当日个股异动原因
+- [特色数据](https://fuyao.aicubes.cn/docs/api-reference/special-data/): A 股涨停股票池、连板天梯、当日个股异动、市场热榜与龙虎榜
 - [财务指标数据](https://fuyao.aicubes.cn/docs/api-reference/financial-indicators/): 按 A 股标的与报告期返回成长、盈利、偿债、运营和现金流指标
 - [指数概况](https://fuyao.aicubes.cn/docs/api-reference/index-overview/): 指数基本信息、成分股、权重接口（敬请期待）
 - [资金流向](https://fuyao.aicubes.cn/docs/api-reference/money-flow/): A 股资金流向接口（敬请期待）
@@ -52,6 +52,11 @@
 - [A股连板天梯](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_special_data_limit_up_ladder/): 返回近 30 个交易日的连板梯队矩阵
 - [A股涨停股票池](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_special_data_limit_up_pool/): 按交易日返回 A 股涨停 / 连板股票池
 - [A股个股异动原因](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_special_data_anomaly_analysis_stock/): 按 1–50 个 thscode 查询当日异动原因
+- [A股飙升榜](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_special_data_skyrocket_list/): 按日或小时返回飙升热度排行
+- [A股热股榜](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_special_data_hot_stock_list/): 按日或小时返回热股排行
+- [A股历史热股榜](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_special_data_hot_stock_list_history/): 按日期返回近一年历史热股排行
+- [A股热股排名趋势](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_special_data_hot_stock_rank_trend/): 查询单股指定日期区间的热度排名趋势
+- [A股龙虎榜](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_special_data_dragon_tiger_list/): 按榜单类型与交易日查询龙虎榜
 - [股票基础信息查询](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_stock_basics/): A 股标的基础信息查询 MCP 工具（敬请期待）
 - [股票所属同花顺指数查询](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_ths_index_membership/): 按个股反查所属同花顺行业/概念指数 MCP 工具（敬请期待）
 - [估值数据](https://fuyao.aicubes.cn/docs/mcp/tools/get_a_share_valuations/): A 股估值数据 MCP 工具（敬请期待）

@@ -14,7 +14,7 @@
 
 - **服务定位**：面向 AI Agent 与量化研究的结构化金融数据服务。
 - **接入方式**：REST API、MCP Tools、官方 Agent Skill、Python/CLI toolkit。
-- **当前数据**：A 股行情、代码表、公司行动、财务报表与财务指标、交易日历、指数、涨停与当日个股异动、全市场数据导出。
+- **当前数据**：A 股行情、代码表、公司行动、财务报表与财务指标、交易日历、指数、涨停与当日个股异动、市场热榜与龙虎榜、全市场数据导出。
 - **本地能力**：自动按需拉取全量 / 增量 dump（无需手动下载 Parquet），导入 DuckDB 后用 `marketdb` 做本地查询、研究和回测。
 - **Agent 能力**：仓库提供官方 Skill，方便 Agent 按固定规则理解、选择并调用金融数据能力。
 
@@ -80,6 +80,10 @@ python toolkit/fuyao/scripts/fuyao.py financials-indicators --thscode 300033.SZ 
 
 # 当日个股异动
 python toolkit/fuyao/scripts/fuyao.py anomaly-analysis-stock --thscodes 600519.SH,000001.SZ
+
+# 市场热榜与龙虎榜
+python toolkit/fuyao/scripts/fuyao.py hot-stock-list --period day
+python toolkit/fuyao/scripts/fuyao.py dragon-tiger-list --board-type all
 ```
 
 Python 调用：
@@ -202,6 +206,7 @@ Agent 调用约定：
 | 财务报表 | 利润表、资产负债表、现金流量表 | `financials-*` |
 | 财务指标 | 按标的和报告期获取成长、盈利、偿债、运营、现金流指标 | `financials-indicators` |
 | 当日个股异动 | 当日异动列表、标签筛选、按 1–50 个 thscode 查询 | `anomaly-analysis-*` |
+| 市场热榜与龙虎榜 | 飙升榜、热股榜、历史热股榜、单股排名趋势与龙虎榜 | `skyrocket-list` / `hot-stock-*` / `dragon-tiger-list` |
 | 交易日历 | A 股交易日判断和窗口切分 | `calendar-trading-days` |
 | 本地增量更新 | 自动按需拉 FULL / INCREMENTAL dump 并合并到本地 DuckDB | `marketdb auto-sync` |
 
@@ -255,6 +260,8 @@ python -m pytest tests/
 <!-- FEATURE-ITERATION-LOG:START -->
 | 时间 | 迭代内容 | 交付成果 | 相关迭代目录 |
 | --- | --- | --- | --- |
+| 2026-07-02 | 同步飙升榜、热股榜、历史热股榜、热股排名趋势和龙虎榜能力。 | fuyao toolkit 扩展为 23 个 REST 端点、22 个 MCP 工具；补齐 client/CLI、参数校验、离线契约测试与文档。 | — |
+| 2026-07-01 | 新增“灵感”金融看板示例板块，并提供单股行情与趋势速览的 Prompt、预览图和静态 HTML。 | 建立可浏览、可复制 Prompt、可继续扩展的灵感示例入口。 | — |
 | 2026-07-01 | 同步 API Server 新增的财务指标与当日个股异动能力：补充 3 个 REST client/CLI 命令，并登记其中 2 个 MCP 工具。 | fuyao toolkit 扩展为 18 个 REST 端点、17 个 MCP 工具；补齐参数校验、当日快照边界、REST-only/MCP 暴露差异和离线契约测试。 | — |
 | 2026-06-23 | 让 `marketdb` 走「自动下载 dump + 增量合并」替代手工 Parquet 与 REST 逐标的拉取：新增 `auto-sync` CLI、`bootstrap.py` 双轨、`release_tag` 幂等、跨平台缓存与清理、API Key 缺失/鉴权失败引导用户到 admin 控制台获取 key。 | 用户从「自己下 Parquet → 放盘 → 手动导入」转为「配 `API_KEY` → `python bootstrap.py`」一条命令完成首次构建；后续增量直接 `marketdb auto-sync`，复权事件每次自动刷新，避免 `v_daily_qfq` 漂移。 | `feature/2026-06-23-auto-dump-download-and-incremental-merge/` |
 <!-- FEATURE-ITERATION-LOG:END -->

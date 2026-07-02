@@ -1,6 +1,6 @@
 # MCP Config for Fuyao (Claude Desktop / Cursor / Windsurf)
 
-Fuyao publishes 17 tools through 3 hosted MCP services. You don't need to run a local MCP server — just point your client at the hosted endpoints with your API token.
+Fuyao publishes 22 tools through 3 hosted MCP services. You don't need to run a local MCP server — just point your client at the hosted endpoints with your API token.
 
 ## Endpoints
 
@@ -54,7 +54,7 @@ Edit `~/.codeium/windsurf/mcp_config.json` — same schema.
 
 ## Verifying
 
-After restart, the client should expose 17 tools:
+After restart, the client should expose 22 tools:
 - `get_a_share_calendar_trading_days`
 - `get_a_share_corporate_actions_adjustment_factors`
 - `get_a_share_financials_balance_sheets`
@@ -66,6 +66,11 @@ After restart, the client should expose 17 tools:
 - `get_a_share_special_data_anomaly_analysis_stock`
 - `get_a_share_special_data_limit_up_ladder`
 - `get_a_share_special_data_limit_up_pool`
+- `get_a_share_special_data_skyrocket_list`
+- `get_a_share_special_data_hot_stock_list`
+- `get_a_share_special_data_hot_stock_list_history`
+- `get_a_share_special_data_hot_stock_rank_trend`
+- `get_a_share_special_data_dragon_tiger_list`
 - `get_a_share_index_catalog_ths_index_list`
 - `get_a_share_index_constituents_ths_stock_list`
 - `get_a_share_index_prices_historical`

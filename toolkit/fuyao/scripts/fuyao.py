@@ -43,6 +43,11 @@ from fuyao_client import (  # noqa: E402
     special_data_limit_up_pool,
     special_data_anomaly_analysis_list,
     special_data_anomaly_analysis_stock,
+    special_data_dragon_tiger_list,
+    special_data_hot_stock_list,
+    special_data_hot_stock_list_history,
+    special_data_hot_stock_rank_trend,
+    special_data_skyrocket_list,
     tickers_list,
     tickers_search,
 )
@@ -217,6 +222,31 @@ def cmd_anomaly_analysis_stock(args):
     return special_data_anomaly_analysis_stock(codes)
 
 
+def cmd_skyrocket_list(args):
+    return special_data_skyrocket_list(args.period)
+
+
+def cmd_hot_stock_list(args):
+    return special_data_hot_stock_list(args.period)
+
+
+def cmd_hot_stock_list_history(args):
+    return special_data_hot_stock_list_history(args.date)
+
+
+def cmd_hot_stock_rank_trend(args):
+    return special_data_hot_stock_rank_trend(
+        args.thscode, args.start_date, args.end_date
+    )
+
+
+def cmd_dragon_tiger_list(args):
+    return special_data_dragon_tiger_list(
+        board_type=args.board_type,
+        date=args.date,
+    )
+
+
 # ---------------------------------------------------------------------------
 # argparse wiring
 # ---------------------------------------------------------------------------
@@ -239,7 +269,7 @@ def _add_financials_subparser(sub, name: str, help_text: str, handler):
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="fuyao",
-        description="Fuyao A-share data CLI (18 REST capabilities). JSON-only stdout. "
+        description="Fuyao A-share data CLI (23 REST capabilities). JSON-only stdout. "
         "Auth: FUYAO_TOKEN env var.",
     )
     parser.add_argument("--compact", action="store_true", help="emit single-line JSON")
@@ -425,6 +455,50 @@ def build_parser() -> argparse.ArgumentParser:
         help="file with one A-share thscode per line",
     )
     p.set_defaults(func=cmd_anomaly_analysis_stock)
+
+    # special-data hot lists and dragon-tiger list
+    p = sub.add_parser(
+        "skyrocket-list",
+        help="A-share skyrocket ranking for the day or hour period",
+    )
+    p.add_argument("--period", default="day", choices=["day", "hour"])
+    p.set_defaults(func=cmd_skyrocket_list)
+
+    p = sub.add_parser(
+        "hot-stock-list",
+        help="A-share hot-stock ranking for the day or hour period",
+    )
+    p.add_argument("--period", default="day", choices=["day", "hour"])
+    p.set_defaults(func=cmd_hot_stock_list)
+
+    p = sub.add_parser(
+        "hot-stock-list-history",
+        help="historical A-share hot-stock ranking for one date",
+    )
+    p.add_argument("--date", required=True, help="YYYY-MM-DD within one year")
+    p.set_defaults(func=cmd_hot_stock_list_history)
+
+    p = sub.add_parser(
+        "hot-stock-rank-trend",
+        help="hot-stock rank trend for one A-share code over at most one year",
+    )
+    p.add_argument("--thscode", required=True)
+    p.add_argument("--start-date", dest="start_date", required=True)
+    p.add_argument("--end-date", dest="end_date", required=True)
+    p.set_defaults(func=cmd_hot_stock_rank_trend)
+
+    p = sub.add_parser(
+        "dragon-tiger-list",
+        help="A-share dragon-tiger list by board type and optional trade date",
+    )
+    p.add_argument(
+        "--board-type",
+        dest="board_type",
+        default="all",
+        choices=["all", "org", "hot_money"],
+    )
+    p.add_argument("--date", help="optional YYYY-MM-DD trade date within one year")
+    p.set_defaults(func=cmd_dragon_tiger_list)
 
     return parser
 

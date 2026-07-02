@@ -43,6 +43,7 @@ toolkit/
 | 指数行情快照 / 历史 K 线 | ❌ | ✅ `index-snapshot` / `index-historical` |
 | 涨停股票池 / 连板天梯 | ❌ | ✅ `limit-up-pool` / `limit-up-ladder` |
 | 当日个股异动原因 | ❌ | ✅ `anomaly-analysis-list` / `anomaly-analysis-stock` |
+| 飙升榜 / 热股榜 / 排名趋势 / 龙虎榜 | ❌ | ✅ `skyrocket-list` / `hot-stock-list` / `hot-stock-list-history` / `hot-stock-rank-trend` / `dragon-tiger-list` |
 | 分钟 K / tick | ❌ | ❌（本仓库不覆盖） |
 
 ### 按"动作"分
@@ -67,6 +68,7 @@ toolkit/
 | 查当日涨停股票池 / 复盘短线情绪 | `fuyao.py limit-up-pool` / `limit-up-ladder` | 远端 API |
 | 查单股报告期财务指标 | `fuyao.py financials-indicators` | 远端 API |
 | 查当日个股异动原因 | `fuyao.py anomaly-analysis-list` / `anomaly-analysis-stock` | 远端 API |
+| 查市场热榜、个股热度趋势或龙虎榜 | `fuyao.py skyrocket-list` / `hot-stock-list` / `hot-stock-list-history` / `hot-stock-rank-trend` / `dragon-tiger-list` | 远端 API |
 
 ---
 
@@ -182,7 +184,7 @@ jq length /tmp/<x>.json
 - `toolkit/marketdb/docs/sdk.md` —— `MarketDB` 全方法签名
 - `toolkit/marketdb/docs/schema.md` —— 表 / 视图 / 列定义
 - `toolkit/marketdb/docs/recipes.md` —— 10 个常用配方
-- `toolkit/fuyao/README.md` —— Pattern A / B / C 接入 + 18 个 REST capability 矩阵
+- `toolkit/fuyao/README.md` —— Pattern A / B / C 接入 + 23 个 REST capability 矩阵
 - `toolkit/fuyao/docs/api-cheatsheet.md` —— REST endpoint 总览
 - `toolkit/fuyao/docs/llms-full.txt` —— 上游协议完整契约
 - `toolkit/fuyao/docs/error-codes.md` —— 错误码 + 重试策略

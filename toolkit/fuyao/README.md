@@ -1,6 +1,6 @@
 # toolkit/fuyao
 
-A tool-agnostic toolkit for calling the **同花顺金融数据 API (fuyao.aicubes.cn)** — a structured A-share financial data service offering 18 REST endpoints and 17 hosted MCP tools. **Use this for remote / live data (snapshots, financials, ticker catalog, indices, 涨跌停, 当日个股异动). For local historical OHLCV go to [`../marketdb/`](../marketdb/README.md).**
+A tool-agnostic toolkit for calling the **同花顺金融数据 API (fuyao.aicubes.cn)** — a structured A-share financial data service offering 23 REST endpoints and 22 hosted MCP tools. **Use this for remote / live data (snapshots, financials, ticker catalog, indices, 涨跌停, 个股异动, 热榜与龙虎榜). For local historical OHLCV go to [`../marketdb/`](../marketdb/README.md).**
 
 This folder is **the entry point for the remote API** for any human or AI agent (Claude Code, Codex, Cursor, ChatGPT, scripts in CI, Jupyter, …). It contains:
 
@@ -66,6 +66,9 @@ from fuyao_client import (
     index_prices_snapshot, index_prices_historical,
     special_data_limit_up_pool, special_data_limit_up_ladder,
     special_data_anomaly_analysis_list, special_data_anomaly_analysis_stock,
+    special_data_skyrocket_list, special_data_hot_stock_list,
+    special_data_hot_stock_list_history, special_data_hot_stock_rank_trend,
+    special_data_dragon_tiger_list,
     FuyaoApiError,
 )
 
@@ -91,6 +94,13 @@ indicators = financials_indicators("300033.SZ", "2025-1")
 # Same-day anomaly analysis (list is REST-only; stock also has hosted MCP)
 anomalies = special_data_anomaly_analysis_list(["LIMIT_UP", "SHARP_FALL"])
 stock_anomalies = special_data_anomaly_analysis_stock(["600519.SH", "000001.SZ"])
+
+# Hot rankings and dragon-tiger list
+hot = special_data_hot_stock_list("hour")
+trend = special_data_hot_stock_rank_trend(
+    "300033.SZ", "2026-06-01", "2026-07-01"
+)
+dragon_tiger = special_data_dragon_tiger_list(board_type="all")
 
 try:
     financials_income_statements(hit["thscode"], limit=4, start_ms=1, end_ms=2)
@@ -158,6 +168,17 @@ python3 toolkit/fuyao/scripts/fuyao.py anomaly-analysis-list \
     --tag-codes LIMIT_UP,SHARP_FALL > /tmp/anomaly-list.json
 python3 toolkit/fuyao/scripts/fuyao.py anomaly-analysis-stock \
     --thscodes 600519.SH,000001.SZ > /tmp/anomaly-stock.json
+
+# 热榜 / 热度趋势 / 龙虎榜
+python3 toolkit/fuyao/scripts/fuyao.py skyrocket-list --period day > /tmp/skyrocket.json
+python3 toolkit/fuyao/scripts/fuyao.py hot-stock-list --period hour > /tmp/hot-stock.json
+python3 toolkit/fuyao/scripts/fuyao.py hot-stock-list-history \
+    --date 2026-07-01 > /tmp/hot-stock-history.json
+python3 toolkit/fuyao/scripts/fuyao.py hot-stock-rank-trend \
+    --thscode 300033.SZ --start-date 2026-06-01 --end-date 2026-07-01 \
+    > /tmp/hot-stock-trend.json
+python3 toolkit/fuyao/scripts/fuyao.py dragon-tiger-list \
+    --board-type all --date 2026-07-01 > /tmp/dragon-tiger.json
 ```
 
 CLI emits JSON to stdout only (default `indent=2`, `--compact` for one-line). Persisting / format conversion is the caller's responsibility — there's intentionally **no** built-in csv / parquet writer. Convert outside:
@@ -175,7 +196,7 @@ Configure your MCP client (Claude Desktop / Cursor / Windsurf) to point at the A
 
 ---
 
-## Capability matrix (18 REST endpoints / 17 hosted MCP tools)
+## Capability matrix (23 REST endpoints / 22 hosted MCP tools)
 
 | Function | CLI subcommand | Notes |
 | --- | --- | --- |
@@ -197,6 +218,11 @@ Configure your MCP client (Claude Desktop / Cursor / Windsurf) to point at the A
 | `special_data_limit_up_ladder` | `limit-up-ladder` | 连板天梯；无入参，固定返回近 30 个交易日 × 6 板位矩阵 |
 | `special_data_anomaly_analysis_list` | `anomaly-analysis-list` | 仅当日；可选六种 `tag_codes`，多值 OR；REST-only |
 | `special_data_anomaly_analysis_stock` | `anomaly-analysis-stock` | 仅当日；1–50 个原始 thscode token，去重保序；REST + MCP |
+| `special_data_skyrocket_list` | `skyrocket-list` | 飙升榜；`period` ∈ {day, hour}，默认 day；REST + MCP |
+| `special_data_hot_stock_list` | `hot-stock-list` | 热股榜；`period` ∈ {day, hour}，默认 day；REST + MCP |
+| `special_data_hot_stock_list_history` | `hot-stock-list-history` | 指定 `YYYY-MM-DD` 的历史热股榜，服务端限制近一年；REST + MCP |
+| `special_data_hot_stock_rank_trend` | `hot-stock-rank-trend` | 单只 A 股在指定日期区间内的热度排名趋势，区间不超过一年；REST + MCP |
+| `special_data_dragon_tiger_list` | `dragon-tiger-list` | 龙虎榜；`board_type` ∈ {all, org, hot_money}，可选近一年交易日；REST + MCP |
 
 Full per-endpoint contract: [`docs/api-cheatsheet.md`](docs/api-cheatsheet.md).
 Full field semantics: [`docs/llms-full.txt`](docs/llms-full.txt).
