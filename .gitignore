@@ -2,6 +2,7 @@
 refer-to/
 feature/
 sdd-docs/*
+.workbuddy
 
 # ---- Secrets / local env ----
 .env

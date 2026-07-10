@@ -1,74 +1,87 @@
 # AGENTS.md
 
-> Entry file for any AI coding agent (Codex CLI, OpenAI Agents, Cursor, Windsurf, ChatGPT, Claude Code, …) working in this repository. This file is intentionally short — it points you at the canonical contracts and stays out of the way.
+> 任何 AI coding/data Agent 进入本仓库后的公开入口。项目品牌为“同花顺金融数据服务（hithink finance）”。
 
-## Repository at a glance
+## 必读顺序
 
-- **`marketdb/`** — local DuckDB-backed A-share data warehouse (Parquet → DuckDB → SQL/SDK). See `toolkit/marketdb/README.md` for the current contract.
-- **`toolkit/`** — tool-agnostic toolkits for both data sources. Start at `toolkit/README.md` (unified router):
-  - **`toolkit/marketdb/`** — local DB queries (历史 OHLCV、复权、面板、因子). Use whenever the answer lives in `data/market.duckdb`.
-  - **`toolkit/fuyao/`** — upstream 同花顺金融数据 API (fuyao.aicubes.cn) REST + MCP. Use whenever you need fresh data (snapshots, financials, ticker catalog).
-- **`examples/`** — runnable end-to-end Python scripts. Best first stop when learning the repo.
-- **`sdd-docs/`** — local-only SDD specs, active workspaces, and archives. It is gitignored and must not be committed or exported.
-- **`tests/`**, **`docs/`**, **`refer-to/`** — standard.
+1. 旧 checkout、旧 Prompt 或旧根级 Python 路径：先读 [`docs/monorepo-migration.md`](docs/monorepo-migration.md)。
+2. 所有金融数据任务：先读 [`skills/hithink-finance/SKILL.md`](skills/hithink-finance/SKILL.md)。
+3. 只加载 Skill 选择的一个接入方式或端点组，不要递归读取全部契约。
 
-## Which toolkit do I use?
+## Monorepo 边界
 
-| You want… | Go to |
+- `hithink-finance-cli/`：Node.js CLI 子项目，面向人类、Agent 和自动化；运行时不依赖 Python。
+- `python/`：唯一 Python 项目根，包含远端取数 toolkit、本地 `marketdb`、示例和测试。
+- `docs/`：公共文档中心；`docs/api/` 是仓库内唯一上游 REST API 契约源。
+- `skills/hithink-finance/`：可独立发布的统一 Skill；API/MCP 契约由脚本从 `docs/` 镜像。
+- `examples/`：monorepo 级示例导航与静态灵感。
+
+## 选择接入方式
+
+| 场景 | 优先入口 |
 | --- | --- |
-| Historical OHLCV / 复权 / 面板 / 因子研究 / SQL on local DB | `toolkit/marketdb/README.md` |
-| Live snapshot / 财报 / 复权事件 / 标的目录刷新 | `toolkit/fuyao/README.md` |
-| "Where's the data? How do I start?" | `toolkit/README.md` (decision tree) + `examples/README.md` |
+| 人类终端、Agent 执行、自动化、远端+本地一体化 | `hithink-finance` CLI |
+| 已连接 MCP 的 Chat 场景 | 托管 MCP |
+| 零依赖 HTTP、自定义语言或服务端 | REST API |
+| Python/Notebook/研究或已有 marketdb | Python toolkit/SDK |
 
-Full responsibility boundary + routing rules: [`toolkit/README.md`](toolkit/README.md).
+CLI 已安装时先运行 `hithink-finance capabilities --format json`，再按需运行 `schema <id>`；MCP 以实时 `tools/list` 为准；REST 响应字段以 `docs/api/` 及远端 <https://fuyao.aicubes.cn/llms-full.txt> 为准；Python 适配层参数以当前函数签名和 `--help` 为准。
 
-## Project-local skill
+## API Key
 
-For financial data tasks in this repository, first use `skills/financial-api/SKILL.md`.
-That skill must treat `toolkit/README.md` as the source of truth and scan current toolkit support before assuming the requested asset class or data type is available.
+所有远端接入方式使用在 <https://fuyao.aicubes.cn/admin> 获取的统一 API Key。
 
-## Auth (for `toolkit/fuyao/`)
+- 不得要求用户把 Key 粘贴到对话。
+- 不得把 Key 写入代码、Prompt、日志、公开配置、产物或 Git。
+- CLI 使用隐藏输入、stdin、系统凭据或 `HITHINK_FINANCE_API_KEY`。
+- REST/Python 使用进程环境变量或 Secret。
+- MCP 使用客户端 Secret 或环境变量插值。
 
-```bash
-export FUYAO_TOKEN=<token>     # issued at https://fuyao.aicubes.cn/admin
-# or API_KEY=<token> for MCP compatibility
-```
+## 大数据纪律
 
-**Never** paste tokens into prompts, code, or git commits.
-
-## Big-data discipline (mandatory for all AI agents)
-
-**Do not** echo paginated / full-market / multi-year / multi-ticker results into your conversation context. The flow is always:
+禁止把全市场、分页全集、多年或多标的原始结果输出到会话上下文。
 
 ```bash
-python3 toolkit/fuyao/scripts/fuyao.py <cmd> ... > /tmp/<x>.json     # or
-marketdb query --json --db data/market.duckdb --sql "..." > /tmp/<x>.json
-# then report file path + row count, NOT the contents
-jq length /tmp/<x>.json
+<command> ... > /tmp/result.json
+# 只报告文件路径、行数、时间窗口和摘要
 ```
 
-Downstream consumers (notebooks, marketdb, pandas) read the file. This keeps context cost bounded and lets you do many calls cheaply.
+CLI 优先使用具体命令的 `--output`、`db export` 或 `market panel --output`。Python/marketdb 将结果写到 `/tmp/`、`out/` 或用户指定路径。不要回显凭证或完整数据文件。
 
-## Conventions in this repo
+## 文档治理
 
-- **SDD development records**: substantial changes live in `sdd-docs/workspace/<id>-<slug>/`; promote stable facts to `sdd-docs/spec/` and archive completed work only after confirmation. `sdd-docs/` stays local and uncommitted.
-- **No global state writes by AI**: never install things into `~/.claude/`, `~/.config/`, etc. on behalf of the user. All deliverables ship inside this repo.
-- **No vendor lock-in in the toolkit**: both `toolkit/fuyao/` and `toolkit/marketdb/` are intentionally free of `SKILL.md` / `.cursorrules` / `.claude/`. Add tool-specific glue *outside* `toolkit/` if you need it (see each toolkit's README § "如何接入各 AI 工具").
+- 根 README 做项目总览；子目录 README 详细解释当前目录，不把细节继续拆散到不必要的多层文档。
+- 上游 REST API 契约只在 `docs/api/` 维护；修改后运行：
 
-## If you're a specific tool
+  ```bash
+  python scripts/sync_skill_contracts.py
+  python scripts/sync_skill_contracts.py --check
+  ```
 
-- **Codex CLI / OpenAI Agents** — you found this file automatically. Read `toolkit/README.md` next; it routes to the right sub-toolkit.
-- **Claude Code** — there's no `.claude/skills/SKILL.md` yet; rely on this AGENTS.md + `toolkit/README.md`. If a project-level SKILL.md is added later, it will just be a thin pointer to the same `toolkit/`.
-- **Cursor / Windsurf** — no `.cursor/rules/` or `.windsurf/` glue today. Either paste `toolkit/README.md` into the project prompt, or add a `.mdc` file pointing here.
-- **ChatGPT (web)** — attach `toolkit/fuyao/docs/llms-full.txt` (full upstream API contract) or `toolkit/marketdb/README.md` (local DB ops) when relevant.
+- 不要直接编辑 `skills/hithink-finance/references/api/` 或 `references/mcp.md`。
+- 不要在 Python、CLI、examples 或其他 README 中复制上游参数表、响应字段表和错误码全集；这些文档只说明自身功能与运行方式并链接契约。
+- 仓库不保存 `llms.txt`、`llms-full.txt` 或相似副本，只链接远端地址。
+- 改动公开能力、命令、选项或路由时，同步更新 README、统一 Skill、契约镜像和开发期契约测试。
 
-## Pointers
+## 验证
 
-- Unified routing + boundary: `toolkit/README.md`
-- Local DB SDK / CLI: `toolkit/marketdb/README.md`
-- Upstream API contract (authoritative): `toolkit/fuyao/docs/llms-full.txt` (mirror of `https://fuyao.aicubes.cn/llms-full.txt`)
-- Endpoint cheatsheet: `toolkit/fuyao/docs/api-cheatsheet.md`
-- Error codes + retry policy: `toolkit/fuyao/docs/error-codes.md`
-- MCP client config snippets: `toolkit/fuyao/docs/mcp-config.md`
-- Examples: `examples/`
-- Project history: root `README.md` § Development History; local detailed records: `sdd-docs/spec/`, `sdd-docs/workspace/`, `sdd-docs/archive/`
+```bash
+python scripts/sync_skill_contracts.py --check
+python -m pytest python/tests/
+
+cd hithink-finance-cli
+npm run verify
+```
+
+批量文档变更还要运行相对链接、旧品牌、旧 Skill 路径和重复契约扫描。离线测试不能证明线上认证或实时服务可用；只有实际授权请求才能称为线上验证。
+
+## 入口索引
+
+- 项目总览：[`README.md`](README.md)
+- 文档中心：[`docs/README.md`](docs/README.md)
+- REST API 契约：[`docs/api/README.md`](docs/api/README.md)
+- MCP：[`docs/mcp.md`](docs/mcp.md)
+- CLI：[`hithink-finance-cli/README.md`](hithink-finance-cli/README.md)
+- Python：[`python/README.md`](python/README.md)
+- Toolkit 路由：[`python/toolkit/README.md`](python/toolkit/README.md)
+- 示例：[`examples/README.md`](examples/README.md)

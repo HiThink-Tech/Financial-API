@@ -1,0 +1,66 @@
+{
+  "name": "@hithink-tech/hithink-finance-cli",
+  "version": "0.1.0",
+  "description": "hithink finance CLI for humans, automation, and AI agents",
+  "type": "module",
+  "bin": {
+    "hithink-finance": "./dist/cli/main.js"
+  },
+  "files": [
+    "dist",
+    "!dist/**/*.map",
+    "schemas",
+    "migrations",
+    "skills",
+    "scripts/postinstall.mjs",
+    "scripts/update-check.mjs",
+    "README.md",
+    "CHANGELOG.md",
+    "SECURITY.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "generate:contracts": "npm run build && node scripts/generate-contracts.mjs && prettier --write \"schemas/*.json\" \"skills/**/*.md\"",
+    "postinstall": "node scripts/postinstall.mjs",
+    "pretest": "npm run build",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --check .",
+    "verify": "npm run format && npm run lint && npm run typecheck && npm run test && npm run build",
+    "prepublishOnly": "node scripts/check-license.mjs && npm run verify"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HiThink-Tech/Financial-API.git",
+    "directory": "hithink-finance-cli"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/HiThink-Tech/Financial-API/tree/main/hithink-finance-cli",
+  "bugs": {
+    "url": "https://github.com/HiThink-Tech/Financial-API/issues"
+  },
+  "dependencies": {
+    "@duckdb/node-api": "1.5.4-r.1",
+    "@napi-rs/keyring": "1.3.0",
+    "commander": "15.0.0",
+    "skills": "1.5.15",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "22.15.1",
+    "eslint": "10.6.0",
+    "execa": "9.6.1",
+    "prettier": "3.9.4",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.63.0",
+    "vitest": "4.1.10"
+  }
+}

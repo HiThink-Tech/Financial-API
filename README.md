@@ -1,267 +1,241 @@
-# 同花顺金融数据 API
+# 同花顺金融数据服务
 
 [![Website](https://img.shields.io/badge/官网-fuyao.aicubes.cn-0b66ff)](https://fuyao.aicubes.cn/)
-[![Docs](https://img.shields.io/badge/API%20Docs-同花顺金融数据API-0f766e)](https://fuyao.aicubes.cn/docs/)
-[![Python](https://img.shields.io/badge/Python-3.11%2B-3776ab)](pyproject.toml)
+[![Docs](https://img.shields.io/badge/API%20Docs-同花顺金融数据服务-0f766e)](https://fuyao.aicubes.cn/docs/)
+[![Python](https://img.shields.io/badge/Python-3.11%2B-3776ab)](python/pyproject.toml)
+[![Node.js](https://img.shields.io/badge/Node.js-22.12%2B-339933)](hithink-finance-cli/package.json)
 
-**同花顺金融数据 API** 是同花顺面向 AI Agent、量化研究和开发者提供的结构化金融数据服务。平台通过 **REST API、MCP Tools、官方 Agent Skill、Python/CLI toolkit、本地 marketdb** 提供可编程消费的 A 股基础数据，并将逐步开放类似同花顺"涨停聚焦"的任务型数据能力，减少字段清洗、口径对齐、代码映射和数据拼接等处理成本。
+**同花顺金融数据服务（hithink finance）** 面向 AI Agent、量化研究和开发者，一站式提供 REST API、托管 MCP、Node.js CLI、Python toolkit/SDK、本地 DuckDB 与官方 Agent Skill。用户可以按场景自由选择接入方式，用统一 API Key 获取 A 股行情、财报、指数、板块、特色数据和全市场数据，并在本地完成同步、查询、研究数据准备与导出。
 
-- 官网：[https://fuyao.aicubes.cn/](https://fuyao.aicubes.cn/)
-- 文档：[https://fuyao.aicubes.cn/docs/](https://fuyao.aicubes.cn/docs/)
-- API Key 管理：[https://fuyao.aicubes.cn/admin/](https://fuyao.aicubes.cn/admin/)
+- 官网：<https://fuyao.aicubes.cn/>
+- 在线文档：<https://fuyao.aicubes.cn/docs/>
+- API Key 管理：<https://fuyao.aicubes.cn/admin/>
+- 仓库文档中心：[`docs/`](docs/README.md)
 
 ## 30 秒了解
 
-- **服务定位**：面向 AI Agent 与量化研究的结构化金融数据服务。
-- **接入方式**：REST API、MCP Tools、官方 Agent Skill、Python/CLI toolkit。
-- **当前数据**：A 股行情、代码表、公司行动、财务报表与财务指标、交易日历、指数、涨停与当日个股异动、市场热榜与龙虎榜、全市场数据导出。
-- **本地能力**：自动按需拉取全量 / 增量 dump（无需手动下载 Parquet），导入 DuckDB 后用 `marketdb` 做本地查询、研究和回测。
-- **Agent 能力**：仓库提供官方 Skill，方便 Agent 按固定规则理解、选择并调用金融数据能力。
+- **服务定位**：面向各类 AI Agent 场景和开发工具的一站式金融数据服务。
+- **接入方式**：REST API、托管 MCP、`hithink-finance` CLI、Python toolkit/SDK、本地 marketdb、统一 Agent Skill。
+- **当前数据**：A 股行情、标的目录、公司行动、财务报表与指标、交易日历、指数/板块、涨停/连板、个股异动、热榜、龙虎榜和全市场 Parquet。
+- **本地能力**：通过 CLI 或 marketdb 自动构建、增量同步和校验 DuckDB，支持历史行情、复权、全市场面板、SQL 和文件导出。
+- **Agent 能力**：安装一个 [`hithink-finance` Skill](skills/hithink-finance/SKILL.md)，Agent 会检测当前环境和能力边界，在 API/MCP/CLI/Python SDK 间自动选择。
 
 ## 能力概览
 
 | 能力 | 适用场景 | 推荐入口 |
 | --- | --- | --- |
-| REST API | 业务系统、脚本、服务端程序直接取数 | [快速开始](https://fuyao.aicubes.cn/docs/quickstart/) |
-| MCP Tools | Claude、Cursor、Windsurf、Codex 等 Agent 工具链 | [`toolkit/fuyao/docs/mcp-config.md`](toolkit/fuyao/docs/mcp-config.md) |
-| 官方 Agent Skill | 让 AI Agent 自动理解取数边界、工具选择和大结果处理规则 | [`skills/financial-api`](skills/financial-api) |
-| Python/CLI toolkit | 在 Python、Notebook、CI、Shell 中调用远端数据 | [`toolkit/fuyao/`](toolkit/fuyao/README.md) |
-| 本地 marketdb | 历史行情、复权视图、全市场面板、研究回测、本地 SQL | [`toolkit/marketdb/`](toolkit/marketdb/README.md) |
-| 全市场数据导出 | 首次构建本地库，后续按需增量更新 | `python bootstrap.py` / `marketdb auto-sync`（dump 规格见[全市场数据导出](https://fuyao.aicubes.cn/docs/api-reference/market-dumps/)） |
+| `hithink-finance` Skill | 让 Agent 自动选工具、处理认证、约束大结果并按需加载契约 | [`skills/hithink-finance/`](skills/hithink-finance/SKILL.md) |
+| CLI | 人类终端、Agent、自动化、远端取数和本地 DuckDB 一体化 | [`hithink-finance-cli/`](hithink-finance-cli/README.md) |
+| REST API | 零依赖 HTTP、自定义语言、服务端集成和自由编排 | [REST API 契约](docs/api/README.md) |
+| MCP | Chat Bot、IDE Chat 和支持 MCP 的客户端 | [MCP 接入说明](docs/mcp.md) |
+| Python toolkit/SDK | Python、Notebook、研究脚本和自定义取数策略 | [`python/`](python/README.md) |
+| marketdb | 本地历史行情、复权、全市场面板、SQL 和研究数据准备 | [`python/toolkit/marketdb/`](python/toolkit/marketdb/README.md) |
+
+## 最新变化
+
+当前 monorepo 版本带来三项关键变化，完整历史见 [`CHANGELOG.md`](CHANGELOG.md)：
+
+1. **新增 `hithink-finance` Node.js CLI**：统一远端数据、本地 DuckDB、稳定 JSON 信封、能力发现、诊断和生命周期命令；推荐直接从 npm 安装。
+2. **新增统一 `hithink-finance` Skill**：原根目录的通用、REST、MCP 和 CLI Setup Skills 已合并为一个可独立安装的入口，覆盖 API/MCP/CLI/Python SDK。
+3. **仓库升级为 monorepo**：Python 项目已迁入 `python/`。旧版用户和 Agent 必须先按 [Monorepo 版本升级指南](docs/monorepo-migration.md) 更新 editable 安装、脚本路径、CI 和 Prompt；本地数据库与 `.env` 不需要迁移。
 
 ## 快速开始
 
-### 1. 直接调用 REST API
+### 1. 获取统一 API Key
 
-登录 [同花顺金融数据 API 官网](https://fuyao.aicubes.cn/)，在 [API Key 管理](https://fuyao.aicubes.cn/admin/) 创建 API Key，然后携带 `X-api-key` 请求接口。
+登录 [同花顺金融数据服务官网](https://fuyao.aicubes.cn/)，在 [API Key 管理](https://fuyao.aicubes.cn/admin/) 创建 Key。API、MCP、CLI 和 Python 远端取数共用这一凭证。
+
+不要把 API Key 粘贴到对话、代码、日志、公开配置或 Git；根据接入方式使用隐藏输入、环境变量、stdin 或客户端 Secret。
+
+### 2. 优先安装 `hithink-finance` Skill
+
+Skill 是 Agent 使用本项目的统一说明书。它包含接入方式选择、API/MCP/CLI/Python 快速路径、完整 API 契约镜像、安全规则和大结果处理规范。
+
+使用支持 [Agent Skills](https://agentskills.io/) 的通用安装器：
+
+```bash
+npx skills add HiThink-Tech/Financial-API --skill hithink-finance -g --yes
+```
+
+也可以把完整的 [`skills/hithink-finance/`](skills/hithink-finance/SKILL.md) 目录复制到 Agent 文档声明的 Skills 发现目录。必须保留 `references/`，不要只复制 `SKILL.md`。安装后新开会话，并直接描述金融数据需求。
+
+### 3. 按场景选择接入方式
+
+#### CLI：人类与 Agent 的默认推荐
+
+CLI 把远端取数、本地数据库、认证、结构化输出和大结果落盘统一为一个命令面。优先从 npm 安装：
+
+```bash
+npm install -g @hithink-tech/hithink-finance-cli
+hithink-finance auth login
+hithink-finance capabilities --format json
+```
+
+仅在参与仓库开发或 npm 暂不可用时从源码验证：
+
+```bash
+cd hithink-finance-cli
+npm ci --ignore-scripts
+npm run build
+node dist/cli/main.js capabilities --format json
+node dist/cli/main.js doctor --format json
+```
+
+常见命令：
+
+```bash
+hithink-finance symbol search --q 600519 --limit 5 --format json
+hithink-finance market snapshot --thscodes 600519.SH --format json
+hithink-finance financials income --thscode 600519.SH --limit 4 --format json
+hithink-finance data init --format json
+hithink-finance db query --sql "SELECT * FROM v_daily_qfq LIMIT 10" --format json
+```
+
+完整说明见 [CLI README](hithink-finance-cli/README.md)。
+
+#### REST API：零依赖、可塑性最高
+
+直接用 `curl` 或任意 HTTP 客户端：
 
 ```bash
 curl 'https://fuyao.aicubes.cn/api/a-share/prices/snapshot?thscodes=600519.SH' \
-  -H 'X-api-key: <your-api-key>'
+  -H 'X-api-key: <API_KEY>'
 ```
 
-成功响应统一使用 `ApiResponse` 信封：
+API 适合自行编写取数策略、接入业务系统或使用任意编程语言。仓库内唯一上游契约源是 [`docs/api/`](docs/api/README.md)；上游完整机器可读契约始终保留在 <https://fuyao.aicubes.cn/llms-full.txt>，仓库不再保存副本。
+
+#### MCP：最快接入 Chat Bot
+
+把三个托管端点一次配置到 Claude Desktop、Cursor、Windsurf 或其他 MCP 客户端；客户端中使用 `hithink-finance-*` 作为服务名称：
 
 ```json
 {
-  "code": 0,
-  "message": "success",
-  "request_id": "a1b2c3d4",
-  "data": {}
+  "mcpServers": {
+    "hithink-finance-a-share": {
+      "type": "http",
+      "url": "https://fuyao.aicubes.cn/mcp/a-share",
+      "headers": { "X-api-key": "${API_KEY}" }
+    },
+    "hithink-finance-a-share-index": {
+      "type": "http",
+      "url": "https://fuyao.aicubes.cn/mcp/a-share-index",
+      "headers": { "X-api-key": "${API_KEY}" }
+    },
+    "hithink-finance-meta": {
+      "type": "http",
+      "url": "https://fuyao.aicubes.cn/mcp/meta",
+      "headers": { "X-api-key": "${API_KEY}" }
+    }
+  }
 }
 ```
 
-### 2. 使用 Python/CLI toolkit
+配置位置、安全方式、意图路由和验证步骤见 [MCP 接入说明](docs/mcp.md)；Skill 已内置工具功能快照，只有在实际调用或排查参数变化时才读取当前连接的 `tools/list`。
 
-克隆本仓库后，安装依赖并配置 API Key：
-
-```bash
-python -m pip install -e .
-
-# 推荐：拷贝 .env.example 为 .env，按需填入 API_KEY  等
-cp .env.example .env
-
-```
-
-常用 命令：
+#### Python SDK：二次开发与研究
 
 ```bash
-# 标的检索
-python toolkit/fuyao/scripts/fuyao.py tickers-search --q "贵州茅台"
-
-# 实时行情快照
-python toolkit/fuyao/scripts/fuyao.py prices-snapshot --thscodes 600519.SH
-
-# 利润表
-python toolkit/fuyao/scripts/fuyao.py financials-income --thscode 600519.SH --limit 4
-
-# 财务指标（报告期格式 YYYY-[1-4]）
-python toolkit/fuyao/scripts/fuyao.py financials-indicators --thscode 300033.SZ --report 2025-1
-
-# 当日个股异动
-python toolkit/fuyao/scripts/fuyao.py anomaly-analysis-stock --thscodes 600519.SH,000001.SZ
-
-# 市场热榜与龙虎榜
-python toolkit/fuyao/scripts/fuyao.py hot-stock-list --period day
-python toolkit/fuyao/scripts/fuyao.py dragon-tiger-list --board-type all
+python -m pip install -e ./python
+python python/toolkit/fuyao/scripts/fuyao.py tickers-search --q "贵州茅台"
+python python/toolkit/fuyao/scripts/fuyao.py prices-snapshot --thscodes 600519.SH
 ```
 
-Python 调用：
-
-```python
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path("toolkit/fuyao/scripts").resolve()))
-
-from fuyao_client import tickers_search, prices_snapshot
-
-hit = tickers_search("贵州茅台", limit=1)[0]
-snapshot = prices_snapshot([hit["thscode"]])
-```
-
-### 3. 构建本地行情数据库
-
-适用于历史研究、因子分析、回测和大批量 SQL 查询。
-
-只需配置 API Key 后运行一条命令，`bootstrap.py` 会自动判断需要拉取全量还是增量 dump，下载、合并、校验、清理临时文件全程自动完成：
+本地历史与研究：
 
 ```bash
-export API_KEY="<your-api-key>"   # 没有的话到 https://fuyao.aicubes.cn/admin/ 创建
-python bootstrap.py               # 默认：API 优先，本地 refer-to/data/ Parquet 兜底
+python python/bootstrap.py
+marketdb status --json --db data/market.duckdb
+marketdb query --json --db data/market.duckdb \
+  --sql "SELECT date, close FROM v_daily_qfq WHERE thscode='600519.SH' ORDER BY date DESC LIMIT 10"
 ```
 
-模式开关（默认就够用，按需选择）：
+Python 子项目包含远端取数 toolkit、`marketdb` CLI/Python SDK、示例和测试。详见 [Python README](python/README.md) 与 [toolkit 路由](python/toolkit/README.md)。
 
-```bash
-python bootstrap.py --api-only       # 只走 API，不读本地 Parquet
-python bootstrap.py --prefer-local   # 优先本地 Parquet，找不到再调 API
-python bootstrap.py --local-only     # 完全本地模式，找不到 Parquet 时直接退出
-python bootstrap.py --no-sync        # 只装包/建库，跳过数据同步
-python bootstrap.py --force          # 已最新时仍强制重拉全量 K 线（auto-sync 走 SKIP→FULL 升级）
-```
+## AI Agent 使用约定
 
-日常增量同步直接跑：
+进入仓库的 Agent 按以下顺序读取：
 
-```bash
-marketdb auto-sync --db data/market.duckdb
-```
+1. [`AGENTS.md`](AGENTS.md)
+2. [`skills/hithink-finance/SKILL.md`](skills/hithink-finance/SKILL.md)
+3. 与选中接入方式对应的一个详细入口
 
-`auto-sync` 会按交易日落后情况选 FULL（全量 dump）/ INCREMENTAL（近 10 日增量 dump，落后 ≤ 7 个交易日时使用）/ SKIP；**每次运行都会重新拉取复权 dump 并重算复权因子**（dump 文件名只到天级粒度，无法判断当天是否有 in-place 内容变化，所以默认不短路），保证 `v_daily_qfq` 不会漂。下载临时文件落到 `data/.cache/dumps/`，应用后立即删除；下载失败时自动重试 1 次，仍失败会提示到 [全市场数据导出](https://fuyao.aicubes.cn/docs/api-reference/market-dumps/) 手动下载并放入 `refer-to/data/` 再用 `--prefer-local` 重跑。
+执行时遵守：
 
-兜底使用本地 Parquet 时需放到 `refer-to/data/`（文件名末尾 `YYYYMMDD` 为快照日期，脚本自动选最新一份）：
+- 用户给名称或不完整代码时，先消歧为唯一 `thscode`，不要猜交易所后缀。
+- 最新/当天/财报/指数/特色数据使用远端能力；本地已有且足够新的历史行情优先使用 DuckDB。
+- 全市场、多年、多标的或分页全集必须落盘，只在对话中返回路径、行数和摘要。
+- 真实数据不可用就报告原因，不使用模拟数据或静态示例冒充。
+- 结果注明数据源、时间范围、报告期、复权口径和“非投资建议”。
 
-- `a_share_daily_k_1d_none_10y_<YYYYMMDD>.parquet`：全市场 10 年日 K
-- `a_share_adjustment_factors_event_none_all_<YYYYMMDD>.parquet`：复权事件
-
-> 旧命令 `marketdb update-daily`（逐 thscode 走 REST 接口）作为兼容入口保留，推荐切换到 `marketdb auto-sync`。
-
-查询示例：
-
-```bash
-marketdb query --db data/market.duckdb \
-  --sql "SELECT date, close FROM v_daily_qfq WHERE thscode = '600519.SH' ORDER BY date DESC LIMIT 10"
-```
-
-## AI Agent 快速开始
-
-当你作为 AI Agent 使用本仓库时，按以下顺序读取：
-
-| 任务 | 优先读取 | 调用方式 |
-| --- | --- | --- |
-| 理解官方 Agent 规则 | [`skills/financial-api`](skills/financial-api) | 优先加载官方 Skill |
-| 调用远端实时数据、财报、标的目录、交易日历 | [`toolkit/fuyao/README.md`](toolkit/fuyao/README.md) | REST / MCP / `toolkit/fuyao/scripts/fuyao.py` |
-| 查询本地历史行情、复权视图、全市场面板 | [`toolkit/marketdb/README.md`](toolkit/marketdb/README.md) | `marketdb` CLI / Python SDK / SQL |
-| 判断该走远端还是本地 | [`toolkit/README.md`](toolkit/README.md) | 按决策树选择路径 |
-
-Agent 调用约定：
-
-- API Key 从环境变量 `API_KEY` 读取，不要写入代码、日志、对话或提交记录。
-- 实时、当天、财报、标的目录等数据走 `toolkit/fuyao/`。
-- 历史、大批量、回测类数据优先走 `marketdb`。
-- 大批量、全市场、多年窗口结果不要直接输出到对话上下文；应落盘到 `/tmp/*.json` 或本地数据文件，只返回摘要和文件路径。
-- MCP 客户端按 [`toolkit/fuyao/docs/mcp-config.md`](toolkit/fuyao/docs/mcp-config.md) 配置。
-
-## 灵感：用一句 Prompt 制作金融看板
-
-不知道从哪里开始时，可以先从[灵感示例库](examples/inspirations/README.md)挑选一个场景，复制其中的 Prompt 交给你的 Agent。Agent 会按项目现有能力完成取数、分析并生成一张可直接打开的金融看板。
-
-灵感覆盖单股行情、财务体检、同花顺概念板块、涨停与连板、自选股当日异动，以及本地 marketdb 全市场研究。每个灵感都提供：
-
-- 一段可直接复制并自由修改的 Prompt；
-- 页面效果截图；
-- 一份使用真实数据制作的静态 HTML 示例。
-
-截图和 HTML 只用于说明可能的效果，**不是模板或复现标准**。Agent 应根据 Prompt、你的目标和当前数据自由设计页面，不需要模仿示例样式。
-
-### 灵感示例：单股行情与趋势速览
-
-<table>
-<tr>
-<td width="440" valign="top">
-<a href="examples/inspirations/01-stock-overview/example.html"><img src="examples/inspirations/01-stock-overview/preview.jpg" alt="单股行情与趋势速览" width="420"></a>
-</td>
-<td valign="top">
-<p>从一只股票出发，把最新行情与近一年趋势放进一张可继续探索的看板。</p>
-<p><a href="examples/inspirations/01-stock-overview/README.md">查看完整说明</a> · <a href="examples/inspirations/01-stock-overview/example.html">打开静态 HTML</a></p>
-<details>
-<summary><strong>复制 Prompt</strong></summary>
-<pre><code>请在当前仓库中制作一张“单股行情与趋势速览”金融看板。先读取 AGENTS.md、skills/financial-api/SKILL.md 和 toolkit/README.md，确认当前能力后再取数。输入标的默认为“同花顺”，先通过 toolkit/fuyao 的 tickers-search 消歧为唯一 thscode，再调用 prices-snapshot 获取最新行情，并调用 prices-historical 获取最近约 250 个交易日的前复权日 K。计算区间涨跌幅、20/60/120 日均线、近 60 日最大回撤和成交额变化，生成一个可直接打开的单文件 HTML，保存到 out/inspirations/stock-overview.html。页面如何布局、配色和选择图表由你决定，但必须展示数据源、标的代码、行情时间、复权口径和非投资建议声明。不要读取或模仿 examples/inspirations 下的示例截图和 example.html；它们不是模板。不得使用模拟数据；如果某项数据不可用，在页面中说明原因。原始响应写入 out/inspirations-data/，不要把长序列输出到对话中，也不要把 API Key 写入任何文件。</code></pre>
-</details>
-</td>
-</tr>
-</table>
-
-→ [浏览全部灵感并制作第一张金融看板](examples/inspirations/README.md)
-
-## 当前支持的数据
+## 数据与场景
 
 | 数据 / 能力 | 说明 | 推荐入口 |
 | --- | --- | --- |
-| A 股实时/近实时行情快照 | 获取标的行情快照 | `prices-snapshot` |
-| A 股历史 K 线 | 获取历史价格数据 | `prices-historical` / `marketdb` |
-| 全市场 10 年日 K | Parquet 全量导出，适合本地库初始化 | `marketdb auto-sync` / [market dumps](https://fuyao.aicubes.cn/docs/api-reference/market-dumps/) |
-| 复权事件 | 公司行动和复权因子相关数据 | `corp-actions` / `marketdb` |
-| 标的检索与代码表 | 名称检索、代码表浏览、Agent 消歧 | `tickers-search` / `tickers-list` |
-| 财务报表 | 利润表、资产负债表、现金流量表 | `financials-*` |
-| 财务指标 | 按标的和报告期获取成长、盈利、偿债、运营、现金流指标 | `financials-indicators` |
-| 当日个股异动 | 当日异动列表、标签筛选、按 1–50 个 thscode 查询 | `anomaly-analysis-*` |
-| 市场热榜与龙虎榜 | 飙升榜、热股榜、历史热股榜、单股排名趋势与龙虎榜 | `skyrocket-list` / `hot-stock-*` / `dragon-tiger-list` |
-| 交易日历 | A 股交易日判断和窗口切分 | `calendar-trading-days` |
-| 本地增量更新 | 自动按需拉 FULL / INCREMENTAL dump 并合并到本地 DuckDB | `marketdb auto-sync` |
+| A 股实时/近实时行情 | 单只、批量或全市场分页快照 | CLI / API / MCP / Python |
+| A 股历史 K 线 | 远端按标的查询；本地库覆盖长期研究 | CLI / marketdb |
+| 公司行动与复权 | 远端事件流、本地前后复权视图和因子 | CLI / marketdb |
+| 财务报表与财务指标 | 利润表、资产负债表、现金流量表和五类指标 | CLI / API / MCP / Python |
+| 标的目录 | 名称、ticker、`thscode` 检索与代码表 | CLI / API / MCP / Python |
+| 指数与板块 | 目录、成分股、行情快照和历史 K 线 | CLI / API / MCP / Python |
+| 特色数据 | 涨停池、连板天梯、异动、热榜和龙虎榜 | CLI / API / MCP / Python |
+| 全市场数据导出 | 全量/增量日 K 与公司行动 Parquet | CLI / Market Dumps |
+| 本地 DuckDB | 同步、状态、校验、迁移、修复、SQL、面板和导出 | CLI / marketdb |
 
-更多市场、更多频率、更多任务型数据能力会在后续版本中持续增加。
+分钟 K、tick、海外行情、宏观数据、新闻公告原文和研报目前不在公开能力范围内。请求未支持能力时应明确说明。
+
+## 示例与灵感
+
+- [Python 可执行示例](python/examples/README.md)：SDK、marketdb 和远端数据组合。
+- [金融看板灵感](examples/inspirations/README.md)：可复制 Prompt、预览和静态 HTML。
+
+### 默认示例：单股行情与趋势速览
+
+[![单股行情与趋势速览](examples/inspirations/01-stock-overview/preview.jpg)](examples/inspirations/01-stock-overview/README.md)
+
+从一只股票出发，将最新行情、近一年日 K、均线、区间表现和回撤组织成可继续探索的看板。查看 [完整说明与 Prompt](examples/inspirations/01-stock-overview/README.md)，或[直接打开静态 HTML](examples/inspirations/01-stock-overview/example.html)。
+
+示例用于展示组合方式，不是能力契约、投资建议或视觉复现标准。
 
 ## 项目结构
 
 ```text
-marketdb/                Python 包：CLI + SDK + DuckDB 数据层
-toolkit/                 工具无关 toolkit，适合人和 AI Agent 使用
-├── marketdb/            本地 DuckDB 查询 toolkit
-└── fuyao/               同花顺远端金融数据 API toolkit
-skills/                  官方 Agent Skill
-examples/                可运行端到端样例
-refer-to/                API/MCP 文档、设计资料、market dumps 放置目录
-sdd-docs/                本地 SDD 开发记录（gitignored，不随仓库提交）
-tests/                   pytest 测试套件
-bootstrap.py             跨平台一键初始化脚本（幂等）
-pyproject.toml           Python 包定义
-.env.example             环境变量样例
+docs/                    公共文档中心；docs/api 是上游 REST 契约 SSOT
+skills/hithink-finance/  可独立安装的统一 Agent Skill；包含契约镜像
+hithink-finance-cli/     Node.js CLI 子项目，运行时不依赖 Python
+python/                  唯一 Python 项目根
+├── marketdb/            本地 DuckDB CLI 与 Python SDK
+├── toolkit/fuyao/       远端数据 Python client 与脚本
+├── toolkit/marketdb/    本地数据使用文档
+├── examples/            Python 可执行示例
+└── tests/               Python 测试
+examples/                monorepo 级示例导航和静态灵感
+scripts/                 仓库级维护脚本
 ```
 
+`internal/` 和 `sdd-docs/` 属于内部治理与开发记录，不是公开使用入口。
 
-## 测试
+## 文档与契约治理
+
+- 根 README 负责完整总览；详细参数下沉到对应子目录 README 或 `docs/`。
+- `docs/api/` 是上游 REST API 契约唯一来源。
+- `skills/hithink-finance/references/api.md`、`references/api/`、`references/mcp.md` 与 `references/mcp/` 由 `python scripts/sync_skill_contracts.py` 生成，保证 Skill 独立发布仍自包含。
+- Python 和 CLI 文档只维护自己的运行方式、命令和适配语义，不复制上游字段契约。
+- 旧版迁移只认 [Monorepo 版本升级指南](docs/monorepo-migration.md)。
+
+## 验证
 
 ```bash
-python -m pytest tests/
-```
+python scripts/sync_skill_contracts.py --check
+python -m pytest python/tests/
 
-当前测试覆盖 schema、Parquet 导入（含全量 / 增量 overwrite 模式）、数据质量、复权因子、新鲜度守门、Dump 下载与重试、auto-sync 决策与版本短路、API Key 守门、跨平台缓存路径等关键路径。
+cd hithink-finance-cli
+npm run verify
+```
 
 ## 安全与合规
 
-- API Key 只通过 `API_KEY` 环境变量形式传入。
-- 不要把 API Key 写入代码、README、Issue、提示词或 Git commit。
-- 本项目提供金融数据访问与本地分析工具，不提供投资建议。
-- 数据权限、可访问 capability、调用频率与使用边界以同花顺金融数据 API 官网和账号授权为准。
-
-## 参考文档
-
-- [同花顺金融数据 API 官网](https://fuyao.aicubes.cn/)
-- [快速开始](https://fuyao.aicubes.cn/docs/quickstart/)
-- [API 参考](https://fuyao.aicubes.cn/docs/api-reference/overview/)
-- [全市场数据导出](https://fuyao.aicubes.cn/docs/api-reference/market-dumps/)
-- [`toolkit/README.md`](toolkit/README.md)
-- [`toolkit/fuyao/README.md`](toolkit/fuyao/README.md)
-- [`examples/README.md`](examples/README.md)
-
-## Development History
-
-<!-- FEATURE-ITERATION-LOG:START -->
-| 时间 | 迭代内容 | 交付成果 | 相关迭代目录 |
-| --- | --- | --- | --- |
-| 2026-07-02 | 同步飙升榜、热股榜、历史热股榜、热股排名趋势和龙虎榜能力。 | fuyao toolkit 扩展为 23 个 REST 端点、22 个 MCP 工具；补齐 client/CLI、参数校验、离线契约测试与文档。 | — |
-| 2026-07-01 | 新增“灵感”金融看板示例板块，并提供单股行情与趋势速览的 Prompt、预览图和静态 HTML。 | 建立可浏览、可复制 Prompt、可继续扩展的灵感示例入口。 | — |
-| 2026-07-01 | 同步 API Server 新增的财务指标与当日个股异动能力：补充 3 个 REST client/CLI 命令，并登记其中 2 个 MCP 工具。 | fuyao toolkit 扩展为 18 个 REST 端点、17 个 MCP 工具；补齐参数校验、当日快照边界、REST-only/MCP 暴露差异和离线契约测试。 | — |
-| 2026-06-23 | 让 `marketdb` 走「自动下载 dump + 增量合并」替代手工 Parquet 与 REST 逐标的拉取：新增 `auto-sync` CLI、`bootstrap.py` 双轨、`release_tag` 幂等、跨平台缓存与清理、API Key 缺失/鉴权失败引导用户到 admin 控制台获取 key。 | 用户从「自己下 Parquet → 放盘 → 手动导入」转为「配 `API_KEY` → `python bootstrap.py`」一条命令完成首次构建；后续增量直接 `marketdb auto-sync`，复权事件每次自动刷新，避免 `v_daily_qfq` 漂移。 | `feature/2026-06-23-auto-dump-download-and-incremental-merge/` |
-<!-- FEATURE-ITERATION-LOG:END -->
+- 所有远端方式共用 API Key，但凭证只通过安全输入、环境变量、stdin、凭据库或客户端 Secret 传入。
+- 不要把 API Key 写入代码、README、Issue、Prompt、日志、产物或 Git commit。
+- 大结果必须落盘，避免终端、日志和 Agent 上下文泄露或膨胀。
+- 本项目提供金融数据访问与研究数据准备工具，不提供投资建议。
+- 数据权限、调用频率和可访问 capability 以官网与账号授权为准。

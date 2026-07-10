@@ -1,0 +1,290 @@
+{
+  "schema_version": "1",
+  "capabilities": [
+    {
+      "id": "data.clean",
+      "command": ["data", "clean"],
+      "description": "Local capability data.clean",
+      "source": "local"
+    },
+    {
+      "id": "data.init",
+      "command": ["data", "init"],
+      "description": "Local capability data.init",
+      "source": "local"
+    },
+    {
+      "id": "data.migrate",
+      "command": ["data", "migrate"],
+      "description": "Local capability data.migrate",
+      "source": "local"
+    },
+    {
+      "id": "data.remove",
+      "command": ["data", "remove"],
+      "description": "Local capability data.remove",
+      "source": "local"
+    },
+    {
+      "id": "data.repair",
+      "command": ["data", "repair"],
+      "description": "Local capability data.repair",
+      "source": "local"
+    },
+    {
+      "id": "data.status",
+      "command": ["data", "status"],
+      "description": "Local capability data.status",
+      "source": "local"
+    },
+    {
+      "id": "data.sync",
+      "command": ["data", "sync"],
+      "description": "Local capability data.sync",
+      "source": "local"
+    },
+    {
+      "id": "data.validate",
+      "command": ["data", "validate"],
+      "description": "Local capability data.validate",
+      "source": "local"
+    },
+    {
+      "id": "db.describe",
+      "command": ["db", "describe"],
+      "description": "Local capability db.describe",
+      "source": "local"
+    },
+    {
+      "id": "db.export",
+      "command": ["db", "export"],
+      "description": "Local capability db.export",
+      "source": "local"
+    },
+    {
+      "id": "db.query",
+      "command": ["db", "query"],
+      "description": "Local capability db.query",
+      "source": "local"
+    },
+    {
+      "id": "financials.balance-sheet",
+      "command": ["financials", "balance-sheet"],
+      "endpoint": "/api/a-share/financials/balance-sheets",
+      "method": "GET",
+      "paging": "none",
+      "window": "ten-years",
+      "source": "remote"
+    },
+    {
+      "id": "financials.cash-flow",
+      "command": ["financials", "cash-flow"],
+      "endpoint": "/api/a-share/financials/cash-flow-statements",
+      "method": "GET",
+      "paging": "none",
+      "window": "ten-years",
+      "source": "remote"
+    },
+    {
+      "id": "financials.income",
+      "command": ["financials", "income"],
+      "endpoint": "/api/a-share/financials/income-statements",
+      "method": "GET",
+      "paging": "none",
+      "window": "ten-years",
+      "source": "remote"
+    },
+    {
+      "id": "financials.indicators",
+      "command": ["financials", "indicators"],
+      "endpoint": "/api/a-share/financials/indicators",
+      "method": "GET",
+      "paging": "none",
+      "window": "none",
+      "source": "remote"
+    },
+    {
+      "id": "index.catalog",
+      "command": ["index", "catalog"],
+      "endpoint": "/api/a-share-index/catalog/ths-index-list",
+      "method": "GET",
+      "paging": "none",
+      "window": "none",
+      "source": "remote"
+    },
+    {
+      "id": "index.constituents",
+      "command": ["index", "constituents"],
+      "endpoint": "/api/a-share-index/constituents/ths-stock-list",
+      "method": "GET",
+      "paging": "none",
+      "window": "none",
+      "source": "remote"
+    },
+    {
+      "id": "index.history",
+      "command": ["index", "history"],
+      "endpoint": "/api/a-share-index/prices/historical",
+      "method": "GET",
+      "paging": "none",
+      "window": "ten-years",
+      "source": "remote"
+    },
+    {
+      "id": "index.snapshot",
+      "command": ["index", "snapshot"],
+      "endpoint": "/api/a-share-index/prices/snapshot",
+      "method": "GET",
+      "paging": "none",
+      "window": "none",
+      "source": "remote"
+    },
+    {
+      "id": "market.adjustment-factors",
+      "command": ["market", "adjustment-factors"],
+      "description": "Local capability market.adjustment-factors",
+      "source": "local"
+    },
+    {
+      "id": "market.calendar",
+      "command": ["market", "calendar"],
+      "endpoint": "/api/a-share/calendar/trading-days",
+      "method": "GET",
+      "paging": "none",
+      "window": "one-year",
+      "source": "remote"
+    },
+    {
+      "id": "market.corporate-actions",
+      "command": ["market", "corporate-actions"],
+      "endpoint": "/api/a-share/corporate-actions/adjustment-factors",
+      "method": "GET",
+      "paging": "none",
+      "window": "none",
+      "source": "remote"
+    },
+    {
+      "id": "market.history",
+      "command": ["market", "history"],
+      "endpoint": "/api/a-share/prices/historical",
+      "method": "GET",
+      "paging": "none",
+      "window": "ten-years",
+      "source": "remote"
+    },
+    {
+      "id": "market.panel",
+      "command": ["market", "panel"],
+      "description": "Local capability market.panel",
+      "source": "local"
+    },
+    {
+      "id": "market.snapshot",
+      "command": ["market", "snapshot"],
+      "endpoint": "/api/a-share/prices/snapshot",
+      "method": "GET",
+      "paging": "offset",
+      "window": "none",
+      "source": "remote"
+    },
+    {
+      "id": "special.anomaly-list",
+      "command": ["special", "anomaly-list"],
+      "endpoint": "/api/a-share/special-data/anomaly-analysis-list",
+      "method": "GET",
+      "paging": "none",
+      "window": "today-only",
+      "source": "remote"
+    },
+    {
+      "id": "special.anomaly-stock",
+      "command": ["special", "anomaly-stock"],
+      "endpoint": "/api/a-share/special-data/anomaly-analysis-stock",
+      "method": "GET",
+      "paging": "none",
+      "window": "today-only",
+      "source": "remote"
+    },
+    {
+      "id": "special.dragon-tiger",
+      "command": ["special", "dragon-tiger"],
+      "endpoint": "/api/a-share/special-data/dragon-tiger-list",
+      "method": "GET",
+      "paging": "none",
+      "window": "one-year",
+      "source": "remote"
+    },
+    {
+      "id": "special.hot-stock",
+      "command": ["special", "hot-stock"],
+      "endpoint": "/api/a-share/special-data/hot-stock-list",
+      "method": "GET",
+      "paging": "none",
+      "window": "none",
+      "source": "remote"
+    },
+    {
+      "id": "special.hot-stock-history",
+      "command": ["special", "hot-stock-history"],
+      "endpoint": "/api/a-share/special-data/hot-stock-list-history",
+      "method": "GET",
+      "paging": "none",
+      "window": "one-year",
+      "source": "remote"
+    },
+    {
+      "id": "special.hot-stock-trend",
+      "command": ["special", "hot-stock-trend"],
+      "endpoint": "/api/a-share/special-data/hot-stock-rank-trend",
+      "method": "GET",
+      "paging": "none",
+      "window": "one-year",
+      "source": "remote"
+    },
+    {
+      "id": "special.limit-up-ladder",
+      "command": ["special", "limit-up-ladder"],
+      "endpoint": "/api/a-share/special-data/limit-up-ladder",
+      "method": "GET",
+      "paging": "none",
+      "window": "none",
+      "source": "remote"
+    },
+    {
+      "id": "special.limit-up-pool",
+      "command": ["special", "limit-up-pool"],
+      "endpoint": "/api/a-share/special-data/limit-up-pool",
+      "method": "GET",
+      "paging": "page",
+      "window": "none",
+      "source": "remote"
+    },
+    {
+      "id": "special.skyrocket",
+      "command": ["special", "skyrocket"],
+      "endpoint": "/api/a-share/special-data/skyrocket-list",
+      "method": "GET",
+      "paging": "none",
+      "window": "none",
+      "source": "remote"
+    },
+    {
+      "id": "symbol.list",
+      "command": ["symbol", "list"],
+      "endpoint": "/api/meta/tickers/list",
+      "method": "GET",
+      "paging": "offset",
+      "window": "none",
+      "source": "remote"
+    },
+    {
+      "id": "symbol.search",
+      "command": ["symbol", "search"],
+      "endpoint": "/api/meta/tickers/search",
+      "method": "GET",
+      "paging": "none",
+      "window": "none",
+      "source": "remote"
+    }
+  ]
+}

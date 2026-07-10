@@ -1,0 +1,33 @@
+name: hithink-finance-cli release
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        required: true
+        type: string
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm-production
+    defaults:
+      run:
+        working-directory: hithink-finance-cli
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      - run: npm ci --ignore-scripts
+      - name: Verify immutable tag and package version
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: node -e "const p=require('./package.json'); if (process.env.RELEASE_TAG !== 'v'+p.version) { console.error('tag/version mismatch'); process.exit(1) }"
+      - run: npm run verify
+      - run: npm pack --dry-run --ignore-scripts
+      - run: npm publish --provenance --access public --tag ${{ contains(inputs.tag, '-') && 'next' || 'latest' }}

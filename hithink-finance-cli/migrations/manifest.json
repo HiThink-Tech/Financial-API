@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "migrations": [
+    {
+      "version": 1,
+      "name": "initial",
+      "type": "safe",
+      "file": "001-initial.sql",
+      "checksum": "de348d8053706344413a06d58b3420baa227058a627b727402f98a33458fbab3"
+    }
+  ]
+}

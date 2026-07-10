@@ -1,0 +1,32 @@
+# Python 远端取数 toolkit
+
+在 Financial-API monorepo 根目录安装：
+
+```bash
+python -m pip install -e ./python
+python python/toolkit/fuyao/scripts/fuyao.py --help
+```
+
+设置进程环境变量 `FUYAO_TOKEN` 或 `API_KEY`，不要把 Key 写入脚本：
+
+```bash
+python python/toolkit/fuyao/scripts/fuyao.py tickers-search --q "贵州茅台"
+python python/toolkit/fuyao/scripts/fuyao.py prices-snapshot --thscodes 600519.SH
+python python/toolkit/fuyao/scripts/fuyao.py financials-income --thscode 600519.SH --limit 4
+```
+
+Python 函数调用：
+
+```python
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path("python/toolkit/fuyao/scripts").resolve()))
+
+from fuyao_client import prices_snapshot, tickers_search
+
+hit = tickers_search("贵州茅台", limit=1)[0]
+snapshot = prices_snapshot([hit["thscode"]])
+```
+
+函数签名与脚本 `--help` 是 Python 适配层的运行契约；上游请求与响应字段按本 Skill 的 [REST API 入口](../api.md) 继续路由。真实调用先检查 `code=0`，大结果必须重定向或由程序写入文件。

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "hithink-finance command envelope",
+  "oneOf": [
+    {
+      "required": ["ok", "command", "data", "meta"]
+    },
+    {
+      "required": ["ok", "command", "error", "meta"]
+    }
+  ]
+}

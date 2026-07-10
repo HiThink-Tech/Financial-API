@@ -1,0 +1,33 @@
+name: hithink-finance-cli CI
+on:
+  pull_request:
+    paths: ['hithink-finance-cli/**', '.github/workflows/hithink-finance-cli-ci.yml']
+  push:
+    paths: ['hithink-finance-cli/**']
+jobs:
+  verify:
+    strategy:
+      matrix:
+        target:
+          - { os: windows-latest, arch: x64 }
+          - { os: ubuntu-latest, arch: x64 }
+          - { os: ubuntu-24.04-arm, arch: arm64 }
+          - { os: macos-15-intel, arch: x64 }
+          - { os: macos-14, arch: arm64 }
+        node: [22, 24]
+    runs-on: ${{ matrix.target.os }}
+    defaults:
+      run:
+        working-directory: hithink-finance-cli
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          architecture: ${{ matrix.target.arch }}
+          cache: npm
+          cache-dependency-path: hithink-finance-cli/npm-shrinkwrap.json
+      - run: npm ci --ignore-scripts
+      - run: node -e "if (process.arch !== '${{ matrix.target.arch }}') process.exit(1)"
+      - run: npm run verify
+      - run: npm pack --dry-run --ignore-scripts
