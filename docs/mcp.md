@@ -24,23 +24,23 @@
     "hithink-finance-a-share": {
       "type": "http",
       "url": "https://fuyao.aicubes.cn/mcp/a-share",
-      "headers": { "X-api-key": "${API_KEY}" }
+      "headers": { "X-api-key": "${HITHINK_FINANCE_API_KEY}" }
     },
     "hithink-finance-a-share-index": {
       "type": "http",
       "url": "https://fuyao.aicubes.cn/mcp/a-share-index",
-      "headers": { "X-api-key": "${API_KEY}" }
+      "headers": { "X-api-key": "${HITHINK_FINANCE_API_KEY}" }
     },
     "hithink-finance-meta": {
       "type": "http",
       "url": "https://fuyao.aicubes.cn/mcp/meta",
-      "headers": { "X-api-key": "${API_KEY}" }
+      "headers": { "X-api-key": "${HITHINK_FINANCE_API_KEY}" }
     }
   }
 }
 ```
 
-若客户端不支持环境变量插值，应使用它提供的 Secret/凭据功能。不得把真实 Key 写入仓库、Prompt、Issue、日志或可共享配置。
+`HITHINK_FINANCE_API_KEY` 是 REST、MCP、CLI 和 Python 共用的推荐变量。若客户端不继承用户级环境变量，由 Agent 从已经配置的统一凭据来源写入客户端 Secret，不要求用户重新提供；若客户端不支持环境变量插值，应使用它提供的 Secret/凭据功能。不得把真实 Key 写入仓库、Prompt、Issue、日志或可共享配置。
 
 ## Agent 决策流程
 
@@ -61,7 +61,7 @@ Skill 中的能力快照用于意图识别、工具选择和参数避错；当�
 - 所有服务使用请求头 `X-api-key`。
 - 业务成功条件是响应信封 `code=0`，不能只看 HTTP 200。
 - `code=2003`、`Invalid or revoked API key`、401 或 403 通常表示 Key 缺失、无效、已撤销或客户端没有正确传递请求头。
-- 认证失败时，引导用户前往 <https://fuyao.aicubes.cn/admin> 创建或复制 Key，并在客户端的 Secret/环境变量配置中更新；不要要求用户把 Key 发到对话里。
+- 认证失败时，先重新检查 `HITHINK_FINANCE_API_KEY` 和 Skill 的用户级凭据文件。仍未配置时，引导用户前往 <https://fuyao.aicubes.cn/admin> 创建 Key，并说明既可以按平台命令配置，也可以交给 Agent 代为安全配置；不得强制用户在对话中粘贴，也不得复述收到的 Key。
 - 更新配置后通常需要重启或重连 MCP 客户端，再对目标服务执行一次最小验证。
 
 ## 能力边界

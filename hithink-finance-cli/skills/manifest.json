@@ -1,6 +1,6 @@
 {
   "protocolVersion": "1",
-  "cliVersion": "0.1.0",
+  "cliVersion": "0.1.1",
   "files": {
     "hithink-finance-data/SKILL.md": "98d36ee1de8adb94149a747f77d3d10c29f41e8f77b04b30d10bdd4df7ce7955",
     "hithink-finance-data/references/data-clean.md": "49422a4a8f1ea0ced02da7b1130f91ec273286205ead881b6beb5e93ba93b55b",
@@ -34,7 +34,7 @@
     "hithink-finance-research/SKILL.md": "7f4ded9d172a2bb2578ac81266ef869521c7d753f2a021c7aa79fc6d0f92541c",
     "hithink-finance-research/references/research-workflow.md": "3f73f179339b21403e7f8f6bfd7fcb2649f06ffc6b6bccb428b18cb19929dad5",
     "hithink-finance-shared/SKILL.md": "9f04c427f09b0a8115c98c5e873bca81ea491b448cbab53b11386db96d354db1",
-    "hithink-finance-shared/references/auth-and-config.md": "8bd9afad8f9f717b0358e606d019d36acd3ede63d46fb15f07253131f3d396ac",
+    "hithink-finance-shared/references/auth-and-config.md": "2685090dd9e78ba344f3f1efc4e8d83dc737e09308aaae197d5af154ab5d8609",
     "hithink-finance-shared/references/global-rules.md": "21b6ef14ffd656240d5f31349bb6e430fdff6ffd790268a3ae115ffdc16e6102",
     "hithink-finance-shared/references/lifecycle.md": "087b3aaa8e8299cc3f6b733a0de07f8dbd43b9a6ebf25addf5b3e77ded21f8fe",
     "hithink-finance-shared/references/skills-management.md": "bb508bd6592d81c5eaad9f6bec575cc93cd7c42d8ecdbe955e12942b55956c02",

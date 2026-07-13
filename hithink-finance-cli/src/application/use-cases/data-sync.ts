@@ -62,7 +62,11 @@ export function chooseSyncDecision(
 }
 
 import type { DuckDBConnection } from '@duckdb/node-api';
-import { fetchFuyaoDump, type DumpKind } from '../../infrastructure/duckdb/dump-client.js';
+import {
+  fetchFuyaoDump,
+  type DumpDownloadProgressEvent,
+  type DumpKind,
+} from '../../infrastructure/duckdb/dump-client.js';
 import { importParquetBundle } from '../../infrastructure/duckdb/importer.js';
 import { applyMigrations } from '../../infrastructure/duckdb/migrations.js';
 import { rebuildAdjustmentFactors } from '../../infrastructure/duckdb/factors.js';
@@ -78,6 +82,8 @@ export interface FuyaoSyncOptions {
   cacheDir: string;
   /** 当前时间（可注入，用于测试） */
   now?: Date;
+  /** 下载转储时的可选进度回调。 */
+  onProgress?: (event: DumpDownloadProgressEvent) => void;
 }
 
 /**

@@ -7,14 +7,13 @@
 
 跑这个脚本前确保：
 - `python python/bootstrap.py` 已经跑过
-- `export FUYAO_TOKEN=<token>`（在 https://fuyao.aicubes.cn/admin 签发）
+- `export HITHINK_FINANCE_API_KEY=<token>`（在 https://fuyao.aicubes.cn/admin 签发）
 
 如果没 token，脚本会跳过远端 API 部分，仍打印行情走势。
 """
 from __future__ import annotations
 
 import json
-import os
 import subprocess
 import sys
 from pathlib import Path
@@ -22,6 +21,7 @@ from pathlib import Path
 import pandas as pd
 
 from marketdb import MarketDB
+from marketdb.credentials import resolve_api_key
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DB_PATH = REPO_ROOT / "data" / "market.duckdb"
@@ -31,8 +31,8 @@ THSCODE = "300033.SZ"
 
 def fetch_remote_income(thscode: str, limit: int = 4) -> pd.DataFrame | None:
     """通过远端 API CLI 拉最近 N 期年报利润表。"""
-    if not (os.environ.get("FUYAO_TOKEN") or os.environ.get("API_KEY")):
-        print("[fundamentals] no FUYAO_TOKEN/API_KEY set, skipping remote part", file=sys.stderr)
+    if not resolve_api_key():
+        print("[fundamentals] no unified API Key configured, skipping remote part", file=sys.stderr)
         return None
     if not FUYAO_CLI.exists():
         print(f"[fundamentals] {FUYAO_CLI} missing, skipping remote part", file=sys.stderr)
@@ -78,7 +78,7 @@ def main() -> None:
     print()
 
     if income is None:
-        print("(remote part skipped — set FUYAO_TOKEN and re-run for the full demo)")
+        print("(remote part skipped — configure HITHINK_FINANCE_API_KEY and re-run for the full demo)")
         return
 
     cols = [c for c in ("report_date", "operating_revenue", "net_profit") if c in income.columns]

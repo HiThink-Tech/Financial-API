@@ -13,6 +13,14 @@ import fuyao as fuyao_cli  # noqa: E402
 import fuyao_client  # noqa: E402
 
 
+def test_remote_toolkit_uses_the_unified_environment(monkeypatch):
+    monkeypatch.setenv("HITHINK_FINANCE_API_KEY", "global-key")
+    monkeypatch.delenv("FUYAO_TOKEN", raising=False)
+    monkeypatch.delenv("API_KEY", raising=False)
+
+    assert fuyao_client._token() == "global-key"
+
+
 def test_financials_indicators_maps_contract_and_returns_full_data(monkeypatch):
     calls = []
     expected = {

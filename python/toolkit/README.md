@@ -64,7 +64,7 @@ marketdb auto-sync --db data/market.duckdb
 
 ### 调用远端数据
 
-统一 API Key 在 <https://fuyao.aicubes.cn/admin> 获取。设置 `FUYAO_TOKEN` 或 `API_KEY` 后：
+统一 API Key 在 <https://fuyao.aicubes.cn/admin> 获取。设置用户级 `HITHINK_FINANCE_API_KEY`，或使用 Skill 配置的用户级 `hithink-finance/credentials.env` 后：
 
 ```bash
 python python/toolkit/fuyao/scripts/fuyao.py tickers-search --q "贵州茅台"
@@ -110,7 +110,7 @@ marketdb describe --db data/market.duckdb
 
 | 路径 | 凭证 |
 | --- | --- |
-| `toolkit/fuyao` | `FUYAO_TOKEN` 或 `API_KEY` |
+| `toolkit/fuyao` | `HITHINK_FINANCE_API_KEY` 或用户级 `credentials.env`；旧变量仅兼容 |
 | `marketdb` 纯本地查询 | 不需要 |
 | `marketdb auto-sync` / `update-daily` / `sync-symbols` | 需要统一 API Key |
 

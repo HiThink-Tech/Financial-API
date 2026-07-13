@@ -59,6 +59,7 @@ import type { ApiKeyAuthProvider } from '../../infrastructure/credentials/api-ke
 import { mkdir, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { withExclusiveDataLock } from '../../infrastructure/filesystem/process-lock.js';
+import { createDownloadProgressReporter } from '../../output/download-progress.js';
 
 /**
  * 解析数据库文件路径
@@ -191,6 +192,7 @@ export function registerDataCommands(
                   )
                 ).apiKey,
                 cacheDir: paths.cacheDir,
+                onProgress: createDownloadProgressReporter(context),
               });
         await renderResult(
           successEnvelope(
@@ -229,6 +231,7 @@ export function registerDataCommands(
           baseUrl: remote.baseUrl,
           apiKey: auth.apiKey,
           cacheDir: paths.cacheDir,
+          onProgress: createDownloadProgressReporter(context),
         });
         await renderResult(
           successEnvelope('data.sync', result, { requestId: context.requestId }),

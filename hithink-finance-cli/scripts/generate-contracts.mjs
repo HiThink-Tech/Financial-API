@@ -355,7 +355,7 @@ hithink-finance config show --format json
 ## 参数选择策略
 
 - 交互式终端可用 \`auth login\` 隐藏输入。
-- 如果 \`auth login\` 提示已登录，需要切换 API Key 时先运行 \`auth logout\`，再重新登录。
+- 如果 \`auth login\` 提示已登录，需要切换 API Key 时运行 \`auth login --replace\`；Agent/CI 使用 \`auth login --api-key-stdin --replace\`，无需先删除旧凭据。
 - Agent/CI 优先用 \`--api-key-stdin\` 或 \`HITHINK_FINANCE_API_KEY\`。
 - 多套凭据使用全局 \`--profile <name>\`。
 - \`config show\` 只显示非敏感项；不要期待它返回 API Key。

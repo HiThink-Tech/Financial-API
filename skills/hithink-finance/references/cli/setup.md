@@ -35,25 +35,85 @@ npm install -g @hithink-tech/hithink-finance-cli
 hithink-finance --version
 ```
 
-Agent 可以辅助执行，但全局安装前必须获得用户明确授权。遇到 `EACCES`、PATH 或 registry 问题时报告原始错误并给出针对性处理；遇到 `E404` 时检查 registry 与包发布状态，不擅自切换未知来源。
+用户明确选择其他接入方式时不安装 CLI。用户直接提出金融任务、未指定方式且 CLI 不存在时，先简短告知“将安装官方 CLI 并继续完成任务”，随后执行安装；平台需要授权时遵循平台授权机制，不再追加一次相同确认。遇到 `EACCES`、PATH 或 registry 问题时报告原始错误并回退到已有 MCP、REST 或 Python 路径；遇到 `E404` 时检查 registry 与包发布状态，不擅自切换未知来源。
 
-## 4. 认证配置
+## 4. 统一凭据
 
-API Key 在 <https://fuyao.aicubes.cn/admin> 获取。先读取状态：
+API Key 在 <https://fuyao.aicubes.cn/admin> 获取。CLI 不是统一凭据的前置条件；先检查 `HITHINK_FINANCE_API_KEY`，再检查用户级凭据文件：
+
+| 平台 | 用户级凭据文件 |
+| --- | --- |
+| Windows | `%APPDATA%\hithink-finance\credentials.env` |
+| macOS | `~/Library/Application Support/hithink-finance/credentials.env` |
+| Linux | `${XDG_CONFIG_HOME:-~/.config}/hithink-finance/credentials.env` |
+
+文件只写一行 `HITHINK_FINANCE_API_KEY=...`，等号右侧直接填写原始 Key，不加单引号或双引号；不放在项目目录。Unix 权限设为 `0600`；Windows 仅允许当前用户访问。
+
+需要自行配置当前用户的持久环境变量时，按当前平台使用隐藏输入。Windows PowerShell：
+
+```powershell
+$secureKey = Read-Host 'API Key' -AsSecureString
+$key = [System.Net.NetworkCredential]::new('', $secureKey).Password
+[Environment]::SetEnvironmentVariable('HITHINK_FINANCE_API_KEY', $key, 'User')
+$env:HITHINK_FINANCE_API_KEY = $key
+Remove-Variable key, secureKey
+```
+
+macOS 默认 zsh：
+
+```zsh
+read -s 'HITHINK_FINANCE_API_KEY?API Key: '; echo
+export HITHINK_FINANCE_API_KEY
+printf '\nexport HITHINK_FINANCE_API_KEY=%q\n' "$HITHINK_FINANCE_API_KEY" >> ~/.zshenv
+chmod 600 ~/.zshenv
+```
+
+Linux Bash：
+
+```bash
+read -rsp 'API Key: ' HITHINK_FINANCE_API_KEY; echo
+export HITHINK_FINANCE_API_KEY
+printf '\nexport HITHINK_FINANCE_API_KEY=%q\n' "$HITHINK_FINANCE_API_KEY" >> ~/.bashrc
+chmod 600 ~/.bashrc
+```
+
+也可以直接发给我，由 Agent 使用 stdin、进程环境或受限凭据文件完成配置。Agent 不复述 Key，不把它放进命令参数、日志、项目文件或 Git。聊天平台可能保留消息记录，因此隐藏输入或环境变量方式更安全。
+
+## 5. CLI 无感登录
+
+先读取 CLI 自身状态：
 
 ```bash
 hithink-finance auth status --format json
 ```
 
-需要配置时由用户在自己的终端运行隐藏输入：
+统一凭据已经存在而 CLI 尚未登录时，不再次询问用户；将统一凭据只通过 stdin 传给 CLI：
+
+```bash
+printf '%s' "$HITHINK_FINANCE_API_KEY" | \
+  hithink-finance auth login --api-key-stdin --format json
+```
+
+统一凭据刚更新且 CLI 已登录时，原子替换系统凭据，不先 logout：
+
+```bash
+printf '%s' "$HITHINK_FINANCE_API_KEY" | \
+  hithink-finance auth login --api-key-stdin --replace --format json
+```
+
+凭据来自用户级文件时，Agent 在进程内读取后直接写入 CLI stdin，不经 stdout 或命令参数。同步只发生在 CLI 安装完成、统一凭据新增/更新或认证恢复时，普通调用不重复写入系统凭据。
+
+CLI 独立使用时仍可运行隐藏输入：
 
 ```bash
 hithink-finance auth login
 ```
 
-不得让用户在对话中发送 Key。Agent/CI 场景使用工具当前帮助中声明的 stdin、进程环境变量或凭据方式，并避免命令历史和日志泄露。退出认证可用 `hithink-finance auth logout`，执行前确认清理范围。
+登录后再次运行 `auth status`，并做一个有界真实请求。验证 CLI 系统凭据能独立工作时，不向该验证子进程注入 `HITHINK_FINANCE_API_KEY`，避免环境变量掩盖系统凭据失败。
 
-## 5. CLI 内置 Skills 检查
+系统凭据库不可用时，不再次索取 Key；当前任务可向 CLI 子进程注入统一环境变量继续，或回退到其他接入方式，同时说明 CLI 独立登录尚未持久化。退出认证可用 `hithink-finance auth logout`，执行前确认清理范围。
+
+## 6. CLI 内置 Skills 检查
 
 ```bash
 hithink-finance skills status --format json
@@ -67,7 +127,7 @@ hithink-finance skills sync --format json
 
 仍不一致时可先读取 `hithink-finance skills sync --help`，再使用 `--repair`。不要手工复制包内文件来绕过 CLI 的清单和校验机制。完整领域路由见 [内置 Skills 路由](builtin-skills.md)。
 
-## 6. 配置与最小验证
+## 7. 配置与最小验证
 
 先做离线诊断：
 
@@ -84,7 +144,7 @@ hithink-finance symbol search --q 600519 --limit 1 --format json
 
 只有退出码 0、信封 `ok=true` 且返回真实结果，才能说明当前认证和远端访问可用。`doctor`、help 或离线 schema 通过不能代替线上验证。
 
-## 7. 安装后建议
+## 8. 安装后建议
 
 1. 运行 `hithink-finance skills status --format json` 并同步缺失 Skills。
 2. 新建 Agent 会话，让新安装的内置 Skills 被重新发现。
@@ -98,7 +158,7 @@ hithink-finance symbol search --q 600519 --limit 1 --format json
 
 4. 选定功能后读取对应 CLI 内置 Skill，而不是继续依赖本 setup 页猜命令。
 
-## 8. 卸载
+## 9. 卸载
 
 先预览，不修改任何内容：
 

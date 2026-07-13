@@ -88,6 +88,29 @@ def test_cli_entry_covers_setup_lifecycle_and_routes_to_builtin_skills() -> None
     assert "已安装" in cli and "内置 Skill" in cli
 
 
+def test_skill_unifies_credentials_and_bootstraps_cli_without_reprompting() -> None:
+    skill = _skill_text()
+    setup = (SKILL_ROOT / "references" / "cli" / "setup.md").read_text(
+        encoding="utf-8"
+    )
+    combined = skill + setup
+
+    for required in (
+        "HITHINK_FINANCE_API_KEY",
+        "credentials.env",
+        "也可以直接发给我",
+        "--api-key-stdin",
+        "--replace",
+    ):
+        assert required in combined
+    for platform_path in ("%APPDATA%", "Application Support", "XDG_CONFIG_HOME"):
+        assert platform_path in combined
+    assert "不要求安装 CLI" in combined
+    assert "不再提示" in combined or "不重复" in combined
+    assert "安装失败" in combined and "回退" in combined
+    assert "系统凭据" in combined and "独立" in combined
+
+
 def test_skill_never_routes_agents_to_remote_llms_contract() -> None:
     combined = "\n".join(
         path.read_text(encoding="utf-8")

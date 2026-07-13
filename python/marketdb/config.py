@@ -6,6 +6,8 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+from .credentials import resolve_api_key
+
 _DEFAULT_ENV_FILES = (".env", ".env.local")
 
 
@@ -59,7 +61,7 @@ class Settings:
             else resolved_db.parent / ".cache" / "dumps"
         )
         return cls(
-            api_key=os.getenv("API_KEY") or None,
+            api_key=resolve_api_key(),
             base_url=os.getenv("BASE_URL", "https://fuyao.aicubes.cn").rstrip("/"),
             mcp_base_url=os.getenv(
                 "MCP_BASE_URL", "https://fuyao.aicubes.cn/mcp/a-share"

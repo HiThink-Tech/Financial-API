@@ -124,8 +124,58 @@ describe('auth login command', () => {
       data: {
         configured: true,
         already_logged_in: true,
-        next_step: expect.stringContaining('auth logout'),
+        next_step: expect.stringContaining('auth login --replace'),
       },
     });
+  });
+
+  test('replaces an existing credential only when --replace is explicit', async () => {
+    const stdout = new MemoryWriteStream();
+    const stderr = new MemoryWriteStream();
+    const paths = createPlatformPaths({ homeDir: process.cwd(), env: {} });
+    const store = new MemoryCredentialStore();
+    store.values.set('profile:default', 'existing-secret');
+    const context: CliContext = {
+      format: 'json',
+      language: 'zh-CN',
+      color: false,
+      requestId: 'req-replace',
+      stdout: stdout as unknown as NodeJS.WriteStream,
+      stderr: stderr as unknown as NodeJS.WriteStream,
+    };
+
+    const program = createProgram(
+      { name: '@hithink-tech/hithink-finance-cli', version: '0.1.0' },
+      context,
+      {
+        authProvider: new ApiKeyAuthProvider(store, {}),
+        fuyaoBaseUrl: 'https://fuyao.aicubes.cn',
+        packageRoot: process.cwd(),
+        platformPaths: paths,
+        resolvedConfig: {
+          dbPath: paths.defaultDbPath,
+          profile: 'default',
+          format: 'json',
+          language: 'zh-CN',
+          updateCheck: false,
+        },
+      },
+    );
+
+    await program.parseAsync(['auth', 'login', '--replace', '--api-key', 'replacement-secret'], {
+      from: 'user',
+    });
+
+    expect(store.values.get('profile:default')).toBe('replacement-secret');
+    expect(JSON.parse(stdout.text())).toMatchObject({
+      ok: true,
+      command: 'auth.login',
+      data: {
+        configured: true,
+        replaced: true,
+      },
+    });
+    expect(`${stdout.text()}${stderr.text()}`).not.toContain('replacement-secret');
+    expect(`${stdout.text()}${stderr.text()}`).not.toContain('existing-secret');
   });
 });

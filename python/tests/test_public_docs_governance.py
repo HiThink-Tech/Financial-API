@@ -169,6 +169,25 @@ def test_python_docs_describe_python_usage_not_duplicate_upstream_contracts() ->
     assert "## 响应字段" not in python_readme
 
 
+def test_public_entry_docs_recommend_one_cross_mode_api_key_contract() -> None:
+    canonical = "HITHINK_FINANCE_API_KEY"
+    entry_docs = (
+        "README.md",
+        "docs/mcp.md",
+        "hithink-finance-cli/README.md",
+        "python/README.md",
+        "python/toolkit/README.md",
+        "python/toolkit/fuyao/README.md",
+        "python/examples/README.md",
+        "skills/hithink-finance/references/python-sdk/remote-toolkit.md",
+    )
+
+    for document in entry_docs:
+        assert canonical in read(document), document
+
+    assert "${API_KEY}" not in read("README.md")
+
+
 def test_public_markdown_relative_links_resolve() -> None:
     link_pattern = re.compile(r"(?<!!)\[[^\]]+\]\(([^)]+)\)")
     missing: list[str] = []

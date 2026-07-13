@@ -7,7 +7,7 @@ Python adapter contract:
 - Long historical windows (>10 years) are auto-sliced and concatenated.
 - Local ticker cache (TTL 12h) backs tickers_search to avoid network round-trips.
 - Returns plain list[dict] / dict — no DataFrame dependency.
-- Token comes from FUYAO_TOKEN env var only; never accepted as a parameter.
+- API Key comes from the unified credential resolver; never accepted as a parameter.
 - Business errors (code != 0) raise FuyaoApiError(code, message, request_id).
 
 Upstream field semantics live in the repository's ``docs/api/`` contract and at
@@ -17,7 +17,6 @@ https://fuyao.aicubes.cn/llms-full.txt; do not reproduce them in docstrings here
 from __future__ import annotations
 
 import json
-import os
 import re
 import time
 from dataclasses import dataclass
@@ -26,6 +25,8 @@ from pathlib import Path
 from typing import Any, Iterable, Literal, Optional
 
 import requests
+
+from marketdb.credentials import resolve_api_key
 
 BASE_URL = "https://fuyao.aicubes.cn"
 SKILL_ROOT = Path(__file__).resolve().parent.parent
@@ -70,11 +71,12 @@ def _session() -> requests.Session:
 
 
 def _token() -> str:
-    tok = os.environ.get("FUYAO_TOKEN") or os.environ.get("API_KEY")
+    tok = resolve_api_key()
     if not tok:
         raise RuntimeError(
-            "FUYAO_TOKEN (or API_KEY) env var is required. "
-            "Issue a token at https://fuyao.aicubes.cn/admin and export it."
+            "HITHINK_FINANCE_API_KEY or the user credential file is required. "
+            "Create an API key at https://fuyao.aicubes.cn/admin. "
+            "FUYAO_TOKEN and API_KEY remain legacy compatibility sources."
         )
     return tok
 

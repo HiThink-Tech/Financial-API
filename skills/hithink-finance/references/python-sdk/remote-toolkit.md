@@ -7,7 +7,7 @@ python -m pip install -e ./python
 python python/toolkit/fuyao/scripts/fuyao.py --help
 ```
 
-设置进程环境变量 `FUYAO_TOKEN` 或 `API_KEY`，不要把 Key 写入脚本：
+推荐设置用户级环境变量 `HITHINK_FINANCE_API_KEY`。toolkit 也会读取本 Skill 配置的用户级 `hithink-finance/credentials.env`；`FUYAO_TOKEN` 和 `API_KEY` 仅作为旧版本兼容来源。不要把 Key 写入脚本：
 
 ```bash
 python python/toolkit/fuyao/scripts/fuyao.py tickers-search --q "贵州茅台"

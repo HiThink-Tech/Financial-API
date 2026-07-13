@@ -30,6 +30,13 @@ def test_mcp_contract_preserves_three_service_intent_routing() -> None:
         assert behavior in entry + capability_map
 
 
+def test_mcp_examples_use_the_canonical_api_key_environment_variable() -> None:
+    entry = read("docs/mcp.md")
+
+    assert entry.count("${HITHINK_FINANCE_API_KEY}") == 3
+    assert "${API_KEY}" not in entry
+
+
 def test_mcp_service_snapshots_preserve_all_tools_and_agent_guidance() -> None:
     expected_counts = {
         "hithink-finance-a-share.md": 16,

@@ -66,7 +66,7 @@ marketdb validate --db ./data/market.duckdb
 
 不要把 `python/data/market.duckdb` 当作新默认位置，也不要因为命令找不到数据库就删除或重建旧库。先检查当前工作目录和 `--db` / `MARKETDB_DB_PATH`。
 
-`.env` 仍在仓库根；`API_KEY`、`FUYAO_TOKEN` 和其他凭据不需要复制到 `python/`，也不得写入命令、Prompt 或提交。
+旧项目 `.env` 仍可留在仓库根，但新的统一凭据不放在项目目录。推荐使用用户级 `HITHINK_FINANCE_API_KEY` 或 Skill 管理的用户级 `hithink-finance/credentials.env`；`API_KEY`、`FUYAO_TOKEN` 仅作为兼容来源，不需要复制到 `python/`，也不得写入命令、Prompt 或提交。
 
 ## Agent 兼容步骤
 

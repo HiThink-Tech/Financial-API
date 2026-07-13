@@ -31,6 +31,7 @@ interface AuthOptions {
   apiKeyStdin?: boolean;
   input?: boolean;
   all?: boolean;
+  replace?: boolean;
 }
 
 const apiKeyHint =
@@ -146,7 +147,11 @@ export function registerAuthCommands(
     .description(localizeText(context.language, 'Manage API key authentication'));
   const login = auth
     .command('login')
-    .description(localizeText(context.language, 'Store an API key in the system credential store'));
+    .description(localizeText(context.language, 'Store an API key in the system credential store'))
+    .option(
+      '--replace',
+      localizeText(context.language, 'replace the existing API key for this profile'),
+    );
 
   login.action(async () => {
     const options = login.optsWithGlobals<AuthOptions>();
@@ -175,7 +180,7 @@ export function registerAuthCommands(
 
     const profile = options.profile ?? 'default';
     const existing = await provider.status(profile);
-    if (existing.configured) {
+    if (existing.configured && options.replace !== true) {
       await renderResult(
         successEnvelope(
           'auth.login',
@@ -209,7 +214,11 @@ export function registerAuthCommands(
 
     const status = await provider.login({ profile, apiKey });
     await renderResult(
-      successEnvelope('auth.login', status, { requestId: context.requestId }),
+      successEnvelope(
+        'auth.login',
+        { ...status, replaced: existing.configured },
+        { requestId: context.requestId },
+      ),
       context,
     );
   });

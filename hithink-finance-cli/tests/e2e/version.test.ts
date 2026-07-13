@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { execa } from 'execa';
 import { expect, test } from 'vitest';
+import { createPlatformPaths } from '../../src/infrastructure/filesystem/platform-paths.js';
 
 test('prints package and executable version', async () => {
   const result = await execa('node', ['dist/cli/main.js', 'version', '--format', 'json']);
@@ -33,7 +34,17 @@ test('supports conventional --version and caller request IDs', async () => {
 
 test('prints cached update notice to stderr after normal JSON command', async () => {
   const root = await mkdtemp(path.join(tmpdir(), 'hithink-version-notice-'));
-  const stateDir = path.join(root, 'hithink-finance', 'state');
+  const platformEnv =
+    process.platform === 'win32'
+      ? { LOCALAPPDATA: root }
+      : process.platform === 'darwin'
+        ? { HOME: root }
+        : { XDG_STATE_HOME: root };
+  const stateDir = createPlatformPaths({
+    platform: process.platform,
+    homeDir: root,
+    env: platformEnv,
+  }).stateDir;
   await mkdir(stateDir, { recursive: true });
   const cacheFile = path.join(stateDir, 'update-cache.json');
   await writeFile(
@@ -47,7 +58,7 @@ test('prints cached update notice to stderr after normal JSON command', async ()
 
   const result = await execa('node', ['dist/cli/main.js', 'version', '--format', 'json'], {
     env: {
-      LOCALAPPDATA: root,
+      ...platformEnv,
     },
   });
 
@@ -59,7 +70,7 @@ test('prints cached update notice to stderr after normal JSON command', async ()
   expect(result.stderr).toContain('hithink-finance update --check');
   expect(JSON.parse(await readFile(cacheFile, 'utf8'))).toMatchObject({
     promptedAt: expect.any(Number),
-    promptedCurrentVersion: '0.1.0',
+    promptedCurrentVersion: '0.1.1',
     promptedLatestVersion: '0.2.0',
   });
 });

@@ -255,7 +255,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="fuyao",
         description="Fuyao A-share data CLI (23 REST capabilities). JSON-only stdout. "
-        "Auth: FUYAO_TOKEN env var.",
+        "Auth: HITHINK_FINANCE_API_KEY or user credentials file.",
     )
     parser.add_argument("--compact", action="store_true", help="emit single-line JSON")
     sub = parser.add_subparsers(dest="command", required=True)

@@ -38,17 +38,16 @@ python -m pip install -e ./python
 在 <https://fuyao.aicubes.cn/admin> 获取统一 API Key，并设置当前进程环境变量：
 
 ```bash
-export FUYAO_TOKEN="<API_KEY>"
-# 或兼容变量 API_KEY
+export HITHINK_FINANCE_API_KEY="<API_KEY>"
 ```
 
 PowerShell：
 
 ```powershell
-$env:FUYAO_TOKEN = "<API_KEY>"
+$env:HITHINK_FINANCE_API_KEY = "<API_KEY>"
 ```
 
-不得把 API Key 写入脚本、Prompt、日志、输出文件或 Git。
+toolkit 还会读取 Skill 配置的用户级 `hithink-finance/credentials.env`；`FUYAO_TOKEN` 和 `API_KEY` 仅保留为旧版本兼容来源。不得把 API Key 写入脚本、Prompt、日志、输出文件或 Git。
 
 ## JSON CLI
 

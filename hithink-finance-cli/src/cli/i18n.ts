@@ -34,7 +34,7 @@ const messages = {
     unknownCommand: 'Unknown command.',
     unknownCommandHint: 'Run `hithink-finance --help` to list available commands.',
     authLoginAlreadyConfigured:
-      'This profile is already logged in. To switch API keys, run `hithink-finance auth logout` first, then run `hithink-finance auth login` again.',
+      'This profile is already logged in. To switch API keys atomically, run `hithink-finance auth login --replace` or use `--api-key-stdin --replace` in non-interactive shells.',
   },
   'zh-CN': {
     rootDescription: '面向人类与 AI Agent 的企业级金融数据命令行工具',
@@ -42,7 +42,7 @@ const messages = {
     unknownCommand: '未知命令。',
     unknownCommandHint: '运行 `hithink-finance --help` 查看可用命令。',
     authLoginAlreadyConfigured:
-      '当前 profile 已登录。如需切换 API Key，请先运行 `hithink-finance auth logout`，再重新运行 `hithink-finance auth login`。',
+      '当前 profile 已登录。如需原子切换 API Key，请运行 `hithink-finance auth login --replace`；非交互环境使用 `--api-key-stdin --replace`。',
   },
 } as const;
 
@@ -62,6 +62,7 @@ const zhTextByEnglish: Record<string, string> = {
   'disable terminal colors': '禁用终端颜色',
   'Manage API key authentication': '管理 API Key 认证',
   'Store an API key in the system credential store': '保存 API Key 到系统凭据库',
+  'replace the existing API key for this profile': '替换当前 profile 已保存的 API Key',
   'Show whether an API key is configured': '查看 API Key 是否已配置',
   'Delete API key credentials': '删除 API Key 凭据',
   'delete every hithink-finance profile': '删除所有 hithink-finance profile 凭据',

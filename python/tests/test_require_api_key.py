@@ -30,7 +30,7 @@ def test_require_api_key_raises_when_missing() -> None:
         require_api_key(None, console=console)
     out = buf.getvalue()
     assert ADMIN_URL in out
-    assert "API_KEY" in out
+    assert "HITHINK_FINANCE_API_KEY" in out
 
 
 def test_render_auth_failure_includes_admin_url() -> None:

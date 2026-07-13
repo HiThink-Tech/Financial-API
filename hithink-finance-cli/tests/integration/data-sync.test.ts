@@ -51,6 +51,38 @@ test('re-signs once after a transient dump failure and downloads atomically', as
   }
 });
 
+test('reports byte progress from the streamed dump response', async () => {
+  const root = await mkdtemp(path.join(tmpdir(), 'hithink-dump-progress-'));
+  const progress: Array<{ phase: string; downloadedBytes: number; totalBytes?: number }> = [];
+  const fetch = vi
+    .fn<typeof globalThis.fetch>()
+    .mockResolvedValueOnce(
+      Response.json({
+        code: 0,
+        message: 'success',
+        data: { presigned_url: 'https://objects.example/releases/r2.parquet?signature=x' },
+      }),
+    )
+    .mockResolvedValueOnce(new Response('parquet-bytes', { headers: { 'content-length': '13' } }));
+  try {
+    await fetchFuyaoDump({
+      baseUrl: 'https://fuyao.example',
+      apiKey: 'secret',
+      kind: 'daily-k',
+      cacheDir: root,
+      fetch,
+      onProgress: (event) => progress.push(event),
+    });
+    expect(progress).toEqual([
+      { kind: 'daily-k', phase: 'started', downloadedBytes: 0, totalBytes: 13 },
+      { kind: 'daily-k', phase: 'progress', downloadedBytes: 13, totalBytes: 13 },
+      { kind: 'daily-k', phase: 'completed', downloadedBytes: 13, totalBytes: 13 },
+    ]);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test('chooses SKIP for an unchanged current release and INCREMENTAL for a short lag', () => {
   expect(
     chooseSyncDecision(

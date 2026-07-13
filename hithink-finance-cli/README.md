@@ -46,6 +46,15 @@ printf '%s' "$HITHINK_FINANCE_API_KEY" | \
   hithink-finance auth login --api-key-stdin --format json
 ```
 
+统一 `hithink-finance` Skill 会先读取 `HITHINK_FINANCE_API_KEY` 或用户级凭据文件，再通过 stdin 将同一个 Key 安全同步到 CLI。已有 CLI 凭据需要更新时使用：
+
+```bash
+printf '%s' "$HITHINK_FINANCE_API_KEY" | \
+  hithink-finance auth login --api-key-stdin --replace --format json
+```
+
+CLI 仍把凭据副本保存在系统凭据库中，保持脱离 Skill 后的独立完整性；`--replace` 直接覆盖成功后才生效，不需要先 `logout`。
+
 不要把 Key 写入配置文件、命令参数记录、日志、Markdown、对话或 Git。`config show` 只展示非敏感配置。
 
 ## 能力发现
@@ -123,6 +132,8 @@ hithink-finance db describe --format json
 ```
 
 初始化和同步需要远端 API Key；已有本地库的只读查询通常不需要。迁移、修复、清理和卸载等有副作用操作先查看计划或帮助，并在命令要求时获得用户明确确认。
+
+远端初始化和同步下载数据包时，交互终端会在 stderr 动态刷新进度；stderr 被重定向时会输出开始、完成及节流后的进度日志（至少相隔 5 秒且新增 8 MiB）。无论何种模式，`--format json` 的结果信封都只写入 stdout。
 
 ## 配置优先级
 

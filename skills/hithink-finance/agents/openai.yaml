@@ -1,0 +1,4 @@
+interface:
+  display_name: "同花顺金融数据服务"
+  short_description: "查询、分析与导出 A 股、指数、板块及本地市场数据"
+  default_prompt: "使用 $hithink-finance 查询贵州茅台的最新行情，并说明数据时间和来源。"

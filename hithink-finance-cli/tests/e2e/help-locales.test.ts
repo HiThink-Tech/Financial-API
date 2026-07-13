@@ -6,8 +6,10 @@ test('shows help when invoked without arguments', async () => {
   expect(result.stdout).toContain('Usage: hithink-finance');
 });
 
-test('defaults human help to Chinese', async () => {
-  const result = await execa('node', ['dist/cli/main.js', '--help']);
+test('renders human help in Chinese for a Chinese system locale', async () => {
+  const result = await execa('node', ['dist/cli/main.js', '--help'], {
+    env: { LC_ALL: 'zh_CN.UTF-8' },
+  });
 
   expect(result.stdout).toContain('面向人类与 AI Agent 的企业级金融数据命令行工具');
   expect(result.stdout).toContain('管理 API Key 认证');

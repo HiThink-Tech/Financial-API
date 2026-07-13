@@ -21,11 +21,24 @@ import { mkdir, readFile, rename, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
+import { Transform } from 'node:stream';
 
 /**
  * 支持的转储数据类型
  */
 export type DumpKind = 'daily-k' | 'daily-k-10d' | 'adjustment-factors';
+
+/** 单个转储下载过程中的字节进度事件。 */
+export interface DownloadProgressEvent {
+  phase: 'started' | 'progress' | 'completed';
+  downloadedBytes: number;
+  totalBytes?: number;
+}
+
+/** 带转储类型的下载进度事件，供调用方区分连续下载的文件。 */
+export interface DumpDownloadProgressEvent extends DownloadProgressEvent {
+  kind: DumpKind;
+}
 
 /**
  * Fuyao 数据转储下载选项
@@ -43,6 +56,8 @@ export interface FetchFuyaoDumpOptions {
   fetch?: typeof globalThis.fetch;
   /** 可注入的 sleep 实现（用于重试退避） */
   sleep?: (milliseconds: number) => Promise<void>;
+  /** 可选的下载进度回调；未提供时下载行为保持安静。 */
+  onProgress?: (event: DumpDownloadProgressEvent) => void;
 }
 
 /**
@@ -81,6 +96,7 @@ export async function downloadDump(
   targetPath: string,
   expectedSha256?: string,
   fetchImplementation: typeof globalThis.fetch = globalThis.fetch,
+  onProgress?: (event: DownloadProgressEvent) => void,
 ): Promise<{ path: string; sha256: string }> {
   const absoluteTarget = path.resolve(targetPath);
   // 临时文件名 = 目标文件 + PID + .download 后缀，避免并发冲突
@@ -93,12 +109,35 @@ export async function downloadDump(
   if (!response.ok || response.body === null)
     throw new Error(`Dump download failed: HTTP ${response.status}`);
 
+  const declaredLength = Number(response.headers.get('content-length'));
+  const totalBytes =
+    Number.isSafeInteger(declaredLength) && declaredLength >= 0 ? declaredLength : undefined;
+  let downloadedBytes = 0;
+  onProgress?.({
+    phase: 'started',
+    downloadedBytes,
+    ...(totalBytes === undefined ? {} : { totalBytes }),
+  });
+
+  const progressStream = new Transform({
+    transform(chunk: Buffer, _encoding, callback) {
+      downloadedBytes += chunk.length;
+      onProgress?.({
+        phase: 'progress',
+        downloadedBytes,
+        ...(totalBytes === undefined ? {} : { totalBytes }),
+      });
+      callback(null, chunk);
+    },
+  });
+
   try {
     // 流式下载：从 Web Stream 转换为 Node.js 可读流，通过 pipeline 写入文件
     await pipeline(
       Readable.fromWeb(
         response.body as unknown as import('node:stream/web').ReadableStream<Uint8Array>,
       ),
+      progressStream,
       // 使用排他创建标志，防止并发写入
       createWriteStream(temporary, { flags: 'wx' }),
     );
@@ -113,6 +152,11 @@ export async function downloadDump(
 
     // 原子重命名：从临时文件到目标文件
     await rename(temporary, absoluteTarget);
+    onProgress?.({
+      phase: 'completed',
+      downloadedBytes,
+      ...(totalBytes === undefined ? {} : { totalBytes }),
+    });
     return { path: absoluteTarget, sha256 };
   } catch (error) {
     // 清理临时文件（force 忽略文件不存在的错误）
@@ -197,7 +241,15 @@ export async function fetchFuyaoDump(options: FetchFuyaoDumpOptions): Promise<Fe
       const signedUrl = await signDump(options, fetchImplementation);
       // 第二步：下载文件，保存为 {kind}.parquet
       const target = path.join(options.cacheDir, `${options.kind}.parquet`);
-      const downloaded = await downloadDump(signedUrl, target, undefined, fetchImplementation);
+      const downloaded = await downloadDump(
+        signedUrl,
+        target,
+        undefined,
+        fetchImplementation,
+        options.onProgress === undefined
+          ? undefined
+          : (event) => options.onProgress?.({ ...event, kind: options.kind }),
+      );
       return { ...downloaded, releaseId: releaseId(signedUrl) };
     } catch (error) {
       lastError = error;

@@ -43,7 +43,7 @@ python -m pip install -e ./python
 
 ### 远端取数
 
-先从 <https://fuyao.aicubes.cn/admin> 获取统一 API Key，并在当前进程设置 `FUYAO_TOKEN` 或 `API_KEY`：
+先从 <https://fuyao.aicubes.cn/admin> 获取统一 API Key，并设置推荐的用户级环境变量 `HITHINK_FINANCE_API_KEY`。Python 也会读取 `hithink-finance/credentials.env` 用户级凭据文件；`FUYAO_TOKEN` 和 `API_KEY` 仅保留为旧版本兼容来源：
 
 ```bash
 python python/toolkit/fuyao/scripts/fuyao.py tickers-search --q "贵州茅台"

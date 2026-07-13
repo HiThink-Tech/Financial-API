@@ -59,6 +59,34 @@ describe('API key authentication', () => {
     await expect(provider.status('research')).resolves.toMatchObject({ configured: false });
   });
 
+  test('preserves the existing credential when an overwrite fails', async () => {
+    let stored = 'existing-secret';
+    let deleteCalled = false;
+    const store: CredentialStore = {
+      async get() {
+        return stored;
+      },
+      async set() {
+        throw new Error('credential write failed');
+      },
+      async delete() {
+        deleteCalled = true;
+        stored = '';
+        return true;
+      },
+      async listAccounts() {
+        return ['profile:default'];
+      },
+    };
+    const provider = new ApiKeyAuthProvider(store, {});
+
+    await expect(
+      provider.login({ profile: 'default', apiKey: 'replacement-secret' }),
+    ).rejects.toMatchObject({ code: 'AUTH_CREDENTIAL_STORE_UNAVAILABLE' });
+    expect(stored).toBe('existing-secret');
+    expect(deleteCalled).toBe(false);
+  });
+
   test('deletes every CLI-owned profile without touching foreign accounts', async () => {
     const store = new MemoryCredentialStore();
     store.values.set('profile:default', 'one');
