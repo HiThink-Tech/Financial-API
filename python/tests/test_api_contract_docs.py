@@ -43,6 +43,15 @@ EXPECTED_ENDPOINTS = {
         "GET /api/a-share/special-data/hot-stock-rank-trend",
         "GET /api/a-share/special-data/dragon-tiger-list",
     },
+    "endpoints-fund.md": {
+        "GET /api/fund/profile/detail",
+        "GET /api/fund/portfolio/holdings",
+        "GET /api/fund/performance/nav",
+        "GET /api/fund/performance/returns",
+        "GET /api/fund/holders/detail",
+        "GET /api/fund/market/snapshot",
+        "GET /api/fund/market/historical",
+    },
     "endpoints-market-dumps.md": {
         "GET /api/dump/market-dumps/daily-k/download-url",
         "GET /api/dump/market-dumps/daily-k-10d/download-url",
@@ -55,8 +64,8 @@ def read(filename: str) -> str:
     return (API_ROOT / filename).read_text(encoding="utf-8")
 
 
-def test_all_26_endpoints_are_documented_once() -> None:
-    assert sum(map(len, EXPECTED_ENDPOINTS.values())) == 26
+def test_all_33_endpoints_are_documented_once() -> None:
+    assert sum(map(len, EXPECTED_ENDPOINTS.values())) == 33
     combined = "\n".join(read(filename) for filename in EXPECTED_ENDPOINTS)
 
     for filename, endpoints in EXPECTED_ENDPOINTS.items():
@@ -133,3 +142,46 @@ def test_special_data_and_index_edge_contracts_are_preserved() -> None:
     assert "1d" in index
     assert "固定" in index or "fixed" in index.lower()
     assert "5003" not in index
+
+
+def test_fund_and_meta_contracts_preserve_backend_boundaries() -> None:
+    fund = read("endpoints-fund.md")
+    meta = read("endpoints-meta.md")
+    entry = read("README.md")
+
+    for value in (
+        "otc",
+        "exchange",
+        "reits",
+        "unit,adj",
+        "twoyear",
+        "fund_name",
+        "hold_ratio",
+        "nav_date",
+        "return_now",
+        "ins_position",
+        "turnover_ratio_pct",
+        "3001",
+        "3002",
+        "3004",
+        "5 年",
+    ):
+        assert value in fund
+    for asset_type in (
+        "a-share",
+        "a-share-index",
+        "forex",
+        "fund-otc",
+        "fund-etf",
+        "fund-lof",
+        "fund-reits",
+    ):
+        assert asset_type in meta
+    assert "逗号" in meta and "多个" in meta
+    assert "3004" in entry
+
+
+def test_error_envelope_always_keeps_null_data() -> None:
+    entry = read("README.md")
+    assert "`data` 字段始终存在" in entry
+    assert "业务错误时为 `null`" in entry

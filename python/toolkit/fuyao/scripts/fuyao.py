@@ -27,6 +27,13 @@ from fuyao_client import (  # noqa: E402
     financials_cash_flow_statements,
     financials_indicators,
     financials_income_statements,
+    fund_holders_detail,
+    fund_market_historical,
+    fund_market_snapshot,
+    fund_performance_nav,
+    fund_performance_returns,
+    fund_portfolio_holdings,
+    fund_profile_detail,
     index_catalog_ths_index_list,
     index_constituents_ths_stock_list,
     index_prices_historical,
@@ -175,6 +182,35 @@ def cmd_index_historical(args):
     )
 
 
+def _fund_detail_args(fn):
+    def _run(args):
+        return fn(args.thscode, fund_type=args.fund_type)
+
+    return _run
+
+
+def cmd_fund_nav(args):
+    return fund_performance_nav(
+        args.thscode,
+        fund_type=args.fund_type,
+        range=args.range,
+        nav_type=args.nav_type,
+    )
+
+
+def cmd_fund_snapshot(args):
+    return fund_market_snapshot(args.thscode)
+
+
+def cmd_fund_historical(args):
+    return fund_market_historical(
+        args.thscode,
+        args.start_ms,
+        args.end_ms,
+        interval=args.interval,
+    )
+
+
 def cmd_limit_up_pool(args):
     return special_data_limit_up_pool(
         date_ms=args.date_ms,
@@ -254,7 +290,7 @@ def _add_financials_subparser(sub, name: str, help_text: str, handler):
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="fuyao",
-        description="Fuyao A-share data CLI (23 REST capabilities). JSON-only stdout. "
+        description="Fuyao financial data CLI (30 REST capabilities). JSON-only stdout. "
         "Auth: HITHINK_FINANCE_API_KEY or user credentials file.",
     )
     parser.add_argument("--compact", action="store_true", help="emit single-line JSON")
@@ -264,7 +300,11 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("tickers-search", help="resolve name/code into thscode (local cache by default)")
     p.add_argument("--q", required=True)
     p.add_argument("--exchange", choices=["SH", "SZ", "BJ"])
-    p.add_argument("--asset-type", dest="asset_type", choices=["a-share", "a-share-index"])
+    p.add_argument(
+        "--asset-type",
+        dest="asset_type",
+        help="comma-separated asset types including fund-otc/fund-etf/fund-lof/fund-reits",
+    )
     p.add_argument("--limit", type=int, default=10)
     p.add_argument("--remote", action="store_true", help="bypass local cache, hit upstream")
     p.set_defaults(func=cmd_tickers_search)
@@ -272,7 +312,12 @@ def build_parser() -> argparse.ArgumentParser:
     # tickers-list
     p = sub.add_parser("tickers-list", help="bulk list tickers; --all loops paging; --refresh-cache writes local cache")
     p.add_argument("--exchange", default="SH,SZ")
-    p.add_argument("--asset-type", dest="asset_type", default="a-share", choices=["a-share", "a-share-index"])
+    p.add_argument(
+        "--asset-type",
+        dest="asset_type",
+        default="a-share",
+        help="comma-separated asset types including fund-otc/fund-etf/fund-lof/fund-reits",
+    )
     p.add_argument("--limit", type=int, default=1000)
     p.add_argument("--offset", type=int, default=0)
     p.add_argument("--all", action="store_true", help="loop offset until exhausted")
@@ -383,6 +428,52 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--end-ms", dest="end_ms", type=int, required=True)
     p.add_argument("--interval", default="1d", choices=["1d", "1w", "1mo"])
     p.set_defaults(func=cmd_index_historical)
+
+    # fund profile/performance/holders
+    for name, help_text, handler in (
+        ("fund-profile", "fund profile detail", _fund_detail_args(fund_profile_detail)),
+        (
+            "fund-holdings",
+            "fund portfolio holdings",
+            _fund_detail_args(fund_portfolio_holdings),
+        ),
+        (
+            "fund-returns",
+            "fund interval returns",
+            _fund_detail_args(fund_performance_returns),
+        ),
+        (
+            "fund-holders",
+            "fund holder structure",
+            _fund_detail_args(fund_holders_detail),
+        ),
+    ):
+        p = sub.add_parser(name, help=help_text)
+        p.add_argument("--fund-type", dest="fund_type", required=True, choices=["otc", "exchange", "reits"])
+        p.add_argument("--thscode", required=True)
+        p.set_defaults(func=handler)
+
+    p = sub.add_parser("fund-nav", help="fund net asset value series")
+    p.add_argument("--fund-type", dest="fund_type", required=True, choices=["otc", "exchange", "reits"])
+    p.add_argument("--thscode", required=True)
+    p.add_argument(
+        "--range",
+        choices=["week", "month", "tmonth", "hyear", "year", "twoyear", "tyear", "fyear"],
+        help="omit for the latest NAV point",
+    )
+    p.add_argument("--nav-type", dest="nav_type", default="unit,adj", choices=["unit", "adj", "unit,adj"])
+    p.set_defaults(func=cmd_fund_nav)
+
+    p = sub.add_parser("fund-snapshot", help="ETF/LOF market snapshot")
+    p.add_argument("--thscode", required=True, help="single ETF/LOF thscode")
+    p.set_defaults(func=cmd_fund_snapshot)
+
+    p = sub.add_parser("fund-historical", help="ETF daily price history, maximum five years")
+    p.add_argument("--thscode", required=True)
+    p.add_argument("--start-ms", dest="start_ms", type=int, required=True)
+    p.add_argument("--end-ms", dest="end_ms", type=int, required=True)
+    p.add_argument("--interval", default="1d", choices=["1d"])
+    p.set_defaults(func=cmd_fund_historical)
 
     # special-data limit-up-pool
     p = sub.add_parser(

@@ -15,13 +15,13 @@ hithink-finance symbol list --format json
 
 ## 参数选择策略
 
-| 参数                     | 必填 | 说明                                                                          |
-| ------------------------ | ---- | ----------------------------------------------------------------------------- |
-| `--exchange <exchanges>` | 否   | comma-separated exchanges；默认: SH,SZ                                        |
-| `--asset-type <type>`    | 否   | asset type；可选: a-share, a-share-index；默认: a-share；上游参数: asset_type |
-| `--limit <number>`       | 否   | page size (1-10000)；默认: 1000                                               |
-| `--offset <number>`      | 否   | row offset；默认: 0                                                           |
-| `--output <path>`        | 否   | write the full JSON response envelope to a file                               |
+| 参数                     | 必填 | 说明                                                                                                                                      |
+| ------------------------ | ---- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `--exchange <exchanges>` | 否   | comma-separated exchanges；默认: SH,SZ                                                                                                    |
+| `--asset-type <type>`    | 否   | comma-separated asset types: a-share, a-share-index, forex, fund-otc, fund-etf, fund-lof, fund-reits；默认: a-share；上游参数: asset_type |
+| `--limit <number>`       | 否   | page size (1-10000)；默认: 1000                                                                                                           |
+| `--offset <number>`      | 否   | row offset；默认: 0                                                                                                                       |
+| `--output <path>`        | 否   | write the full JSON response envelope to a file                                                                                           |
 
 ## 窗口与分页
 

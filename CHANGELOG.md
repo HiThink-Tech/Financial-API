@@ -2,6 +2,12 @@
 
 本文件记录“同花顺金融数据服务（hithink finance）”对外可见的重要变化。版本升级与路径兼容说明见 [Monorepo 版本升级指南](docs/monorepo-migration.md)。
 
+## 2026-07-17 — 公募基金能力
+
+- 新增基金资料、定期披露持仓、净值、区间收益和持有人结构查询。
+- 新增 ETF/LOF 行情快照与 ETF 历史日线，明确 5 年窗口和基金类型边界。
+- REST API、MCP、CLI、Python SDK 与统一 Agent Skill 同步支持基金能力；meta 标的检索扩展基金资产类型。
+
 ## 2026-07-10 — Monorepo 文档与接入体系治理
 
 ### 新增

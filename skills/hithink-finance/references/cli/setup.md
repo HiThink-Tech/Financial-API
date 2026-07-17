@@ -119,13 +119,17 @@ hithink-finance auth login
 hithink-finance skills status --format json
 ```
 
-状态应表明 8 个随 CLI 发布的领域 Skills 已安装且与当前版本一致。缺失或漂移时，在获得写入 Agent Skills 目录的授权后执行：
+输出中的 `canonical` 是随 CLI 发布的官方 Skills 来源；它不能证明当前 Agent 已发现 9 个 CLI 配套 Skill。确定使用 CLI 后，Agent 必须先从自身运行时配置定位**当前 Agent 的 Skills 目录**，并检查下列每个目录都存在且含有 `SKILL.md`：`hithink-finance-shared`、`hithink-finance-symbol`、`hithink-finance-market`、`hithink-finance-financials`、`hithink-finance-index`、`hithink-finance-special-data`、`hithink-finance-fund`、`hithink-finance-data`、`hithink-finance-research`。
+
+任何目录缺失时，先执行：
 
 ```bash
 hithink-finance skills sync --format json
 ```
 
-仍不一致时可先读取 `hithink-finance skills sync --help`，再使用 `--repair`。不要手工复制包内文件来绕过 CLI 的清单和校验机制。完整领域路由见 [内置 Skills 路由](builtin-skills.md)。
+随后必须对同一个当前 Agent 的 Skills 目录复查，而不是把同步命令的退出码当成安装证明。`skills sync` 可能没有当前 Agent 的发现目录或无法覆盖该工具；若 `canonical/<skill-name>/SKILL.md` 存在、当前 Agent 的 Skills 目录已知且可写，Agent 必须主动复制每个缺失 Skill 的完整目录（含 `references/`）到当前 Agent 的目录。只复制缺失的官方目录，不覆盖无关 Skills，也不向项目目录、其他 Agent 目录或未知路径写入。已存在但被用户修改的同名目录不做手工覆盖；先用 `hithink-finance skills sync --repair --format json`，仍无法确认时报告冲突和路径。复制后再次逐目录核验，并在 Agent 需要时新建会话以重新发现。
+
+完整领域路由见 [内置 Skills 路由](builtin-skills.md)。
 
 ## 7. 配置与最小验证
 
@@ -146,7 +150,7 @@ hithink-finance symbol search --q 600519 --limit 1 --format json
 
 ## 8. 安装后建议
 
-1. 运行 `hithink-finance skills status --format json` 并同步缺失 Skills。
+1. 运行 `hithink-finance skills status --format json`；核验当前 Agent 的 Skills 目录，必要时同步并主动复制缺失 Skills。
 2. 新建 Agent 会话，让新安装的内置 Skills 被重新发现。
 3. 在新会话直接描述需求，或快速开始：
 

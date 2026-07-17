@@ -15,13 +15,13 @@ hithink-finance symbol search --q <query> --format json
 
 ## 参数选择策略
 
-| 参数                    | 必填 | 说明                                                           |
-| ----------------------- | ---- | -------------------------------------------------------------- |
-| `--q <query>`           | 是   | name, ticker, or thscode                                       |
-| `--exchange <exchange>` | 否   | exchange filter；可选: SH, SZ, BJ                              |
-| `--asset-type <type>`   | 否   | asset type；可选: a-share, a-share-index；上游参数: asset_type |
-| `--limit <number>`      | 否   | maximum matches (1-50)；默认: 10                               |
-| `--output <path>`       | 否   | write the full JSON response envelope to a file                |
+| 参数                    | 必填 | 说明                                                                                                                       |
+| ----------------------- | ---- | -------------------------------------------------------------------------------------------------------------------------- |
+| `--q <query>`           | 是   | name, ticker, or thscode                                                                                                   |
+| `--exchange <exchange>` | 否   | exchange filter；可选: SH, SZ, BJ                                                                                          |
+| `--asset-type <type>`   | 否   | comma-separated asset types: a-share, a-share-index, forex, fund-otc, fund-etf, fund-lof, fund-reits；上游参数: asset_type |
+| `--limit <number>`      | 否   | maximum matches (1-50)；默认: 10                                                                                           |
+| `--output <path>`       | 否   | write the full JSON response envelope to a file                                                                            |
 
 ## 窗口与分页
 

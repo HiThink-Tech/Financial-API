@@ -1,27 +1,54 @@
 # 单股财务体检
 
-> 将利润表、资产负债表、现金流量表和财务指标组织成事实清晰的公司体检页。
+> 用三张报表和财务指标生成增长、盈利、现金流与杠杆体检页。
 
-## 适用场景
+## 定位
 
-财报发布后的快速阅读、基本面初筛，以及检查利润、现金流与杠杆是否相互匹配。默认示例标的是同花顺（`300033.SZ`）。
+财报发布后的快速阅读、基本面初筛，以及核对利润、现金流与资产负债结构是否相互匹配。默认示例标的是同花顺。
 
 ## Prompt 示例
 
-```text
-请在当前仓库中制作一张“单股财务体检”金融看板。先读取 AGENTS.md、skills/hithink-finance/SKILL.md 和 python/toolkit/README.md，并只使用当前 toolkit 已暴露能力。输入标的默认为“同花顺”，先用 tickers-search 确认唯一 thscode；通过 python/toolkit/fuyao 分别获取最近 8 期季度利润表、资产负债表、现金流量表，并根据最新已披露报告期调用 financials-indicators。围绕增长、盈利、现金流、杠杆四个维度做事实性分析，至少展示营业收入、归母净利润、经营活动现金流、总资产、总负债以及接口提供的关键财务指标；字段缺失时保持空缺并说明，不自行推算不同口径字段。生成可直接打开的单文件 HTML，保存到 out/inspirations/financial-health.html。视觉方案和图表形式由你自由设计，但需标注报告期、数据源、字段口径和非投资建议声明。不要读取或模仿 examples/inspirations 下的截图和示例 HTML。不得使用模拟数据，不补充项目当前未提供的估值、资讯或 F10 数据；原始响应落盘，不要在对话中输出完整财务记录，也不要将 API Key 写入文件。
+复制下面这一段 Prompt 交给任意支持 Skill 的 Agent。无需克隆本仓库。
+
+```markdown
+请使用已安装的 `hithink-finance` Skill，通过 REST API 为"同花顺"生成一张"单股财务体检"看板；不假设本地存在项目仓库、CLI 或 Python SDK。
+
+### 数据任务
+
+1. 按 Skill 的统一凭据规则安全读取 API Key，调用 `GET /api/meta/tickers/search` 将"同花顺"消歧为唯一 A 股 `thscode`；请求头使用 `X-api-key`，不得回显凭据。
+2. 分别调用利润表、资产负债表和现金流量表端点，读取最近 8 期 `quarterly` 数据；按 `period_end_ms` 对齐三表，并根据最新报告期调用财务指标端点。
+3. 围绕增长、盈利、现金流和杠杆做事实性归纳。`null` 保持缺失，不补零；不要混淆单季值、累计值或不同报告期，也不要编造估值、行业均值和评分。
+
+### 页面产物
+
+- 直接生成当前目录下的 `financial-health.html` 并打开预览。
+- 产物必须是无外部依赖、无运行时请求的单文件 HTML，内联 CSS、图表、数据和 JavaScript。页面应具备现代金融数据产品的专业感和清晰信息层级，具体布局、配色和视觉风格自由发挥。
+- 展示核心财务数值、同期对比、可切换的收入/利润/现金流序列，以及报告期和字段口径说明；图表支持悬停查看报告期详情，页面需适配手机宽度和键盘操作。
+- 标明数据源、报告期、币种和"非投资建议"。原始响应只落到临时目录，不写入 HTML；API Key 不得进入文件、日志或对话。
 ```
 
 ## 效果预览
 
-下图只展示一种可能效果，不是页面模板或复现标准。
+[![单股财务体检](preview.jpg)](example.html)
 
-![单股财务体检示例](preview.jpg)
+- [打开单文件 HTML](example.html)
+- [返回灵感目录](../README.md)
 
-[打开示例静态 HTML](example.html)
+## 同花顺金融数据能力
 
-## 能力与口径
+唯一金融数据源：同花顺金融数据 API。官方接口聚合：llms-full.txt。
 
-- 路径：`tickers-search`、`financials-income`、`financials-balance`、`financials-cashflow`、`financials-indicators`。
-- 范围：单只 A 股；最近 8 个季度；以接口已披露报告期为准。
-- 前置条件：设置 `FUYAO_TOKEN` 或 `API_KEY`。
+- `GET /api/meta/tickers/search`
+- `GET /api/a-share/financials/income-statements`
+- `GET /api/a-share/financials/balance-sheets`
+- `GET /api/a-share/financials/cash-flow-statements`
+- `GET /api/a-share/financials/indicators`
+
+## 关键边界
+
+- 推荐路径：REST API。
+- 数据范围：单只 A 股；最近 8 期季度报表；以最新已披露报告期为准。
+- 前置条件：仅需安装 Skill 并配置统一凭据；无需 CLI、Python SDK 或仓库源码。
+- 产物约束：单文件 HTML，所有样式、图表、数据和交互内联，无外部依赖、无运行时取数。
+
+> 示例页面使用模拟数据展示布局与交互，不代表真实最新结果，也不构成投资建议。

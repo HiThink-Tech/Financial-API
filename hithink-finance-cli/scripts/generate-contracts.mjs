@@ -77,7 +77,7 @@ const domainConfigs = {
       ['预览卸载', '`hithink-finance uninstall --plan --format json`'],
     ],
     boundaries: [
-      '业务取数请求必须切到 symbol、market、special-data、financials、index、data 或 research skill。',
+      '业务取数请求必须切到 symbol、market、special-data、financials、index、fund、data 或 research skill。',
       '不要把 API Key 写入命令、配置文件、日志、Markdown、Git 或对话正文；优先 stdin 或系统凭据库。',
       '不要把 stderr 更新提示、诊断详情或完整大数据结果当作最终答案原样展开。',
     ],
@@ -169,6 +169,26 @@ const domainConfigs = {
       '成分股结果是指数成员关系，不等于用户的投资组合或推荐清单。',
     ],
   },
+  fund: {
+    description:
+      '用于 Agent 通过 hithink-finance CLI 查询基金档案、持仓、净值、区间收益、持有人结构、ETF/LOF 快照和 ETF 历史；A 股行情转 hithink-finance-market，基金代码搜索转 hithink-finance-symbol。',
+    identity: '基金基础信息、业绩、持有人和场内行情入口。根据基金类型与市场形态选择稳定命令。',
+    decisions: [
+      ['基金档案', '`fund profile`'],
+      ['基金持仓', '`fund holdings`'],
+      ['基金净值', '`fund nav`'],
+      ['基金区间收益', '`fund returns`'],
+      ['基金持有人结构', '`fund holders`'],
+      ['ETF/LOF 快照', '`fund snapshot`'],
+      ['ETF 历史日线', '`fund history`'],
+      ['基金代码或名称搜索', '切到 `hithink-finance-symbol`'],
+    ],
+    boundaries: [
+      '档案、持仓、净值、收益和持有人查询必须同时提供单个 `fund_type` 与 `thscode`。',
+      '`fund snapshot` 只支持 ETF/LOF；`fund history` 只支持 ETF、固定 `1d` 且窗口最多 5 年。',
+      '基金数据不是投资建议，不要据此扩写买卖或收益承诺。',
+    ],
+  },
   data: {
     description:
       '用于 Agent 通过 hithink-finance CLI 管理本地 DuckDB：初始化、同步、状态、校验、迁移、修复、清理、删除、只读 SQL、导出；远端实时数据转对应业务 skill。',
@@ -222,6 +242,7 @@ const domainOrder = [
   'special-data',
   'financials',
   'index',
+  'fund',
   'data',
   'research',
 ];
@@ -404,8 +425,8 @@ hithink-finance skills remove --format json
 
 - \`status\` 检查已安装 Skills 是否与 CLI 包内 manifest 一致。
 - \`sync\` 修复缺失或漂移的受管文件；用户改过的受管文件会备份。
-- \`remove\` 只移除本 CLI manifest 拥有的 8 个 skill，不做全局清空。
-- 若某个 Agent 不在自动安装范围内，读取 \`status --format json\` 的 \`canonical\` 目录，并把其中 8 个 \`hithink-finance-*\` 目录复制到该 Agent 文档声明的 skills 发现目录。
+- \`remove\` 只移除本 CLI manifest 拥有的 9 个 skill，不做全局清空。
+- 若某个 Agent 不在自动安装范围内，读取 \`status --format json\` 的 \`canonical\` 目录，并把其中 9 个 \`hithink-finance-*\` 目录复制到该 Agent 文档声明的 skills 发现目录。
 
 ## 常见错误
 
@@ -623,7 +644,7 @@ ${table([['用户意图', '首选命令 / 路由'], ['---', '---'], ...config.de
 | 能力 | 凭据 |
 | --- | --- |
 | 本地 data/db/market panel | 通常不需要 API Key，除非需要同步或初始化远端 dump |
-| symbol/market remote/special/financials/index | 需要统一 API Key |
+| symbol/market remote/special/financials/index/fund | 需要统一 API Key |
 | skills/update/uninstall | 需要本机文件系统权限；不要写全局非 CLI 管理目录 |
 
 ## 边界声明

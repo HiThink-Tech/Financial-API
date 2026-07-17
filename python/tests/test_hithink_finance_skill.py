@@ -36,6 +36,8 @@ def test_hithink_finance_skill_covers_recent_remote_capabilities() -> None:
         "hot-stock-list",
         "hot-stock-rank-trend",
         "dragon-tiger-list",
+        "/api/fund/profile/detail",
+        "/api/fund/market/historical",
     ):
         assert capability in capability_map
 
@@ -83,9 +85,35 @@ def test_cli_entry_covers_setup_lifecycle_and_routes_to_builtin_skills() -> None
         "hithink-finance-data",
         "hithink-finance-research",
         "hithink-finance-shared",
+        "hithink-finance-fund",
     ):
         assert skill_name in builtin
     assert "已安装" in cli and "内置 Skill" in cli
+
+
+def test_cli_skill_contract_verifies_the_active_agent_and_handles_long_data_init() -> None:
+    skill = _skill_text()
+    cli = (SKILL_ROOT / "references" / "cli.md").read_text(encoding="utf-8")
+    setup = (SKILL_ROOT / "references" / "cli" / "setup.md").read_text(
+        encoding="utf-8"
+    )
+    builtin = (SKILL_ROOT / "references" / "cli" / "builtin-skills.md").read_text(
+        encoding="utf-8"
+    )
+    combined = "\n".join((skill, cli, setup, builtin))
+
+    for required in (
+        "当前 Agent 的 Skills 目录",
+        "9 个 CLI 配套 Skill",
+        "不能证明当前 Agent 已发现",
+        "主动复制",
+        "不覆盖无关 Skills",
+        "data init",
+        "不少于 15 分钟",
+        "存活 PID",
+        "不得在该 DB 上继续执行",
+    ):
+        assert required in combined
 
 
 def test_skill_unifies_credentials_and_bootstraps_cli_without_reprompting() -> None:
@@ -109,6 +137,25 @@ def test_skill_unifies_credentials_and_bootstraps_cli_without_reprompting() -> N
     assert "不再提示" in combined or "不重复" in combined
     assert "安装失败" in combined and "回退" in combined
     assert "系统凭据" in combined and "独立" in combined
+
+
+def test_skill_routes_fund_tasks_across_all_access_modes() -> None:
+    skill = _skill_text()
+    api = _api_capability_text()
+    mcp = (SKILL_ROOT / "references" / "mcp" / "hithink-finance-fund.md").read_text(
+        encoding="utf-8"
+    )
+    python_sdk = (SKILL_ROOT / "references" / "python-sdk.md").read_text(
+        encoding="utf-8"
+    )
+    remote_toolkit = (
+        SKILL_ROOT / "references" / "python-sdk" / "remote-toolkit.md"
+    ).read_text(encoding="utf-8")
+
+    for phrase in ("基金", "净值", "持仓", "持有人", "ETF"):
+        assert phrase in skill + api + mcp + python_sdk
+    assert "hithink-finance-fund" in mcp
+    assert "fund_market_historical" in python_sdk + remote_toolkit
 
 
 def test_skill_never_routes_agents_to_remote_llms_contract() -> None:

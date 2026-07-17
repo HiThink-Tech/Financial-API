@@ -20,7 +20,7 @@ const localCommands = [
 ];
 
 test('exposes all remote and local capability paths', async () => {
-  expect(remoteCapabilities).toHaveLength(23);
+  expect(remoteCapabilities).toHaveLength(30);
   expect(localCapabilities.map((item) => item.command.join(' ')).sort()).toEqual(
     localCommands.map((item) => item.join(' ')).sort(),
   );

@@ -1,27 +1,52 @@
 # 单股行情与趋势速览
 
-> 从一只股票出发，把最新行情与近一年趋势放进一张可继续探索的看板。
+> 一句话生成单股价格、均线、回撤与成交额联动的交互看板。
 
-## 适用场景
+## 定位
 
-第一次使用项目、快速了解某只 A 股近期表现，或为日常复盘建立一个轻量入口。默认示例标的是同花顺（`300033.SZ`），也可以替换为股票名称或代码。
+第一次使用服务、快速了解某只 A 股近期表现，或建立轻量日常复盘入口。默认示例标的是同花顺（`300033.SZ`）。
 
 ## Prompt 示例
 
-```text
-请在当前仓库中制作一张“单股行情与趋势速览”金融看板。先读取 AGENTS.md、skills/hithink-finance/SKILL.md 和 python/toolkit/README.md，确认当前能力后再取数。输入标的默认为“同花顺”，先通过 python/toolkit/fuyao 的 tickers-search 消歧为唯一 thscode，再调用 prices-snapshot 获取最新行情，并调用 prices-historical 获取最近约 250 个交易日的前复权日 K。计算区间涨跌幅、20/60/120 日均线、近 60 日最大回撤和成交额变化，生成一个可直接打开的单文件 HTML，保存到 out/inspirations/stock-overview.html。页面如何布局、配色和选择图表由你决定，但必须展示数据源、标的代码、行情时间、复权口径和非投资建议声明。不要读取或模仿 examples/inspirations 下的示例截图和 example.html；它们不是模板。不得使用模拟数据；如果某项数据不可用，在页面中说明原因。原始响应写入 out/inspirations-data/，不要把长序列输出到对话中，也不要把 API Key 写入任何文件。
+复制下面这一段 Prompt 交给任意支持 Skill 的 Agent。无需克隆本仓库。
+
+```markdown
+请使用已安装的 `hithink-finance` Skill，为"同花顺"生成一张"单股行情与趋势速览"看板；不假设本地存在任何项目仓库。
+
+### 数据任务
+
+1. 按 Skill 规则复用统一 API Key，优先使用 `hithink-finance` CLI；先查看 `capabilities --format json`，再按需查看 `schema symbol.search`、`schema market.snapshot` 和 `schema market.history`。
+2. 用 `symbol search` 将"同花顺"消歧为唯一 A 股 `thscode`，再获取最新行情和最近约 250 个交易日的前复权日 K。
+3. 计算区间涨跌幅、MA20/MA60/MA120、近 60 日最大回撤和 20 日平均成交额。原始长序列写入临时文件，不要粘贴到对话。
+
+### 页面产物
+
+- 直接生成当前目录下的 `stock-overview.html` 并在完成后打开预览。
+- 必须是可离线打开的单文件 HTML：CSS、图表、数据和 JavaScript 全部内联，不使用 CDN、框架、网络字体或运行时请求。页面应具备现代金融数据产品的专业感和清晰信息层级，具体布局、配色和视觉风格自由发挥。
+- 历史数据包含 OHLC 时优先展示 K 线，并联动成交量和均线；支持悬停十字光标与日期价格详情，以及滚轮缩放、拖拽平移、窗口切换或等价的区间探索。交互需兼顾窄屏和键盘操作。
+- 标明标的代码、数据时间、前复权口径、数据源和"非投资建议"。不得写入 API Key，不得用模拟数据填补失败项；失败时在页面中如实说明。
 ```
 
 ## 效果预览
 
-下图只展示一种可能效果，不是页面模板或复现标准。
+[![单股行情与趋势速览](preview.jpg)](example.html)
 
-![单股行情与趋势速览示例](preview.jpg)
+- [打开单文件 HTML](example.html)
+- [返回灵感目录](../README.md)
 
-[打开示例静态 HTML](example.html)
+## 同花顺金融数据能力
 
-## 能力与口径
+唯一金融数据源：同花顺金融数据 API。官方接口聚合：llms-full.txt。
 
-- 路径：`tickers-search`、`prices-snapshot`、`prices-historical`。
-- 范围：单只 A 股、约 250 个交易日、日线前复权。
-- 前置条件：设置 `FUYAO_TOKEN` 或 `API_KEY`。
+- `GET /api/meta/tickers/search`
+- `GET /api/a-share/prices/snapshot`
+- `GET /api/a-share/prices/historical`
+
+## 关键边界
+
+- 推荐路径：CLI。
+- 数据范围：单只 A 股；最近约 250 个交易日；默认前复权。
+- 前置条件：仅需安装 `hithink-finance` Skill；Skill 会复用统一凭据并在需要时引导使用 CLI。
+- 产物约束：单文件 HTML，所有样式、图表、数据和交互内联，无外部依赖、无运行时取数。
+
+> 示例页面使用模拟数据展示布局与交互，不代表真实最新结果，也不构成投资建议。

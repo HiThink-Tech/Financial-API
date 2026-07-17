@@ -1,5 +1,5 @@
 import { createServer, type Server } from 'node:http';
-import { afterEach, describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 import { z } from 'zod';
 import { FuyaoClient } from '../../src/infrastructure/fuyao/client.js';
 import { paginate } from '../../src/infrastructure/fuyao/pagination.js';
@@ -47,21 +47,21 @@ describe('Fuyao HTTP client', () => {
   test('retries retryable business errors three total attempts and honors Retry-After', async () => {
     let attempts = 0;
     const delays: number[] = [];
-    const { baseUrl } = await fixtureServer((_request, response) => {
+    const fetch = vi.fn<typeof globalThis.fetch>().mockImplementation(async () => {
       attempts += 1;
-      response.setHeader('content-type', 'application/json');
-      response.setHeader('retry-after', '0');
-      response.end(
+      return new Response(
         JSON.stringify(
           attempts < 3
             ? { code: 4001, message: 'limited', request_id: `req_${attempts}`, data: null }
             : { code: 0, message: 'ok', request_id: 'req_3', data: { done: true } },
         ),
+        { headers: { 'content-type': 'application/json', 'retry-after': '0' } },
       );
     });
     const client = new FuyaoClient({
-      baseUrl,
+      baseUrl: 'https://fixture.invalid',
       auth: { method: 'api-key', profile: 'default', apiKey: 'test-key', source: 'explicit' },
+      fetch,
       sleep: async (milliseconds) => {
         delays.push(milliseconds);
       },

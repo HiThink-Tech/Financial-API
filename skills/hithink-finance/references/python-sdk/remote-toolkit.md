@@ -13,6 +13,7 @@ python python/toolkit/fuyao/scripts/fuyao.py --help
 python python/toolkit/fuyao/scripts/fuyao.py tickers-search --q "贵州茅台"
 python python/toolkit/fuyao/scripts/fuyao.py prices-snapshot --thscodes 600519.SH
 python python/toolkit/fuyao/scripts/fuyao.py financials-income --thscode 600519.SH --limit 4
+python python/toolkit/fuyao/scripts/fuyao.py fund-history --thscode 510300.SH --start-ms 1704038400000 --end-ms 1735660799000
 ```
 
 Python 函数调用：
@@ -23,10 +24,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path("python/toolkit/fuyao/scripts").resolve()))
 
-from fuyao_client import prices_snapshot, tickers_search
+from fuyao_client import fund_market_historical, prices_snapshot, tickers_search
 
 hit = tickers_search("贵州茅台", limit=1)[0]
 snapshot = prices_snapshot([hit["thscode"]])
+fund_bars = fund_market_historical("510300.SH", 1704038400000, 1735660799000)
 ```
 
 函数签名与脚本 `--help` 是 Python 适配层的运行契约；上游请求与响应字段按本 Skill 的 [REST API 入口](../api.md) 继续路由。真实调用先检查 `code=0`，大结果必须重定向或由程序写入文件。

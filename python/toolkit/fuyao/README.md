@@ -1,6 +1,6 @@
 # 远端数据 Python toolkit
 
-本目录提供同花顺金融数据服务的 Python 适配层，用于从 Python、Shell、CI 或 Notebook 获取最新行情、财报、指数、标的目录和特色数据。历史全市场研究与本地 SQL 请使用 [`../marketdb/`](../marketdb/README.md)。
+本目录提供同花顺金融数据服务的 Python 适配层，用于从 Python、Shell、CI 或 Notebook 获取最新行情、财报、指数、基金、标的目录和特色数据。历史全市场研究与本地 SQL 请使用 [`../marketdb/`](../marketdb/README.md)。
 
 这里维护的是 **Python 函数和脚本运行方式**。上游 REST 端点参数、响应字段和错误码统一在 [`docs/api/`](../../../docs/api/README.md) 维护，本目录不保存 `llms.txt`、`llms-full.txt` 或重复契约。
 
@@ -22,6 +22,7 @@ python/toolkit/fuyao/
 - 公司行动、财务报表、财务指标和交易日历
 - 股票/指数名称、ticker、`thscode` 检索与消歧
 - 指数/板块目录、成分股和行情
+- 基金档案、持仓、净值、收益、持有人和场内基金行情
 - 涨停、连板、当日异动、热榜和龙虎榜
 - 全市场 Market Dumps 的远端签出流程
 
@@ -77,6 +78,11 @@ python python/toolkit/fuyao/scripts/fuyao.py financials-indicators --thscode 600
 python python/toolkit/fuyao/scripts/fuyao.py index-catalog --tag cn_concept
 python python/toolkit/fuyao/scripts/fuyao.py index-constituents --thscode 000300.SH
 
+# 基金
+python python/toolkit/fuyao/scripts/fuyao.py fund-nav --fund-type otc --thscode 025480.OF --range year
+python python/toolkit/fuyao/scripts/fuyao.py fund-historical --thscode 510300.SH \
+  --start-ms 1704038400000 --end-ms 1735660800000
+
 # 特色数据
 python python/toolkit/fuyao/scripts/fuyao.py limit-up-pool --size 50
 python python/toolkit/fuyao/scripts/fuyao.py hot-stock-list --period day
@@ -92,6 +98,7 @@ python python/toolkit/fuyao/scripts/fuyao.py dragon-tiger-list --board-type all
 | 财务 | `financials-income`, `financials-balance`, `financials-cashflow`, `financials-indicators` |
 | 日历 | `calendar-trading-days` |
 | 指数 | `index-catalog`, `index-constituents`, `index-snapshot`, `index-historical` |
+| 基金 | `fund-profile`, `fund-holdings`, `fund-nav`, `fund-returns`, `fund-holders`, `fund-snapshot`, `fund-historical` |
 | 特色数据 | `limit-up-pool`, `limit-up-ladder`, `anomaly-analysis-list`, `anomaly-analysis-stock`, `skyrocket-list`, `hot-stock-list`, `hot-stock-list-history`, `hot-stock-rank-trend`, `dragon-tiger-list` |
 
 具体参数始终以当前 `--help` 和函数签名为准；上游字段解释见 [REST API 契约](../../../docs/api/README.md)。

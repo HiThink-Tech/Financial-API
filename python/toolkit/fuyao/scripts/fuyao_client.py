@@ -20,7 +20,7 @@ import json
 import re
 import time
 from dataclasses import dataclass
-from datetime import date as Date
+from datetime import date as Date, datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable, Literal, Optional
 
@@ -37,6 +37,36 @@ RETRY_CODES = {4001, 5001, 5002, 5003}
 MAX_RETRIES = 3
 RETRY_BASE_SECONDS = 1.0
 DEFAULT_TIMEOUT_SECONDS = 30
+
+AssetType = Literal[
+    "a-share",
+    "a-share-index",
+    "forex",
+    "fund-otc",
+    "fund-etf",
+    "fund-lof",
+    "fund-reits",
+]
+FundType = Literal["otc", "exchange", "reits"]
+FundRange = Literal[
+    "week", "month", "tmonth", "hyear", "year", "twoyear", "tyear", "fyear"
+]
+FundNavType = Literal["unit", "adj", "unit,adj"]
+
+_ASSET_TYPES = {
+    "a-share",
+    "a-share-index",
+    "forex",
+    "fund-otc",
+    "fund-etf",
+    "fund-lof",
+    "fund-reits",
+}
+_FUND_TYPES = {"otc", "exchange", "reits"}
+_FUND_RANGES = {
+    "week", "month", "tmonth", "hyear", "year", "twoyear", "tyear", "fyear"
+}
+_FUND_NAV_TYPES = {"unit", "adj", "unit,adj"}
 
 
 # ---------------------------------------------------------------------------
@@ -143,6 +173,47 @@ def _validate_adjust(adjust: str) -> None:
         raise ValueError(f"adjust must be one of none/forward/backward; got {adjust!r}")
 
 
+def _normalize_asset_type(
+    asset_type: AssetType | str | Iterable[AssetType | str] | None,
+) -> str | None:
+    if asset_type is None:
+        return None
+    raw = asset_type.split(",") if isinstance(asset_type, str) else list(asset_type)
+    normalized: list[str] = []
+    for value in raw:
+        token = value.strip().lower() if isinstance(value, str) else ""
+        if not token or token not in _ASSET_TYPES:
+            raise ValueError(f"asset_type contains unsupported value: {value!r}")
+        if token not in normalized:
+            normalized.append(token)
+    return ",".join(normalized)
+
+
+def _validate_fund_target(fund_type: str, thscode: str) -> tuple[str, str]:
+    normalized_type = fund_type.strip().lower() if isinstance(fund_type, str) else ""
+    if normalized_type not in _FUND_TYPES:
+        raise ValueError(f"fund_type must be one of otc/exchange/reits; got {fund_type!r}")
+    _validate_thscode(thscode)
+    return normalized_type, thscode.strip().upper()
+
+
+def _validate_exchange_fund_code(thscode: str) -> str:
+    _validate_thscode(thscode)
+    normalized = thscode.strip().upper()
+    if not re.fullmatch(r"[0-9]{6}\.(SH|SZ)", normalized):
+        raise ValueError("exchange-traded fund thscode must end in .SH or .SZ")
+    return normalized
+
+
+def _five_year_limit_ms(start_ms: int) -> int:
+    start = datetime.fromtimestamp(start_ms / 1000, tz=timezone.utc)
+    try:
+        limit = start.replace(year=start.year + 5)
+    except ValueError:
+        limit = start.replace(year=start.year + 5, day=28)
+    return int(limit.timestamp() * 1000)
+
+
 def _validate_recent_or_range(
     limit: int | None, start_ms: int | None, end_ms: int | None
 ) -> tuple[str, dict[str, Any]]:
@@ -209,7 +280,7 @@ def _local_search(
     for it in items:
         if exchange and it.get("exchange") != exchange:
             continue
-        if asset_type and it.get("asset_type") != asset_type:
+        if asset_type and it.get("asset_type") not in asset_type.split(","):
             continue
         haystack = " ".join(
             str(it.get(k) or "") for k in ("thscode", "ticker", "name")
@@ -225,7 +296,7 @@ def tickers_search(
     q: str,
     *,
     exchange: Literal["SH", "SZ", "BJ"] | None = None,
-    asset_type: Literal["a-share", "a-share-index"] | None = None,
+    asset_type: AssetType | str | Iterable[AssetType | str] | None = None,
     limit: int = 10,
     use_cache: bool = True,
     remote: bool = False,
@@ -239,6 +310,7 @@ def tickers_search(
         raise ValueError("q is required")
     if limit < 1 or limit > 50:
         raise ValueError("limit must be in [1, 50]")
+    normalized_asset_type = _normalize_asset_type(asset_type)
     if not remote and use_cache:
         items, cached_at = _load_cache()
         if items is not None:
@@ -250,13 +322,18 @@ def tickers_search(
                     "run `fuyao.py tickers-list --refresh-cache` to refresh",
                     file=sys.stderr,
                 )
-            hits = _local_search(items, q, exchange, asset_type, limit)
+            hits = _local_search(items, q, exchange, normalized_asset_type, limit)
             if hits:
                 return hits
             # Fall through to remote when cache misses on this query.
     data = _get(
         "/api/meta/tickers/search",
-        {"q": q, "exchange": exchange, "asset_type": asset_type, "limit": limit},
+        {
+            "q": q,
+            "exchange": exchange,
+            "asset_type": normalized_asset_type,
+            "limit": limit,
+        },
     )
     return data.get("item", [])
 
@@ -269,7 +346,7 @@ def tickers_search(
 def tickers_list(
     *,
     exchange: str = "SH,SZ",
-    asset_type: Literal["a-share", "a-share-index"] = "a-share",
+    asset_type: AssetType | str | Iterable[AssetType | str] = "a-share",
     limit: int = 1000,
     offset: int = 0,
     fetch_all: bool = False,
@@ -282,13 +359,21 @@ def tickers_list(
     """
     if limit < 1 or limit > 10000:
         raise ValueError("limit must be in [1, 10000]")
+    if offset < 0:
+        raise ValueError("offset must be >= 0")
+    normalized_asset_type = _normalize_asset_type(asset_type)
     if refresh_cache:
         fetch_all = True
 
     if not fetch_all:
         data = _get(
             "/api/meta/tickers/list",
-            {"exchange": exchange, "asset_type": asset_type, "limit": limit, "offset": offset},
+            {
+                "exchange": exchange,
+                "asset_type": normalized_asset_type,
+                "limit": limit,
+                "offset": offset,
+            },
         )
         return data.get("item", [])
 
@@ -299,7 +384,7 @@ def tickers_list(
             "/api/meta/tickers/list",
             {
                 "exchange": exchange,
-                "asset_type": asset_type,
+                "asset_type": normalized_asset_type,
                 "limit": limit,
                 "offset": cur_offset,
             },
@@ -635,7 +720,109 @@ def index_prices_historical(
 
 
 # ---------------------------------------------------------------------------
-# 15/16. Special data — limit-up pool & limit-up ladder
+# 15-21. Fund profile, performance, holders, and exchange market data
+# ---------------------------------------------------------------------------
+
+
+def _fund_detail(
+    path: str, thscode: str, fund_type: FundType | str
+) -> dict[str, Any]:
+    normalized_type, normalized_code = _validate_fund_target(fund_type, thscode)
+    return _get(path, {"fund_type": normalized_type, "thscode": normalized_code})
+
+
+def fund_profile_detail(
+    thscode: str, *, fund_type: FundType
+) -> dict[str, Any]:
+    """Fund profile for one explicitly typed fund target."""
+    return _fund_detail("/api/fund/profile/detail", thscode, fund_type)
+
+
+def fund_portfolio_holdings(
+    thscode: str, *, fund_type: FundType
+) -> dict[str, Any]:
+    """Fund portfolio holdings for one explicitly typed target."""
+    return _fund_detail("/api/fund/portfolio/holdings", thscode, fund_type)
+
+
+def fund_performance_nav(
+    thscode: str,
+    *,
+    fund_type: FundType,
+    range: FundRange | None = None,
+    nav_type: FundNavType = "unit,adj",
+) -> dict[str, Any]:
+    """Fund NAV; omit range for the latest point."""
+    normalized_type, normalized_code = _validate_fund_target(fund_type, thscode)
+    if range is not None and range not in _FUND_RANGES:
+        raise ValueError(f"range must be one of {sorted(_FUND_RANGES)}; got {range!r}")
+    if nav_type not in _FUND_NAV_TYPES:
+        raise ValueError(
+            f"nav_type must be one of unit/adj/unit,adj; got {nav_type!r}"
+        )
+    return _get(
+        "/api/fund/performance/nav",
+        {
+            "fund_type": normalized_type,
+            "thscode": normalized_code,
+            "range": range,
+            "nav_type": nav_type,
+        },
+    )
+
+
+def fund_performance_returns(
+    thscode: str, *, fund_type: FundType
+) -> dict[str, Any]:
+    """Fund interval-return summary for one explicitly typed target."""
+    return _fund_detail("/api/fund/performance/returns", thscode, fund_type)
+
+
+def fund_holders_detail(
+    thscode: str, *, fund_type: FundType
+) -> dict[str, Any]:
+    """Fund holder structure for one explicitly typed target."""
+    return _fund_detail("/api/fund/holders/detail", thscode, fund_type)
+
+
+def fund_market_snapshot(thscode: str) -> dict[str, Any]:
+    """Market snapshot for one exchange-traded ETF/LOF target."""
+    if isinstance(thscode, str) and "," in thscode:
+        raise ValueError("single-thscode endpoint does not accept comma-separated input")
+    normalized = _validate_exchange_fund_code(thscode)
+    return _get("/api/fund/market/snapshot", {"thscode": normalized})
+
+
+def fund_market_historical(
+    thscode: str,
+    start_ms: int,
+    end_ms: int,
+    *,
+    interval: Literal["1d"] = "1d",
+) -> dict[str, Any]:
+    """Daily ETF price history for a single target and a maximum five-year window."""
+    normalized = _validate_exchange_fund_code(thscode)
+    if interval != "1d":
+        raise ValueError("interval must be 1d")
+    if not isinstance(start_ms, int) or not isinstance(end_ms, int):
+        raise ValueError("start_ms / end_ms must be int milliseconds")
+    if end_ms < start_ms:
+        raise ValueError("end_ms must be >= start_ms")
+    if end_ms > _five_year_limit_ms(start_ms):
+        raise ValueError("fund history window must not exceed five years")
+    return _get(
+        "/api/fund/market/historical",
+        {
+            "thscode": normalized,
+            "interval": interval,
+            "start": start_ms,
+            "end": end_ms,
+        },
+    )
+
+
+# ---------------------------------------------------------------------------
+# 22/23. Special data — limit-up pool & limit-up ladder
 # ---------------------------------------------------------------------------
 
 
@@ -883,6 +1070,13 @@ __all__ = [
     "index_constituents_ths_stock_list",
     "index_prices_snapshot",
     "index_prices_historical",
+    "fund_profile_detail",
+    "fund_portfolio_holdings",
+    "fund_performance_nav",
+    "fund_performance_returns",
+    "fund_holders_detail",
+    "fund_market_snapshot",
+    "fund_market_historical",
     "special_data_limit_up_pool",
     "special_data_limit_up_ladder",
     "special_data_anomaly_analysis_list",

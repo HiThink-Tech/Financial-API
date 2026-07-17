@@ -25,6 +25,7 @@ import { registerMarketCommands } from '../commands/market/index.js';
 import { registerSpecialCommands } from '../commands/special/index.js';
 import { registerFinancialCommands } from '../commands/financials/index.js';
 import { registerIndexCommands } from '../commands/index/index.js';
+import { registerFundCommands } from '../commands/fund/index.js';
 import { registerCapabilitiesCommand } from '../commands/system/capabilities.js';
 import { registerSchemaCommand } from '../commands/system/schema.js';
 import { registerSkillsCommands } from '../commands/skills/index.js';
@@ -211,6 +212,7 @@ export function createProgram(
   registerSpecialCommands(program, context, remoteDependencies);
   registerFinancialCommands(program, context, remoteDependencies);
   registerIndexCommands(program, context, remoteDependencies);
+  registerFundCommands(program, context, remoteDependencies);
   registerCapabilitiesCommand(program, context);
   registerSchemaCommand(program, context);
   registerSkillsCommands(program, context, dependencies.packageRoot);

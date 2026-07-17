@@ -1,6 +1,6 @@
 {
   "protocolVersion": "1",
-  "cliVersion": "0.1.1",
+  "cliVersion": "0.1.2",
   "files": {
     "hithink-finance-data/SKILL.md": "98d36ee1de8adb94149a747f77d3d10c29f41e8f77b04b30d10bdd4df7ce7955",
     "hithink-finance-data/references/data-clean.md": "49422a4a8f1ea0ced02da7b1130f91ec273286205ead881b6beb5e93ba93b55b",
@@ -19,6 +19,14 @@
     "hithink-finance-financials/references/financials-cash-flow.md": "722d0d2d08e2feb65ff9548fade70bc5cc4da6fb41fe84e63f438e59838eb130",
     "hithink-finance-financials/references/financials-income.md": "2450abcf2f419792bd7c89dade763a4067e758984e96dc7d9f27ed6fd2dd1d2d",
     "hithink-finance-financials/references/financials-indicators.md": "eb6413001a852d77d4d393b36ba21f903fa1f69fd0cd0948da7da59c0fa9db3b",
+    "hithink-finance-fund/SKILL.md": "ebfef70aaafed2f6f4ed11017a2eee79b3f6145ce36436d89c5e783216df2acb",
+    "hithink-finance-fund/references/fund-history.md": "20fb80471bc182f2d85dfea17a04dfc8af302e3b6db976b92848e31c1c7a1f6d",
+    "hithink-finance-fund/references/fund-holders.md": "95d14c0da8fac6b9c6bd1876d1db2a0263f42649b85d1e81c27c5ffe7398358e",
+    "hithink-finance-fund/references/fund-holdings.md": "17da2b7c00de6505300226b59a7d4eca37a4b4674b9eea6eb2561e330bf4f677",
+    "hithink-finance-fund/references/fund-nav.md": "c7e8eb2b065a1923acbfbf247bc9eb28643dd76a49ce81e290438bcb1ce28ad0",
+    "hithink-finance-fund/references/fund-profile.md": "b92a9ed43c8d63d799676a6e7af659df3a637903af875b5d13a1e010e3cad19f",
+    "hithink-finance-fund/references/fund-returns.md": "eb008bf06b14bc10cc895e994ccde5c4166fe1b15a778230cd266b4158d2cffd",
+    "hithink-finance-fund/references/fund-snapshot.md": "056976586c5f02404d25ec1bc124280fb659e4a9dd760346a92b2f94d8e27a10",
     "hithink-finance-index/SKILL.md": "861e15cba2713368864b57a5d7193d531d1adf21796f43c180bc660590f56213",
     "hithink-finance-index/references/index-catalog.md": "319f6255e3a6d55c552332c6c2dc747a23ac3a63fd0da778c9b451fd33d2e245",
     "hithink-finance-index/references/index-constituents.md": "82bb54f90b458aceab5c7725f52c30e5197aaa87d7969c2abcb37c204c4cee6b",
@@ -33,11 +41,11 @@
     "hithink-finance-market/references/market-snapshot.md": "a7c08d2ea387ec85781f159a3d92404e31f47159564d39ed639565299b517af4",
     "hithink-finance-research/SKILL.md": "7f4ded9d172a2bb2578ac81266ef869521c7d753f2a021c7aa79fc6d0f92541c",
     "hithink-finance-research/references/research-workflow.md": "3f73f179339b21403e7f8f6bfd7fcb2649f06ffc6b6bccb428b18cb19929dad5",
-    "hithink-finance-shared/SKILL.md": "9f04c427f09b0a8115c98c5e873bca81ea491b448cbab53b11386db96d354db1",
+    "hithink-finance-shared/SKILL.md": "9293ba3384d128e8187dacf799f6645a8778113d75569a53d07f2d8082b16870",
     "hithink-finance-shared/references/auth-and-config.md": "2685090dd9e78ba344f3f1efc4e8d83dc737e09308aaae197d5af154ab5d8609",
     "hithink-finance-shared/references/global-rules.md": "21b6ef14ffd656240d5f31349bb6e430fdff6ffd790268a3ae115ffdc16e6102",
     "hithink-finance-shared/references/lifecycle.md": "087b3aaa8e8299cc3f6b733a0de07f8dbd43b9a6ebf25addf5b3e77ded21f8fe",
-    "hithink-finance-shared/references/skills-management.md": "bb508bd6592d81c5eaad9f6bec575cc93cd7c42d8ecdbe955e12942b55956c02",
+    "hithink-finance-shared/references/skills-management.md": "7bfbebd716ef58a5718217931b5a76634018e622402957a10db47944514a28b2",
     "hithink-finance-special-data/SKILL.md": "d824662f6bc12912f8b89f52a1b7f938dca36c2342174732380606e609ebc30b",
     "hithink-finance-special-data/references/special-anomaly-list.md": "98f7bac44eb040ff80fd06185bd9ac811fdd7d46fa6c7695a32e808eda3bd2fd",
     "hithink-finance-special-data/references/special-anomaly-stock.md": "5bb7878964e76c6b37b46ffe6eb1f43c2df709b34a3f3be24bc0729ccf31188d",
@@ -49,7 +57,7 @@
     "hithink-finance-special-data/references/special-limit-up-pool.md": "caf9e8266b15b39ef869787cf1bcbbaea950d15939acc460fa5d60d8b3236276",
     "hithink-finance-special-data/references/special-skyrocket.md": "8b8791551cb044902bc70301f34614f7cc358f96111b4208e286d114f24d7e86",
     "hithink-finance-symbol/SKILL.md": "398867892e734766aa3efbf7d57d92e7ae895eb3485164673e4b48252daef659",
-    "hithink-finance-symbol/references/symbol-list.md": "bdedd2e8898acd18937352d2bffd5706988119a0ec8c526b5bdbcb2a21c93eee",
-    "hithink-finance-symbol/references/symbol-search.md": "27c627658985c9d33bc8e62e53e732812cac3210bd014e4edb10a79fbac0e616"
+    "hithink-finance-symbol/references/symbol-list.md": "a9947c8e3ae19f680ff04a2d82efc5f4cd05a78c2b449eea8e3a0dacdb91d852",
+    "hithink-finance-symbol/references/symbol-search.md": "d711ee78891c296b1b7df14fa79224f45a97970dd690c00e5feb6f8e239936d0"
   }
 }

@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { remoteCapabilities } from '../../src/contracts/remote-capabilities.js';
 
-const EXPECTED_23_IDS = [
+const EXPECTED_30_IDS = [
   'symbol.search',
   'symbol.list',
   'market.snapshot',
@@ -16,6 +16,13 @@ const EXPECTED_23_IDS = [
   'index.constituents',
   'index.snapshot',
   'index.history',
+  'fund.profile',
+  'fund.holdings',
+  'fund.nav',
+  'fund.returns',
+  'fund.holders',
+  'fund.snapshot',
+  'fund.history',
   'special.limit-up-pool',
   'special.limit-up-ladder',
   'special.anomaly-list',
@@ -27,14 +34,72 @@ const EXPECTED_23_IDS = [
   'special.dragon-tiger',
 ];
 
-test('registers exactly the frozen 23 remote capabilities with unique command paths', () => {
+test('registers exactly the frozen 30 remote capabilities with unique command paths', () => {
   expect(remoteCapabilities.map((capability) => capability.id).sort()).toEqual(
-    EXPECTED_23_IDS.sort(),
+    EXPECTED_30_IDS.sort(),
   );
   expect(new Set(remoteCapabilities.map((capability) => capability.command.join(' '))).size).toBe(
-    23,
+    30,
   );
   expect(remoteCapabilities.every((capability) => capability.method === 'GET')).toBe(true);
+});
+
+test('keeps all seven fund capabilities under the fund command group', () => {
+  const fund = remoteCapabilities.filter((capability) => capability.id.startsWith('fund.'));
+  expect(fund.map((capability) => capability.command.join(' '))).toEqual([
+    'fund profile',
+    'fund holdings',
+    'fund nav',
+    'fund returns',
+    'fund holders',
+    'fund snapshot',
+    'fund history',
+  ]);
+  expect(fund.map((capability) => capability.endpoint)).toEqual([
+    '/api/fund/profile/detail',
+    '/api/fund/portfolio/holdings',
+    '/api/fund/performance/nav',
+    '/api/fund/performance/returns',
+    '/api/fund/holders/detail',
+    '/api/fund/market/snapshot',
+    '/api/fund/market/historical',
+  ]);
+});
+
+test('validates fund enum and five-year historical boundaries', () => {
+  const profile = remoteCapabilities.find((candidate) => candidate.id === 'fund.profile')!;
+  expect(profile.inputSchema.safeParse({ fundType: 'otc', thscode: '025480.OF' }).success).toBe(
+    true,
+  );
+  expect(profile.inputSchema.safeParse({ fundType: 'invalid', thscode: '025480.OF' }).success).toBe(
+    false,
+  );
+
+  const history = remoteCapabilities.find((candidate) => candidate.id === 'fund.history')!;
+  expect(
+    history.inputSchema.safeParse({ thscode: '510300.SH', startMs: 1, endMs: 2 }).success,
+  ).toBe(true);
+  expect(
+    history.inputSchema.safeParse({
+      thscode: '510300.SH',
+      startMs: 1,
+      endMs: 5 * 366 * 24 * 60 * 60 * 1000 + 2,
+    }).success,
+  ).toBe(false);
+
+  const snapshot = remoteCapabilities.find((candidate) => candidate.id === 'fund.snapshot')!;
+  expect(snapshot.inputSchema.safeParse({ thscode: '510300.SH' }).success).toBe(true);
+  expect(snapshot.inputSchema.safeParse({ thscodes: '510300.SH,159915.SZ' }).success).toBe(false);
+});
+
+test('accepts documented comma-separated asset types and rejects unknown tokens', () => {
+  const search = remoteCapabilities.find((candidate) => candidate.id === 'symbol.search')!;
+  expect(
+    search.inputSchema.safeParse({ q: '基金', assetType: 'fund-otc,fund-etf', limit: 10 }).success,
+  ).toBe(true);
+  expect(search.inputSchema.safeParse({ q: '基金', assetType: 'fund', limit: 10 }).success).toBe(
+    false,
+  );
 });
 
 test('keeps all nine special-data capabilities under special only', () => {

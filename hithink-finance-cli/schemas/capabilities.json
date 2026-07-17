@@ -104,6 +104,69 @@
       "source": "remote"
     },
     {
+      "id": "fund.history",
+      "command": ["fund", "history"],
+      "endpoint": "/api/fund/market/historical",
+      "method": "GET",
+      "paging": "none",
+      "window": "five-years",
+      "source": "remote"
+    },
+    {
+      "id": "fund.holders",
+      "command": ["fund", "holders"],
+      "endpoint": "/api/fund/holders/detail",
+      "method": "GET",
+      "paging": "none",
+      "window": "none",
+      "source": "remote"
+    },
+    {
+      "id": "fund.holdings",
+      "command": ["fund", "holdings"],
+      "endpoint": "/api/fund/portfolio/holdings",
+      "method": "GET",
+      "paging": "none",
+      "window": "none",
+      "source": "remote"
+    },
+    {
+      "id": "fund.nav",
+      "command": ["fund", "nav"],
+      "endpoint": "/api/fund/performance/nav",
+      "method": "GET",
+      "paging": "none",
+      "window": "none",
+      "source": "remote"
+    },
+    {
+      "id": "fund.profile",
+      "command": ["fund", "profile"],
+      "endpoint": "/api/fund/profile/detail",
+      "method": "GET",
+      "paging": "none",
+      "window": "none",
+      "source": "remote"
+    },
+    {
+      "id": "fund.returns",
+      "command": ["fund", "returns"],
+      "endpoint": "/api/fund/performance/returns",
+      "method": "GET",
+      "paging": "none",
+      "window": "none",
+      "source": "remote"
+    },
+    {
+      "id": "fund.snapshot",
+      "command": ["fund", "snapshot"],
+      "endpoint": "/api/fund/market/snapshot",
+      "method": "GET",
+      "paging": "none",
+      "window": "none",
+      "source": "remote"
+    },
+    {
       "id": "index.catalog",
       "command": ["index", "catalog"],
       "endpoint": "/api/a-share-index/catalog/ths-index-list",

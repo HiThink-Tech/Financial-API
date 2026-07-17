@@ -48,6 +48,7 @@ def test_root_readme_has_current_brand_positioning_and_quick_start() -> None:
         "hithink-finance-a-share",
         "hithink-finance-a-share-index",
         "hithink-finance-meta",
+        "hithink-finance-fund",
     ):
         assert server_name in readme
     assert "examples/inspirations/01-stock-overview/preview.jpg" in readme
@@ -99,7 +100,8 @@ def test_upstream_api_contract_has_one_canonical_source_and_skill_mirror() -> No
     contract_files = {
         "capability-map.md",
         "endpoints-calendar.md",
-        "endpoints-financials.md",
+            "endpoints-financials.md",
+            "endpoints-fund.md",
         "endpoints-index.md",
         "endpoints-market-dumps.md",
         "endpoints-meta.md",

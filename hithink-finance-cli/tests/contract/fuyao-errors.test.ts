@@ -1,34 +1,18 @@
-import { createServer, type Server } from 'node:http';
-import { afterEach, describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { z } from 'zod';
 import { FuyaoClient } from '../../src/infrastructure/fuyao/client.js';
 
-const servers: Server[] = [];
-
-async function errorServer(code: number): Promise<{ baseUrl: string; attempts: () => number }> {
+function errorFetch(code: number): { fetch: typeof globalThis.fetch; attempts: () => number } {
   let count = 0;
-  const server = createServer((_request, response) => {
+  const fetch = vi.fn<typeof globalThis.fetch>().mockImplementation(async () => {
     count += 1;
-    response.setHeader('content-type', 'application/json');
-    response.end(
+    return new Response(
       JSON.stringify({ code, message: `business-${code}`, request_id: `req_${count}`, data: null }),
+      { headers: { 'content-type': 'application/json' } },
     );
   });
-  servers.push(server);
-  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
-  const address = server.address();
-  if (address === null || typeof address === 'string')
-    throw new Error('fixture server unavailable');
-  return { baseUrl: `http://127.0.0.1:${address.port}`, attempts: () => count };
+  return { fetch, attempts: () => count };
 }
-
-afterEach(async () => {
-  await Promise.all(
-    servers
-      .splice(0)
-      .map((server) => new Promise<void>((resolve) => server.close(() => resolve()))),
-  );
-});
 
 describe.each([
   [1001, 'validation', 2, false],
@@ -36,10 +20,11 @@ describe.each([
   [2003, 'authentication', 3, false],
 ] as const)('business error %i', (code, category, exitCode, retryable) => {
   test('maps immediately without retry', async () => {
-    const fixture = await errorServer(code);
+    const fixture = errorFetch(code);
     const client = new FuyaoClient({
-      baseUrl: fixture.baseUrl,
+      baseUrl: 'https://fixture.invalid',
       auth: { method: 'api-key', profile: 'default', apiKey: 'test-key', source: 'explicit' },
+      fetch: fixture.fetch,
       sleep: async () => undefined,
     });
 
@@ -56,10 +41,11 @@ describe.each([
 
 describe.each([4001, 5001, 5002, 5003])('retryable business error %i', (code) => {
   test('fails after exactly three attempts and preserves the last request ID', async () => {
-    const fixture = await errorServer(code);
+    const fixture = errorFetch(code);
     const client = new FuyaoClient({
-      baseUrl: fixture.baseUrl,
+      baseUrl: 'https://fixture.invalid',
       auth: { method: 'api-key', profile: 'default', apiKey: 'test-key', source: 'explicit' },
+      fetch: fixture.fetch,
       sleep: async () => undefined,
       random: () => 0,
     });

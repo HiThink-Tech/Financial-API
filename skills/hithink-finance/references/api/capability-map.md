@@ -2,7 +2,7 @@
 
 > 根据用户意图快速定位到具体 REST 端点。本页只做路由，参数与字段细节在各端点详情页。
 
-## 全部端点一览（26 个）
+## 全部端点一览（33 个）
 
 ### 元信息（2 个）
 
@@ -53,6 +53,20 @@
 
 详情：[endpoints-index.md](endpoints-index.md)
 
+### 公募基金（7 个）
+
+| 端点 | 用途 | 典型问题 |
+| --- | --- | --- |
+| `GET /api/fund/profile/detail` | 基金基本资料 | 「这只基金的管理人和基金经理是谁」 |
+| `GET /api/fund/portfolio/holdings` | 定期披露重仓股 | 「这只基金披露了哪些重仓股」 |
+| `GET /api/fund/performance/nav` | 最新或固定区间净值 | 「这只基金近一年单位净值走势」 |
+| `GET /api/fund/performance/returns` | 固定区间收益 | 「这只基金近一月、近一年和成立以来收益」 |
+| `GET /api/fund/holders/detail` | 持有人结构 | 「机构和个人持有比例是多少」 |
+| `GET /api/fund/market/snapshot` | ETF/LOF 场内快照 | 「510300.SH 当前价格多少」 |
+| `GET /api/fund/market/historical` | ETF 历史日线 | 「510300.SH 最近一年的日线行情」 |
+
+详情：[endpoints-fund.md](endpoints-fund.md)
+
 ### 特色数据（9 个）
 
 | 端点 | 用途 | 典型问题 |
@@ -86,7 +100,7 @@
 ### 名称到数据
 
 1. 用 `/api/meta/tickers/search?q=<名称>` 消歧为唯一 `thscode`。
-2. 判断 `asset_type`：`a-share` 走个股端点，`a-share-index` 走指数端点。
+2. 判断 `asset_type`：`a-share` 走个股端点，`a-share-index` 走指数端点，`fund-*` 走基金端点。
 3. 调用对应行情、财务或特色数据端点。
 
 ### 概念板块到成分股行情
@@ -103,8 +117,8 @@
 
 ## 能力边界
 
-- 覆盖 **A 股**（沪深京）和 **A 股指数 / 板块**。
-- **不覆盖**：分钟 K、tick、Level-2、港股、美股、基金、期货、期权。
+- 覆盖 **A 股**（沪深京）、**A 股指数 / 板块**和公募基金资料/披露/净值/收益；场内行情覆盖 ETF/LOF 快照与 ETF 日线。
+- **不覆盖**：分钟 K、tick、Level-2、港股、美股、基金申赎交易、基金风险指标、期货、期权。
 - 财务指标端点不返回行业均值、评分、排名或点评。
 - 端点提供数据，不提供回测引擎、alpha 模型或确定性投资建议。
 - 异动分析（`anomaly-analysis-list` / `anomaly-analysis-stock`）仅支持当日快照，不支持历史查询。

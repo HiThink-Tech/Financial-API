@@ -13,7 +13,7 @@ test('publishes generated capability and envelope schemas', async () => {
   const capabilities = JSON.parse(await readFile('schemas/capabilities.json', 'utf8')) as {
     capabilities: unknown[];
   };
-  expect(capabilities.capabilities).toHaveLength(36);
+  expect(capabilities.capabilities).toHaveLength(43);
   await expect(access('schemas/command-envelope.schema.json')).resolves.toBeUndefined();
 });
 
@@ -26,6 +26,7 @@ test('checked-in contracts are fresh after line-ending normalization', async () 
       'schemas/command-envelope.schema.json',
       'skills/hithink-finance-data/SKILL.md',
       'skills/hithink-finance-market/SKILL.md',
+      'skills/hithink-finance-fund/SKILL.md',
       'skills/hithink-finance-shared/SKILL.md',
       'skills/manifest.json',
     ]) {
@@ -42,6 +43,6 @@ test('generated Skill manifest pins every owned file by sha256', async () => {
   const manifest = JSON.parse(await readFile('skills/manifest.json', 'utf8')) as {
     files: Record<string, string>;
   };
-  expect(Object.keys(manifest.files)).toHaveLength(49);
+  expect(Object.keys(manifest.files)).toHaveLength(57);
   expect(Object.values(manifest.files).every((hash) => /^[a-f0-9]{64}$/u.test(hash))).toBe(true);
 });

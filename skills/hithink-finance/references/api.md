@@ -16,6 +16,8 @@
 | 时间戳 | 毫秒 Unix 时间戳；具体日期字符串格式以端点页为准 |
 | 空值 | `null` 表示未披露或上游无值，不得自动补零 |
 
+`data` 字段始终存在：成功时承载端点数据，业务错误时为 `null`。调用方不得以“字段缺失”判断旧版错误信封，也不得在错误时把 `null` 当作成功空结果。
+
 获取统一 API Key：<https://fuyao.aicubes.cn/admin>。API Key 不得写入代码、Prompt、日志、公开配置或 Git 提交。
 
 最小请求：
@@ -36,6 +38,7 @@ curl 'https://fuyao.aicubes.cn/api/meta/tickers/search?q=600519&limit=1' \
 | 利润表、资产负债表、现金流量表、财务指标 | [财务数据端点](api/endpoints-financials.md) |
 | 交易日历 | [交易日历端点](api/endpoints-calendar.md) |
 | 指数/板块目录、成分股、指数行情 | [指数与板块端点](api/endpoints-index.md) |
+| 基金资料、净值、收益、持仓、持有人和场内行情 | [公募基金端点](api/endpoints-fund.md) |
 | 涨停、连板、异动、热榜、龙虎榜 | [特色数据端点](api/endpoints-special-data.md) |
 | 全市场 Parquet 与本地建库数据源 | [全市场数据导出](api/endpoints-market-dumps.md) |
 
@@ -52,6 +55,9 @@ curl 'https://fuyao.aicubes.cn/api/meta/tickers/search?q=600519&limit=1' \
 | `1004` | 参数冲突 | 按端点互斥规则重组参数 |
 | `2001` | 未认证 | 检查 `X-api-key` 是否存在且格式正确 |
 | `2003` | 无权限或 Key 无效 | 前往 API Key 管理页检查授权或重新签发 |
+| `3001` | 标的不存在 | 先通过元信息端点消歧并核对资产类别与 `thscode` |
+| `3002` | 数据尚未准备 | 保留 `request_id` 与口径，稍后再查，不得补零或使用模拟数据 |
+| `3004` | 目标类型不支持该能力 | 选择适用于该资产类型的端点，不重试原请求 |
 | `4001` | 限流 | 指数退避，最多重试 3 次 |
 | `5001`/`5002`/`5003` | 服务端或上游异常 | 退避重试；持续失败时保留 `request_id` |
 

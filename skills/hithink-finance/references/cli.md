@@ -13,9 +13,17 @@ CLI 是人类终端、Agent 执行与自动化的推荐路径，统一远端数�
    hithink-finance capabilities --format json
    ```
 
-   然后读取 [CLI 内置 Skills 路由](cli/builtin-skills.md)，按用户意图打开已安装 CLI 所管理的对应 Skill。内置 Skill 与当前 CLI 版本同步，具有更准确的命令、参数、输出和本地数据指引。
+   `skills status` 的 `canonical` 只定位已安装包内的官方来源，不能证明当前 Agent 已发现 9 个 CLI 配套 Skill。先按 [安装、配置与生命周期](cli/setup.md) 核验当前 Agent 的 Skills 目录；通过后再读取 [CLI 内置 Skills 路由](cli/builtin-skills.md)，按用户意图打开对应 Skill。内置 Skill 与当前 CLI 版本同步，具有更准确的命令、参数、输出和本地数据指引。
 
-4. 如果内置 Skills 缺失或漂移，先按 setup 契约运行 `hithink-finance skills sync`；无法修复时再用 `capabilities`、`schema <command-id>` 和 `<command> --help` 做运行时发现。
+4. 当前 Agent 缺少任一配套 Skill 时，先按 setup 契约运行 `hithink-finance skills sync` 并复查同一目录。同步无法覆盖该 Agent 时，Agent 必须从 `canonical` 主动复制缺失的完整官方 Skill 目录到当前 Agent 的 Skills 目录；只补缺失目录，不覆盖无关 Skills。仅在 Skills 路径未知或不可写时报告阻塞，不要把 `capabilities`、`schema <command-id>` 或 `<command> --help` 当成已安装 Skill 的替代证明。
+
+## 长时间本地初始化
+
+`data init` 的远端全量路径包含下载、导入和复权重建；下载完成不表示进程已完成或 DuckDB 已解锁。
+
+- 使用前台、可等待全部子进程的执行器，超时不少于 15 分钟；不要让外层 shell 超时后遗留 `node.exe`。
+- 只有退出码 0 且 JSON 信封 `ok=true` 后，才可对同一 `--db` 运行 `data status`、`market history`、`db query` 或其他本地命令。
+- 若执行器超时或返回非 0，先检查锁文件/报错中的存活 PID。PID 仍存活时继续等待，不得在该 DB 上继续执行，也不得删除活锁；只有用户明确要求取消时才终止该进程。
 
 ## 功能简述
 

@@ -9,12 +9,13 @@ const names = [
   'special-data',
   'financials',
   'index',
+  'fund',
   'data',
   'research',
 ].map((n) => `hithink-finance-${n}`);
 
-test('ships exactly eight valid Skills with shared dependency rules', async () => {
-  expect(names).toHaveLength(8);
+test('ships exactly nine valid Skills with shared dependency rules', async () => {
+  expect(names).toHaveLength(9);
   for (const name of names) {
     const file = path.resolve('skills', name, 'SKILL.md');
     await expect(access(file)).resolves.toBeUndefined();

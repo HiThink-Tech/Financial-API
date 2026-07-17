@@ -7,7 +7,7 @@
 
 **同花顺金融数据服务（hithink-finance）** 是由同花顺官方提供和维护的 A股金融数据服务，面向 AI Agent、量化研究者和应用开发者。
 
-通过一个统一的 API Key，即可查询 A股最新行情快照、历史行情、财务报表、指数、板块、涨停、连板、个股异动、热榜和龙虎榜等数据，并将数据接入 AI 工具、Python 研究脚本、量化程序或业务系统。
+通过一个统一的 API Key，即可查询 A股最新行情快照、历史行情、财务报表、指数、板块、公募基金资料与净值、涨停、连板、个股异动、热榜和龙虎榜等数据，并将数据接入 AI 工具、Python 研究脚本、量化程序或业务系统。
 
 > 一站式同花顺官方金融数据能力，覆盖 API、MCP、CLI、Python SDK、本地数据库和 Agent Skill。
 
@@ -25,6 +25,7 @@
 - 查询上市公司的利润表、资产负债表、现金流量表和财务指标。
 - 获取交易日历、公司行动、复权因子等基础研究数据。
 - 查询涨停池、连板天梯、个股异动、热榜和龙虎榜等同花顺特色数据。
+- 查询公募基金资料、披露持仓、净值、区间收益、持有人结构以及 ETF/LOF 场内行情。
 - 下载全市场数据，为回测、选股、因子研究和 AI 分析准备数据。
 - 让 Claude、Cursor、Windsurf 等支持 MCP 或 Agent Skill 的工具直接调用金融数据。
 - 在本地构建 DuckDB 数据库，完成增量同步、SQL 查询、复权计算和文件导出。
@@ -39,7 +40,7 @@
 
 ### 有什么数据
 
-覆盖 A股行情、标的目录、公司行动、财务报表与指标、交易日历、指数、板块、涨停、连板、个股异动、热榜、龙虎榜和全市场数据文件。
+覆盖 A股行情、标的目录、公司行动、财务报表与指标、交易日历、指数、板块、公募基金、涨停、连板、个股异动、热榜、龙虎榜和全市场数据文件。
 
 ### 怎么使用
 
@@ -77,6 +78,7 @@
 | 交易日历 | 判断交易日、安排数据同步和回测时间 | CLI / API / MCP / Python |
 | 指数与板块 | 查询指数和板块目录、成分股、行情及历史 K 线 | CLI / API / MCP / Python |
 | 同花顺特色数据 | 获取涨停池、连板、异动、热榜和龙虎榜 | CLI / API / MCP / Python |
+| 公募基金 | 查询资料、披露持仓、净值、收益、持有人结构、ETF/LOF 快照与 ETF 日线 | CLI / API / MCP / Python |
 | 全市场数据导出 | 下载全量或增量日 K、公司行动等标准数据文件 | CLI / Market Dumps |
 | 本地 DuckDB | 完成数据初始化、同步、校验、修复、SQL 查询和导出 | CLI / marketdb |
 
@@ -109,18 +111,18 @@ Skill 是 Agent 使用本项目的统一说明书，包含：
 
 请选择一种安装方式：
 
-1. **优先：从 [Skill Hub](https://www.skillhub.cn/skills/hithink-finance) 安装**
+1. **优先：通过 `npx skills add` 安装（推荐）**
+
+   ```bash
+   npx skills add HiThink-Tech/Financial-API --skill hithink-finance -g --yes
+   ```
+
+2. **无网络条件：从 [Skill Hub](https://www.skillhub.cn/skills/hithink-finance) 安装**
 
    **将提示词发送给你的 AI 安装该 Skill：**
 
    ```text
    请根据 https://skillhub.cn/install/skillhub.md，安装 hithink-finance。
-   ```
-
-2. **通过 [Agent Skills](https://agentskills.io/) 通用安装器安装**
-
-   ```bash
-   npx skills add HiThink-Tech/Financial-API --skill hithink-finance -g --yes
    ```
 
 如无法使用以上安装方式，也可以把完整的 [`skills/hithink-finance/`](skills/hithink-finance/SKILL.md) 目录复制到 Agent 文档声明的 Skills 发现目录。
@@ -151,6 +153,17 @@ CLI 将远端取数、本地数据库、认证、统一 JSON 输出和大结果�
 
 ```bash
 npm install -g @hithink-tech/hithink-finance-cli
+```
+
+国内用户可使用 [npmmirror](https://npmmirror.com/) 镜像加速：
+
+```bash
+npm install -g @hithink-tech/hithink-finance-cli --registry=https://registry.npmmirror.com
+```
+
+安装完成后验证：
+
+```bash
 hithink-finance auth login
 hithink-finance capabilities --format json
 ```
@@ -225,7 +238,7 @@ curl 'https://fuyao.aicubes.cn/api/a-share/prices/snapshot?thscodes=600519.SH' \
 
 MCP 适合 Claude Desktop、Cursor、Windsurf 和其他支持 MCP 的客户端。
 
-将以下三个托管端点配置到客户端，并使用 `hithink-finance-*` 作为服务名称：
+将以下四个托管端点配置到客户端，并使用 `hithink-finance-*` 作为服务名称：
 
 ```json
 {
@@ -250,16 +263,24 @@ MCP 适合 Claude Desktop、Cursor、Windsurf 和其他支持 MCP 的客户端�
       "headers": {
         "X-api-key": "${HITHINK_FINANCE_API_KEY}"
       }
+    },
+    "hithink-finance-fund": {
+      "type": "http",
+      "url": "https://fuyao.aicubes.cn/mcp/fund",
+      "headers": {
+        "X-api-key": "${HITHINK_FINANCE_API_KEY}"
+      }
     }
   }
 }
 ```
 
-三个服务分别覆盖：
+四个服务分别覆盖：
 
 - `hithink-finance-a-share`：A股行情、财务和特色数据；
 - `hithink-finance-a-share-index`：指数、板块及相关行情；
 - `hithink-finance-meta`：标的检索、能力发现等基础信息。
+- `hithink-finance-fund`：基金资料、披露、净值、收益和场内行情。
 
 配置位置、安全方式、意图路由和验证步骤见 [MCP 接入说明](docs/mcp.md)。
 
@@ -480,9 +501,13 @@ marketdb query \
 
 ## 最新变化
 
-当前 monorepo 版本包含三项关键变化，完整历史见 [`CHANGELOG.md`](CHANGELOG.md)。
+当前 monorepo 版本包含四项关键变化，完整历史见 [`CHANGELOG.md`](CHANGELOG.md)。
 
-### 1. 新增 `hithink-finance` Node.js CLI
+### 1. 新增公募基金能力
+
+REST API、MCP、CLI 与 Python SDK 统一支持基金资料、披露持仓、净值、区间收益、持有人结构、ETF/LOF 快照和 ETF 历史日线。
+
+### 2. 新增 `hithink-finance` Node.js CLI
 
 统一提供：
 
@@ -495,7 +520,7 @@ marketdb query \
 
 推荐直接从 npm 安装。
 
-### 2. 新增统一 `hithink-finance` Skill
+### 3. 新增统一 `hithink-finance` Skill
 
 原根目录中的通用、REST、MCP 和 CLI Setup Skills 已合并为一个可以独立安装的入口，统一覆盖：
 
@@ -505,7 +530,7 @@ marketdb query \
 - Python SDK；
 - 安全与大结果处理规范。
 
-### 3. 仓库升级为 monorepo
+### 4. 仓库升级为 monorepo
 
 Python 项目已迁入 `python/`。
 

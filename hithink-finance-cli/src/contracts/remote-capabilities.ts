@@ -20,13 +20,34 @@ export interface RemoteCapabilityDescriptor {
   outputSchema: ZodType<unknown>;
   options: readonly RemoteOptionDescriptor[];
   paging: 'none' | 'offset' | 'page';
-  window: 'none' | 'ten-years' | 'one-year' | 'today-only';
+  window: 'none' | 'ten-years' | 'five-years' | 'one-year' | 'today-only';
 }
 
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/u);
 const aShareCode = z.string().regex(/^\d{6}\.(SH|SZ|BJ)$/iu);
 const indexCode = z.string().regex(/^\d{6}\.(SH|SZ|BJ|TI)$/iu);
 const commaCodes = z.string().min(1);
+const assetTypes = [
+  'a-share',
+  'a-share-index',
+  'forex',
+  'fund-otc',
+  'fund-etf',
+  'fund-lof',
+  'fund-reits',
+] as const;
+const assetTypeCsv = z.string().superRefine((value, context) => {
+  const tokens = value.split(',');
+  if (
+    tokens.length === 0 ||
+    tokens.some(
+      (token) => token.length === 0 || !assetTypes.includes(token as (typeof assetTypes)[number]),
+    )
+  ) {
+    context.addIssue({ code: 'custom', message: 'invalid comma-separated asset type' });
+  }
+});
+const fundCode = z.string().regex(/^\d{6}\.(OF|SH|SZ)$/iu);
 const record = z.record(z.string(), z.unknown());
 const itemOutput = z.object({ item: z.array(record) }).passthrough();
 const objectOutput = z.object({}).passthrough();
@@ -49,6 +70,29 @@ const indexHistoryInput = z
   })
   .strict()
   .refine((value) => value.endMs >= value.startMs, { message: 'end-ms must be >= start-ms' });
+
+const fundHistoryInput = z
+  .object({
+    thscode: fundCode,
+    interval: z.literal('1d').default('1d'),
+    startMs: z.number().int().nonnegative(),
+    endMs: z.number().int().nonnegative(),
+  })
+  .strict()
+  .superRefine((value, context) => {
+    if (value.endMs < value.startMs) {
+      context.addIssue({ code: 'custom', message: 'end-ms must be >= start-ms' });
+      return;
+    }
+    const latest = new Date(value.startMs);
+    latest.setUTCFullYear(latest.getUTCFullYear() + 5);
+    if (value.endMs > latest.getTime()) {
+      context.addIssue({
+        code: 'custom',
+        message: 'fund history window must not exceed five years',
+      });
+    }
+  });
 
 const financialInput = z
   .object({
@@ -124,6 +168,42 @@ function financial(
   };
 }
 
+function fundDetail(
+  command: 'profile' | 'holdings' | 'returns' | 'holders',
+  description: string,
+  endpoint: string,
+): RemoteCapabilityDescriptor {
+  return {
+    id: `fund.${command}`,
+    command: ['fund', command],
+    description,
+    endpoint,
+    method: 'GET',
+    inputSchema: z
+      .object({ fundType: z.enum(['otc', 'exchange', 'reits']), thscode: fundCode })
+      .strict(),
+    outputSchema: itemOutput,
+    options: [
+      {
+        flags: '--fund-type <type>',
+        description: 'fund type',
+        type: 'string',
+        required: true,
+        choices: ['otc', 'exchange', 'reits'],
+        queryName: 'fund_type',
+      },
+      {
+        flags: '--thscode <code>',
+        description: 'single fund thscode',
+        type: 'string',
+        required: true,
+      },
+    ],
+    paging: 'none',
+    window: 'none',
+  };
+}
+
 export const remoteCapabilities: readonly RemoteCapabilityDescriptor[] = [
   {
     id: 'symbol.search',
@@ -135,7 +215,7 @@ export const remoteCapabilities: readonly RemoteCapabilityDescriptor[] = [
       .object({
         q: z.string().min(1),
         exchange: z.enum(['SH', 'SZ', 'BJ']).optional(),
-        assetType: z.enum(['a-share', 'a-share-index']).optional(),
+        assetType: assetTypeCsv.optional(),
         limit: z.number().int().min(1).max(50).default(10),
       })
       .strict(),
@@ -155,9 +235,8 @@ export const remoteCapabilities: readonly RemoteCapabilityDescriptor[] = [
       },
       {
         flags: '--asset-type <type>',
-        description: 'asset type',
         type: 'string',
-        choices: ['a-share', 'a-share-index'],
+        description: `comma-separated asset types: ${assetTypes.join(', ')}`,
         queryName: 'asset_type',
       },
       {
@@ -179,7 +258,7 @@ export const remoteCapabilities: readonly RemoteCapabilityDescriptor[] = [
     inputSchema: z
       .object({
         exchange: z.string().default('SH,SZ'),
-        assetType: z.enum(['a-share', 'a-share-index']).default('a-share'),
+        assetType: assetTypeCsv.default('a-share'),
         limit: z.number().int().min(1).max(10000).default(1000),
         offset: z.number().int().nonnegative().default(0),
       })
@@ -194,9 +273,8 @@ export const remoteCapabilities: readonly RemoteCapabilityDescriptor[] = [
       },
       {
         flags: '--asset-type <type>',
-        description: 'asset type',
         type: 'string',
-        choices: ['a-share', 'a-share-index'],
+        description: `comma-separated asset types: ${assetTypes.join(', ')}`,
         defaultValue: 'a-share',
         queryName: 'asset_type',
       },
@@ -444,6 +522,119 @@ export const remoteCapabilities: readonly RemoteCapabilityDescriptor[] = [
     ],
     paging: 'none',
     window: 'ten-years',
+  },
+  fundDetail('profile', 'Query fund profile detail', '/api/fund/profile/detail'),
+  fundDetail('holdings', 'Query fund portfolio holdings', '/api/fund/portfolio/holdings'),
+  {
+    id: 'fund.nav',
+    command: ['fund', 'nav'],
+    description: 'Query fund net asset value series',
+    endpoint: '/api/fund/performance/nav',
+    method: 'GET',
+    inputSchema: z
+      .object({
+        fundType: z.enum(['otc', 'exchange', 'reits']),
+        thscode: fundCode,
+        range: z
+          .enum(['week', 'month', 'tmonth', 'hyear', 'year', 'twoyear', 'tyear', 'fyear'])
+          .optional(),
+        navType: z.enum(['unit', 'adj', 'unit,adj']).default('unit,adj'),
+      })
+      .strict(),
+    outputSchema: itemOutput,
+    options: [
+      {
+        flags: '--fund-type <type>',
+        description: 'fund type',
+        type: 'string',
+        required: true,
+        choices: ['otc', 'exchange', 'reits'],
+        queryName: 'fund_type',
+      },
+      {
+        flags: '--thscode <code>',
+        description: 'single fund thscode',
+        type: 'string',
+        required: true,
+      },
+      {
+        flags: '--range <range>',
+        description: 'NAV history range; omit for the latest point',
+        type: 'string',
+        choices: ['week', 'month', 'tmonth', 'hyear', 'year', 'twoyear', 'tyear', 'fyear'],
+      },
+      {
+        flags: '--nav-type <type>',
+        description: 'NAV fields to return',
+        type: 'string',
+        choices: ['unit', 'adj', 'unit,adj'],
+        defaultValue: 'unit,adj',
+        queryName: 'nav_type',
+      },
+    ],
+    paging: 'none',
+    window: 'none',
+  },
+  fundDetail('returns', 'Query fund interval returns', '/api/fund/performance/returns'),
+  fundDetail('holders', 'Query fund holder structure', '/api/fund/holders/detail'),
+  {
+    id: 'fund.snapshot',
+    command: ['fund', 'snapshot'],
+    description: 'Query exchange-traded fund market snapshot',
+    endpoint: '/api/fund/market/snapshot',
+    method: 'GET',
+    inputSchema: z.object({ thscode: fundCode }).strict(),
+    outputSchema: itemOutput,
+    options: [
+      {
+        flags: '--thscode <code>',
+        description: 'single ETF or LOF thscode',
+        type: 'string',
+        required: true,
+      },
+    ],
+    paging: 'none',
+    window: 'none',
+  },
+  {
+    id: 'fund.history',
+    command: ['fund', 'history'],
+    description: 'Query daily ETF price history',
+    endpoint: '/api/fund/market/historical',
+    method: 'GET',
+    inputSchema: fundHistoryInput,
+    outputSchema: itemOutput,
+    options: [
+      {
+        flags: '--thscode <code>',
+        description: 'single ETF thscode',
+        type: 'string',
+        required: true,
+      },
+      {
+        flags: '--interval <interval>',
+        description: 'bar interval',
+        type: 'string',
+        choices: ['1d'],
+        defaultValue: '1d',
+      },
+      {
+        flags: '--start-ms <milliseconds>',
+        description: 'start timestamp',
+        type: 'integer',
+        required: true,
+        queryName: 'start',
+      },
+      {
+        flags: '--end-ms <milliseconds>',
+        description: 'end timestamp',
+        type: 'integer',
+        required: true,
+        queryName: 'end',
+      },
+    ],
+    paging: 'none',
+    window: 'five-years',
   },
   {
     id: 'special.limit-up-pool',

@@ -34,12 +34,12 @@ test('uses pinned local skills CLI with global copy mode and no telemetry', () =
   expect(invocation.args.join(' ')).not.toContain('latest');
 });
 
-test('removes only the eight package-owned skill names from every agent', () => {
+test('removes only the nine package-owned skill names from every agent', () => {
   const invocation = skillsRemoveArguments('C:/pkg');
   expect(invocation.args).toEqual(expect.arrayContaining(['remove', '--global', '--yes']));
   expect(
     invocation.args.filter((argument) => argument.startsWith('hithink-finance-')),
-  ).toHaveLength(8);
+  ).toHaveLength(9);
   expect(invocation.args).not.toContain('--agent');
   expect(invocation.args).not.toContain('--all');
 });

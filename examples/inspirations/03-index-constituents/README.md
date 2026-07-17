@@ -1,27 +1,53 @@
 # 同花顺概念板块联动
 
-> 将同花顺概念指数、区间行情和当前成分股放在一起观察板块整体表现。
+> 把概念指数走势与当前成分股放在同一页，快速理解板块联动边界。
 
-## 适用场景
+## 定位
 
-理解一个概念或行业板块包含哪些股票，以及板块指数在指定区间内如何变化。默认从“机器人”相关概念中选择一个唯一指数。
+理解一个概念或行业板块包含哪些股票，以及板块指数在指定区间内如何变化。默认观察"机器人概念"。
 
 ## Prompt 示例
 
-```text
-请在当前仓库中制作一张“同花顺概念板块联动”金融看板。先读取 AGENTS.md、skills/hithink-finance/SKILL.md 和 python/toolkit/README.md，并遵守大数据结果落盘规则。输入概念默认为“机器人”；调用 python/toolkit/fuyao 的 index-catalog --tag cn_concept，把完整目录保存到 out/inspirations-data/ 后在本地筛选名称，若有多个候选先列出候选并选择名称最匹配的一项，同时在页面标明选择结果。随后调用 index-constituents 获取当前成分股，调用 index-historical 获取最近约 120 个自然日的日线行情；只对少量代表性成分股调用 prices-snapshot，不能把全量成分股逐只请求。计算指数区间涨跌幅、近 20 日波动、成交额变化和成分股数量，生成可直接打开的单文件 HTML 到 out/inspirations/index-constituents.html。页面设计由你自由发挥，但板块股票池关系与指数行情必须分开展示，并提示指数涨跌不能证明单只股票的概念相关度。不要读取或模仿 examples/inspirations 中的示例资产，不使用模拟数据，不引入当前 toolkit 未提供的公司画像或资讯；保留指数代码、数据日期、来源和非投资建议声明，不要在对话中粘贴完整目录或成分股列表。
+复制下面这一段 Prompt 交给任意支持 Skill 的 Agent。无需克隆本仓库。
+
+```markdown
+请使用已安装的 `hithink-finance` Skill，为"机器人概念"生成一张"同花顺概念板块联动"看板；不假设本地存在项目仓库。
+
+### 数据任务
+
+1. 若当前 Agent 已连接托管 MCP，只检查并调用本任务需要的 `hithink-finance-a-share-index` 服务：使用目录工具筛选 `cn_concept`，确认"机器人概念"的唯一 `thscode`，再获取当前成分股和最近约 120 个自然日的指数日线。不要探测无关 MCP 服务。
+2. 若 MCP 未连接，使用 Skill 给出的等价 CLI 或 REST 路径完成同一任务；核心功能不得依赖某个特定 Agent 框架。
+3. 完整目录和成分股列表落到临时文件，只把页面所需的摘要和有限条目嵌入产物。计算区间涨跌、近 20 日波动和成分数量；指数没有复权概念。
+
+### 页面产物
+
+- 直接生成当前目录下的 `index-constituents.html` 并打开预览。
+- 必须是无外部依赖的单文件 HTML，内联 CSS、图表、数据和 JavaScript。页面应具备现代金融数据产品的专业感和清晰信息层级，具体布局、配色和视觉风格自由发挥。
+- 指数历史包含 OHLC 时可展示支持悬停详情、缩放和平移的 K 线或其他合适图表；同时提供指数窗口切换和成分股名称/代码搜索，并适配窄屏和键盘操作。
+- 指数走势与成分关系分开展示，明确"当前成分不代表历史成分，指数涨跌也不证明单只股票的概念相关度"。
+- 标明指数代码、数据日期、接入方式、数据源和"非投资建议"；不得使用模拟数据或泄露 API Key。
 ```
 
 ## 效果预览
 
-下图只展示一种可能效果，不是页面模板或复现标准。
+[![同花顺概念板块联动](preview.jpg)](example.html)
 
-![同花顺概念板块联动示例](preview.jpg)
+- [打开单文件 HTML](example.html)
+- [返回灵感目录](../README.md)
 
-[打开示例静态 HTML](example.html)
+## 同花顺金融数据能力
 
-## 能力与口径
+唯一金融数据源：同花顺金融数据 API。官方接口聚合：llms-full.txt。
 
-- 路径：`index-catalog`、`index-constituents`、`index-historical`，可选 `prices-snapshot`。
-- 范围：单一同花顺概念、当前成分股、约 120 个自然日的指数日线。
-- 前置条件：设置 `FUYAO_TOKEN` 或 `API_KEY`。
+- `GET /api/a-share-index/catalog/ths-index-list?tag=cn_concept`
+- `GET /api/a-share-index/constituents/ths-stock-list`
+- `GET /api/a-share-index/prices/historical`
+
+## 关键边界
+
+- 推荐路径：MCP（CLI/API 可回退）。
+- 数据范围：单一同花顺概念；当前成分；最近约 120 个自然日的指数日线。
+- 前置条件：仅需安装 Skill；已连接 MCP 时优先使用目标服务，未连接时按 Skill 回退到 CLI 或 REST。
+- 指数走势与成分关系分开展示，明确"当前成分不代表历史成分，指数涨跌也不证明单只股票的概念相关度"。
+
+> 示例页面使用模拟数据展示布局与交互，不代表真实最新结果，也不构成投资建议。

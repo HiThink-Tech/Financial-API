@@ -17,7 +17,7 @@ test('every remote command exposes help without making a network request', async
     ]);
     expect(result.stdout).toContain(`Usage: hithink-finance ${capability.command.join(' ')}`);
   }
-}, 30_000);
+}, 60_000);
 
 test('executes a descriptor-backed command against a bounded local fixture', async () => {
   const server = createServer((request, response) => {
@@ -52,6 +52,60 @@ test('executes a descriptor-backed command against a bounded local fixture', asy
       ok: true,
       command: 'symbol.search',
       meta: { source: 'remote', request_id: 'req_fixture' },
+    });
+  } finally {
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+  }
+});
+
+test('maps fund command options to the published query contract', async () => {
+  const server = createServer((request, response) => {
+    const url = new URL(request.url ?? '/', 'http://fixture');
+    expect(url.pathname).toBe('/api/fund/performance/nav');
+    expect(url.searchParams.get('fund_type')).toBe('otc');
+    expect(url.searchParams.get('thscode')).toBe('025480.OF');
+    expect(url.searchParams.get('range')).toBe('year');
+    expect(url.searchParams.get('nav_type')).toBe('unit,adj');
+    response.setHeader('content-type', 'application/json');
+    response.end(
+      JSON.stringify({
+        code: 0,
+        message: 'ok',
+        request_id: 'req_fund_fixture',
+        data: { item: [{ nav_date: 1784217600000, unit_nav: 1.2345 }] },
+      }),
+    );
+  });
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+  try {
+    const address = server.address();
+    if (address === null || typeof address === 'string') throw new Error('fixture unavailable');
+    const result = await execa(
+      'node',
+      [
+        'dist/cli/main.js',
+        'fund',
+        'nav',
+        '--fund-type',
+        'otc',
+        '--thscode',
+        '025480.OF',
+        '--range',
+        'year',
+        '--format',
+        'json',
+      ],
+      {
+        env: {
+          HITHINK_FINANCE_API_KEY: 'fixture-key',
+          HITHINK_FINANCE_FUYAO_BASE_URL: `http://127.0.0.1:${address.port}`,
+        },
+      },
+    );
+    expect(JSON.parse(result.stdout)).toMatchObject({
+      ok: true,
+      command: 'fund.nav',
+      meta: { source: 'remote', request_id: 'req_fund_fixture', count: 1 },
     });
   } finally {
     await new Promise<void>((resolve) => server.close(() => resolve()));

@@ -14,7 +14,7 @@ def read(relative_path: str) -> str:
     return (REPO_ROOT / relative_path).read_text(encoding="utf-8")
 
 
-def test_mcp_contract_preserves_three_service_intent_routing() -> None:
+def test_mcp_contract_preserves_four_service_intent_routing() -> None:
     entry = read("docs/mcp.md")
     capability_map = read("docs/mcp/capability-map.md")
 
@@ -22,10 +22,11 @@ def test_mcp_contract_preserves_three_service_intent_routing() -> None:
         "hithink-finance-a-share",
         "hithink-finance-a-share-index",
         "hithink-finance-meta",
+        "hithink-finance-fund",
     ):
         assert service in entry
         assert service in capability_map
-    assert "22" in capability_map
+    assert "29" in capability_map
     for behavior in ("意图", "按需", "消歧", "code=2003", "tools/list"):
         assert behavior in entry + capability_map
 
@@ -33,7 +34,7 @@ def test_mcp_contract_preserves_three_service_intent_routing() -> None:
 def test_mcp_examples_use_the_canonical_api_key_environment_variable() -> None:
     entry = read("docs/mcp.md")
 
-    assert entry.count("${HITHINK_FINANCE_API_KEY}") == 3
+    assert entry.count("${HITHINK_FINANCE_API_KEY}") == 4
     assert "${API_KEY}" not in entry
 
 
@@ -42,6 +43,7 @@ def test_mcp_service_snapshots_preserve_all_tools_and_agent_guidance() -> None:
         "hithink-finance-a-share.md": 16,
         "hithink-finance-a-share-index.md": 4,
         "hithink-finance-meta.md": 2,
+        "hithink-finance-fund.md": 7,
     }
 
     for filename, expected_count in expected_counts.items():
