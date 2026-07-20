@@ -80,6 +80,7 @@ python python/toolkit/fuyao/scripts/fuyao.py index-constituents --thscode 000300
 
 # 基金
 python python/toolkit/fuyao/scripts/fuyao.py fund-nav --fund-type otc --thscode 025480.OF --range year
+python python/toolkit/fuyao/scripts/fuyao.py fund-holders --fund-type otc --thscode 161725.SZ --merge-scope all
 python python/toolkit/fuyao/scripts/fuyao.py fund-historical --thscode 510300.SH \
   --start-ms 1704038400000 --end-ms 1735660800000
 

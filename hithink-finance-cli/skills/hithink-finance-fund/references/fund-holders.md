@@ -15,11 +15,12 @@ hithink-finance fund holders --fund-type <type> --thscode <code> --format json
 
 ## 参数选择策略
 
-| 参数                 | 必填 | 说明                                                       |
-| -------------------- | ---- | ---------------------------------------------------------- |
-| `--fund-type <type>` | 是   | fund type；可选: otc, exchange, reits；上游参数: fund_type |
-| `--thscode <code>`   | 是   | single fund thscode                                        |
-| `--output <path>`    | 否   | write the full JSON response envelope to a file            |
+| 参数                    | 必填 | 说明                                                                                   |
+| ----------------------- | ---- | -------------------------------------------------------------------------------------- |
+| `--fund-type <type>`    | 是   | fund type；可选: otc, exchange, reits；上游参数: fund_type                             |
+| `--thscode <code>`      | 是   | single fund thscode                                                                    |
+| `--merge-scope <scope>` | 否   | holder disclosure scope；可选: all, merged, separate；默认: all；上游参数: merge_scope |
+| `--output <path>`       | 否   | write the full JSON response envelope to a file                                        |
 
 ## 窗口与分页
 

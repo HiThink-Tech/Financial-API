@@ -148,6 +148,9 @@ def test_fund_and_meta_contracts_preserve_backend_boundaries() -> None:
     fund = read("endpoints-fund.md")
     meta = read("endpoints-meta.md")
     entry = read("README.md")
+    holders = fund.split("## 5. 基金持有人结构", maxsplit=1)[1].split(
+        "## 6. 场内基金行情快照", maxsplit=1
+    )[0]
 
     for value in (
         "otc",
@@ -160,6 +163,11 @@ def test_fund_and_meta_contracts_preserve_backend_boundaries() -> None:
         "nav_date",
         "return_now",
         "ins_position",
+        "merge_scope",
+        "report_date_ms",
+        "all",
+        "merged",
+        "separate",
         "turnover_ratio_pct",
         "3001",
         "3002",
@@ -167,6 +175,9 @@ def test_fund_and_meta_contracts_preserve_backend_boundaries() -> None:
         "5 年",
     ):
         assert value in fund
+    assert "| `merge_scope` | string | 否 |" in holders
+    assert "`all`（默认" in holders
+    assert "`report_date_ms`" in holders
     for asset_type in (
         "a-share",
         "a-share-index",

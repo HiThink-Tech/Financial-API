@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.3 - 2026-07-20
+
+- `fund holders` 新增 `--merge-scope all|merged|separate`，默认 `all`；同步持有人披露口径和报告日契约。
+
 ## 0.1.2 - 2026-07-17
 
 - 新增基金档案、持仓、净值、收益、持有人、场内快照和 ETF 历史 7 个远端命令。

@@ -91,10 +91,11 @@ Agent 不应只凭 README 猜参数。先读取 `capabilities`，再对目标 ca
 ```bash
 hithink-finance symbol search --q 600519 --limit 5 --format json
 hithink-finance market snapshot --thscodes 600519.SH --format json
-hithink-finance financials income --thscode 600519.SH --limit 4 --format json
-hithink-finance index constituents --thscode 000300.SH --format json
-hithink-finance fund nav --fund-type otc --thscode 025480.OF --range year --format json
-hithink-finance special limit-up-pool --size 50 --format json
+  hithink-finance financials income --thscode 600519.SH --limit 4 --format json
+  hithink-finance index constituents --thscode 000300.SH --format json
+  hithink-finance fund nav --fund-type otc --thscode 025480.OF --range year --format json
+  hithink-finance fund holders --fund-type otc --thscode 161725.SZ --merge-scope all --format json
+  hithink-finance special limit-up-pool --size 50 --format json
 hithink-finance data status --format json
 hithink-finance db query --sql "SELECT * FROM v_daily_qfq LIMIT 10" --format json
 ```

@@ -125,19 +125,34 @@ curl 'https://fuyao.aicubes.cn/api/fund/performance/returns?fund_type=otc&thscod
 GET /api/fund/holders/detail
 ```
 
-参数：`fund_type`（必填）和单个 `thscode`（必填）。
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `fund_type` | string | 是 | 基金类型：`otc`（场外基金）、`exchange`（ETF/LOF）或 `reits`（公募 REITs）。 |
+| `thscode` | string | 是 | 完整基金 `thscode`，必须保留市场后缀；例如 `161725.SZ`。 |
+| `merge_scope` | string | 否 | 持有人披露口径：`all`（默认，分别返回合并/独立份额的最新记录）、`merged`（A 类、C 类等份额合并披露）或 `separate`（当前份额独立披露）。 |
 
 ```bash
-curl 'https://fuyao.aicubes.cn/api/fund/holders/detail?fund_type=otc&thscode=025480.OF' \
+curl 'https://fuyao.aicubes.cn/api/fund/holders/detail?fund_type=otc&thscode=025480.OF&merge_scope=all' \
   -H 'X-api-key: <your-api-key>'
 ```
 
-`data.item[]` 字段：`ins_position`（机构持有占比）、`holder_amount`（持有人数量）、`avg_holder_share`（户均份额）、`psnl_rate`（个人持有占比）、`mgmt_staff_hold_rate`（管理人员工持有占比）。
+`data.timestamp` 是返回记录中最新的报告日，使用毫秒 Unix 时间戳。`data.item[]` 是持有人结构记录；当 `merge_scope=all` 时，最多分别返回一条 `merged` 和 `separate` 的最新记录。
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `merge_scope` | string | 实际命中的披露口径：`merged` 或 `separate`。 |
+| `report_date_ms` | integer | 当前记录的报告日，毫秒 Unix 时间戳。 |
+| `ins_position` | number | 机构投资者占比，百分数原值。 |
+| `holder_amount` | integer | 基金份额持有人户数。 |
+| `avg_holder_share` | number | 平均每户持有基金份额。 |
+| `psnl_rate` | number | 个人投资者占比，百分数原值。 |
+| `mgmt_staff_hold_rate` | number | 管理人员工持有比例，百分数原值。 |
 
 ### 避错要点
 
 - 持有人数据是披露数据，不是实时账户统计。
 - 百分比字段按上游百分数值解释，缺失值保持 `null`。
+- `all` 是聚合查询口径，不是第三种披露记录；返回项的实际口径只会是 `merged` 或 `separate`。
 
 ## 6. 场内基金行情快照
 

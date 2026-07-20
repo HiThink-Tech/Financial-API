@@ -189,6 +189,14 @@ def _fund_detail_args(fn):
     return _run
 
 
+def cmd_fund_holders(args):
+    return fund_holders_detail(
+        args.thscode,
+        fund_type=args.fund_type,
+        merge_scope=args.merge_scope,
+    )
+
+
 def cmd_fund_nav(args):
     return fund_performance_nav(
         args.thscode,
@@ -429,7 +437,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--interval", default="1d", choices=["1d", "1w", "1mo"])
     p.set_defaults(func=cmd_index_historical)
 
-    # fund profile/performance/holders
+    # fund profile/performance
     for name, help_text, handler in (
         ("fund-profile", "fund profile detail", _fund_detail_args(fund_profile_detail)),
         (
@@ -442,16 +450,22 @@ def build_parser() -> argparse.ArgumentParser:
             "fund interval returns",
             _fund_detail_args(fund_performance_returns),
         ),
-        (
-            "fund-holders",
-            "fund holder structure",
-            _fund_detail_args(fund_holders_detail),
-        ),
     ):
         p = sub.add_parser(name, help=help_text)
         p.add_argument("--fund-type", dest="fund_type", required=True, choices=["otc", "exchange", "reits"])
         p.add_argument("--thscode", required=True)
         p.set_defaults(func=handler)
+
+    p = sub.add_parser("fund-holders", help="fund holder structure")
+    p.add_argument("--fund-type", dest="fund_type", required=True, choices=["otc", "exchange", "reits"])
+    p.add_argument("--thscode", required=True)
+    p.add_argument(
+        "--merge-scope",
+        default="all",
+        choices=["all", "merged", "separate"],
+        help="holder disclosure scope; default: all",
+    )
+    p.set_defaults(func=cmd_fund_holders)
 
     p = sub.add_parser("fund-nav", help="fund net asset value series")
     p.add_argument("--fund-type", dest="fund_type", required=True, choices=["otc", "exchange", "reits"])

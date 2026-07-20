@@ -10,13 +10,14 @@
 | `get_fund_portfolio_holdings` | 查询定期披露重仓股 | `fund_type` + 单个 `thscode`；`hold_ratio` 是百分数值 | 把披露持仓当实时组合，或把 8.88 解释为 0.0888% |
 | `get_fund_performance_nav` | 查询最新或固定区间净值 | `range=week/month/tmonth/hyear/year/twoyear/tyear/fyear`；`nav_type=unit/adj/unit,adj`，默认二者 | 把 range 当自定义日期；忽略未选择字段会被省略 |
 | `get_fund_performance_returns` | 查询固定区间收益 | `fund_type` + 单个 `thscode`；返回月/季/半年/年/三年/五年/今年/成立以来 | 把固定区间字段当任意起止日期收益 |
-| `get_fund_holders_detail` | 查询持有人结构 | `fund_type` + 单个 `thscode`；披露口径 | 把持有人结构当实时账户统计 |
+| `get_fund_holders_detail` | 查询持有人结构 | `fund_type` + 单个 `thscode`；`merge_scope=all/merged/separate`，默认 `all`；返回实际口径与报告日 | 把持有人结构当实时账户统计，或把 `all` 误当作实际记录口径 |
 | `get_fund_market_snapshot` | 查询 ETF/LOF 场内快照 | 单个 `thscode`；不接收 `fund_type` | 对场外基金或 REITs 重试 `3004` |
 | `get_fund_market_historical` | 查询 ETF 历史日线 | 单个 ETF；`interval=1d`；`start/end` 为毫秒戳；最多 5 年；无 `adjust` | 传 LOF、复权参数、批量代码或超过 5 年窗口 |
 
 ## 参数与错误语义
 
 - `fund_type` 与 `thscode` 共同定位基金；`fund_type` 不支持逗号分隔多值。
+- `get_fund_holders_detail` 的 `merge_scope=all` 最多返回 `merged`、`separate` 各一条最新披露记录；每条记录的 `merge_scope` 是实际口径，`report_date_ms` 是该条报告日，顶层 `timestamp` 取返回记录中的最新报告日（均为毫秒戳）。
 - `market/snapshot` 支持 ETF 与 LOF，`market/historical` 当前只支持 ETF。
 - `3001` 表示基金未找到；回到 meta 搜索核对 `asset_type` 和 `thscode`。
 - `3002` 表示数据尚未准备；保留 `request_id`，不要补零或使用模拟数据。

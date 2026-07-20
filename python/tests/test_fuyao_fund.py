@@ -54,7 +54,18 @@ import fuyao_client  # noqa: E402
             ("025480.OF",),
             {"fund_type": "otc"},
             "/api/fund/holders/detail",
-            {"fund_type": "otc", "thscode": "025480.OF"},
+            {"fund_type": "otc", "thscode": "025480.OF", "merge_scope": "all"},
+        ),
+        (
+            "fund_holders_detail",
+            ("025480.OF",),
+            {"fund_type": "otc", "merge_scope": "separate"},
+            "/api/fund/holders/detail",
+            {
+                "fund_type": "otc",
+                "thscode": "025480.OF",
+                "merge_scope": "separate",
+            },
         ),
         (
             "fund_market_snapshot",
@@ -108,6 +119,12 @@ def test_fund_functions_map_the_published_contract(
                 "025480.OF", fund_type="otc", nav_type="all"
             ),
             "nav_type",
+        ),
+        (
+            lambda: fuyao_client.fund_holders_detail(
+                "025480.OF", fund_type="otc", merge_scope="combined"
+            ),
+            "merge_scope",
         ),
         (lambda: fuyao_client.fund_market_snapshot("025480.OF"), "exchange-traded"),
         (lambda: fuyao_client.fund_market_snapshot("510300.SH,159915.SZ"), "single-thscode"),
@@ -194,3 +211,28 @@ def test_fund_cli_commands_are_registered_and_map_arguments(monkeypatch):
             {"fund_type": "otc", "range": "year", "nav_type": "unit,adj"},
         )
     ]
+
+
+def test_fund_holders_cli_maps_merge_scope(monkeypatch):
+    calls = []
+    monkeypatch.setattr(
+        fuyao_cli,
+        "fund_holders_detail",
+        lambda thscode, **kwargs: calls.append((thscode, kwargs)) or {},
+    )
+    parser = fuyao_cli.build_parser()
+
+    args = parser.parse_args(
+        [
+            "fund-holders",
+            "--fund-type",
+            "otc",
+            "--thscode",
+            "025480.OF",
+            "--merge-scope",
+            "separate",
+        ]
+    )
+    args.func(args)
+
+    assert calls == [("025480.OF", {"fund_type": "otc", "merge_scope": "separate"})]

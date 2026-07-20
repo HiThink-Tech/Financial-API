@@ -90,6 +90,25 @@ test('validates fund enum and five-year historical boundaries', () => {
   const snapshot = remoteCapabilities.find((candidate) => candidate.id === 'fund.snapshot')!;
   expect(snapshot.inputSchema.safeParse({ thscode: '510300.SH' }).success).toBe(true);
   expect(snapshot.inputSchema.safeParse({ thscodes: '510300.SH,159915.SZ' }).success).toBe(false);
+
+  const holders = remoteCapabilities.find((candidate) => candidate.id === 'fund.holders')!;
+  expect(
+    holders.inputSchema.safeParse({
+      fundType: 'otc',
+      thscode: '161725.SZ',
+      mergeScope: 'separate',
+    }).success,
+  ).toBe(true);
+  expect(holders.inputSchema.parse({ fundType: 'otc', thscode: '161725.SZ' }).mergeScope).toBe(
+    'all',
+  );
+  expect(
+    holders.inputSchema.safeParse({
+      fundType: 'otc',
+      thscode: '161725.SZ',
+      mergeScope: 'combined',
+    }).success,
+  ).toBe(false);
 });
 
 test('accepts documented comma-separated asset types and rejects unknown tokens', () => {

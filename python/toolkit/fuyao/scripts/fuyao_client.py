@@ -52,6 +52,7 @@ FundRange = Literal[
     "week", "month", "tmonth", "hyear", "year", "twoyear", "tyear", "fyear"
 ]
 FundNavType = Literal["unit", "adj", "unit,adj"]
+FundHolderMergeScope = Literal["all", "merged", "separate"]
 
 _ASSET_TYPES = {
     "a-share",
@@ -67,6 +68,7 @@ _FUND_RANGES = {
     "week", "month", "tmonth", "hyear", "year", "twoyear", "tyear", "fyear"
 }
 _FUND_NAV_TYPES = {"unit", "adj", "unit,adj"}
+_FUND_HOLDER_MERGE_SCOPES = {"all", "merged", "separate"}
 
 
 # ---------------------------------------------------------------------------
@@ -779,10 +781,29 @@ def fund_performance_returns(
 
 
 def fund_holders_detail(
-    thscode: str, *, fund_type: FundType
+    thscode: str,
+    *,
+    fund_type: FundType,
+    merge_scope: FundHolderMergeScope | str = "all",
 ) -> dict[str, Any]:
-    """Fund holder structure for one explicitly typed target."""
-    return _fund_detail("/api/fund/holders/detail", thscode, fund_type)
+    """Fund holder structure by merged, separate, or all disclosure scopes."""
+    normalized_type, normalized_code = _validate_fund_target(fund_type, thscode)
+    normalized_scope = (
+        merge_scope.strip().lower() if isinstance(merge_scope, str) else ""
+    )
+    if normalized_scope not in _FUND_HOLDER_MERGE_SCOPES:
+        raise ValueError(
+            "merge_scope must be one of all/merged/separate; "
+            f"got {merge_scope!r}"
+        )
+    return _get(
+        "/api/fund/holders/detail",
+        {
+            "fund_type": normalized_type,
+            "thscode": normalized_code,
+            "merge_scope": normalized_scope,
+        },
+    )
 
 
 def fund_market_snapshot(thscode: str) -> dict[str, Any]:

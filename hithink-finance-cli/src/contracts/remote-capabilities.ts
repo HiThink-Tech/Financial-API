@@ -576,7 +576,47 @@ export const remoteCapabilities: readonly RemoteCapabilityDescriptor[] = [
     window: 'none',
   },
   fundDetail('returns', 'Query fund interval returns', '/api/fund/performance/returns'),
-  fundDetail('holders', 'Query fund holder structure', '/api/fund/holders/detail'),
+  {
+    id: 'fund.holders',
+    command: ['fund', 'holders'],
+    description: 'Query fund holder structure by disclosure scope',
+    endpoint: '/api/fund/holders/detail',
+    method: 'GET',
+    inputSchema: z
+      .object({
+        fundType: z.enum(['otc', 'exchange', 'reits']),
+        thscode: fundCode,
+        mergeScope: z.enum(['all', 'merged', 'separate']).default('all'),
+      })
+      .strict(),
+    outputSchema: itemOutput,
+    options: [
+      {
+        flags: '--fund-type <type>',
+        description: 'fund type',
+        type: 'string',
+        required: true,
+        choices: ['otc', 'exchange', 'reits'],
+        queryName: 'fund_type',
+      },
+      {
+        flags: '--thscode <code>',
+        description: 'single fund thscode',
+        type: 'string',
+        required: true,
+      },
+      {
+        flags: '--merge-scope <scope>',
+        description: 'holder disclosure scope',
+        type: 'string',
+        choices: ['all', 'merged', 'separate'],
+        defaultValue: 'all',
+        queryName: 'merge_scope',
+      },
+    ],
+    paging: 'none',
+    window: 'none',
+  },
   {
     id: 'fund.snapshot',
     command: ['fund', 'snapshot'],

@@ -31,15 +31,15 @@ description: '用于 Agent 通过 hithink-finance CLI 查询基金档案、持�
 
 ## Shortcuts
 
-| 命令                                         | 何时使用                                   |
-| -------------------------------------------- | ------------------------------------------ |
-| [fund history](references/fund-history.md)   | Query daily ETF price history              |
-| [fund holders](references/fund-holders.md)   | Query fund holder structure                |
-| [fund holdings](references/fund-holdings.md) | Query fund portfolio holdings              |
-| [fund nav](references/fund-nav.md)           | Query fund net asset value series          |
-| [fund profile](references/fund-profile.md)   | Query fund profile detail                  |
-| [fund returns](references/fund-returns.md)   | Query fund interval returns                |
-| [fund snapshot](references/fund-snapshot.md) | Query exchange-traded fund market snapshot |
+| 命令                                         | 何时使用                                        |
+| -------------------------------------------- | ----------------------------------------------- |
+| [fund history](references/fund-history.md)   | Query daily ETF price history                   |
+| [fund holders](references/fund-holders.md)   | Query fund holder structure by disclosure scope |
+| [fund holdings](references/fund-holdings.md) | Query fund portfolio holdings                   |
+| [fund nav](references/fund-nav.md)           | Query fund net asset value series               |
+| [fund profile](references/fund-profile.md)   | Query fund profile detail                       |
+| [fund returns](references/fund-returns.md)   | Query fund interval returns                     |
+| [fund snapshot](references/fund-snapshot.md) | Query exchange-traded fund market snapshot      |
 
 ## 原生命令与 schema
 
