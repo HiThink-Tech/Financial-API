@@ -36,9 +36,9 @@ jobs:
       - name: Publish once with provenance
         shell: bash
         run: |
-          version="$(node -p \"require('./package.json').version\")"
+          version="$(node -p "require('./package.json').version")"
           if npm view "@hithink-tech/hithink-finance-cli@$version" version --json > existing-version.json 2>/dev/null; then
-            existing="$(node -p \"require('./existing-version.json')\")"
+            existing="$(node -p "require('./existing-version.json')")"
             if [ "$existing" != "$version" ]; then
               echo "Registry returned an unexpected version for $version: $existing" >&2
               exit 1

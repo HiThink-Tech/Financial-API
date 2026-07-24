@@ -43,5 +43,8 @@ test('declares public monorepo release metadata and an explicit license gate', a
   expect(releaseWorkflow).toContain('tag/version mismatch');
   expect(releaseWorkflow).toContain('id-token: write');
   expect(releaseWorkflow).toContain('gh release create');
+  expect(releaseWorkflow).toContain(`version="$(node -p "require('./package.json').version")"`);
+  expect(releaseWorkflow).toContain(`existing="$(node -p "require('./existing-version.json')")"`);
+  expect(releaseWorkflow).not.toContain(`node -p \\"`);
   expect(releaseWorkflow).not.toMatch(/NPM_TOKEN|NODE_AUTH_TOKEN/u);
 });
