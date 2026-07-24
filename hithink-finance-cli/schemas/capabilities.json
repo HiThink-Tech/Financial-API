@@ -348,6 +348,15 @@
       "paging": "none",
       "window": "none",
       "source": "remote"
+    },
+    {
+      "id": "valuation.snapshot",
+      "command": ["valuation", "snapshot"],
+      "endpoint": "/api/a-share/valuations/snapshot",
+      "method": "GET",
+      "paging": "none",
+      "window": "none",
+      "source": "remote"
     }
   ]
 }

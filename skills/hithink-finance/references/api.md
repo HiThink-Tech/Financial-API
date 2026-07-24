@@ -36,6 +36,7 @@ curl 'https://fuyao.aicubes.cn/api/meta/tickers/search?q=600519&limit=1' \
 | 标的检索、代码消歧、代码表 | [元信息端点](api/endpoints-meta.md) |
 | 个股行情、历史 K 线、公司行动 | [行情与公司行为端点](api/endpoints-prices.md) |
 | 利润表、资产负债表、现金流量表、财务指标 | [财务数据端点](api/endpoints-financials.md) |
+| A 股市盈率、市净率、市销率和市现率快照 | [估值数据端点](api/endpoints-valuations.md) |
 | 交易日历 | [交易日历端点](api/endpoints-calendar.md) |
 | 指数/板块目录、成分股、指数行情 | [指数与板块端点](api/endpoints-index.md) |
 | 基金资料、净值、收益、持仓、持有人和场内行情 | [公募基金端点](api/endpoints-fund.md) |

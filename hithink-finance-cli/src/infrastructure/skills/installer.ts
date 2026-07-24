@@ -87,6 +87,7 @@ const skillNames = [
   'hithink-finance-financials',
   'hithink-finance-index',
   'hithink-finance-fund',
+  'hithink-finance-valuation',
   'hithink-finance-data',
   'hithink-finance-research',
 ];

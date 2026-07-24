@@ -1,6 +1,6 @@
 # hithink-finance-a-share 工具契约
 
-用于 A 股行情、公司行为、财务、交易日历和特色数据的选型与避错。历史研究若本地 `marketdb` 已覆盖，应优先使用本地数据，不要为相同历史窗口重复调用远端 MCP。
+用于 A 股行情、公司行为、财务、估值、交易日历和特色数据的选型与避错。历史研究若本地 `marketdb` 已覆盖，应优先使用本地数据，不要为相同历史窗口重复调用远端 MCP。
 
 ## 行情与公司行为
 
@@ -20,6 +20,12 @@
 | `get_a_share_financials_indicators` | 指定报告期的成长、盈利、偿债、营运和现金流指标 | `report` 格式 `yyyy-{1|2|3|4}`；`abilities` 为数组，每项含 `ability` 与 `indicators` | 期待行业均值、评分、排名或点评；把日期当 report；把 `abilities` 当 object |
 
 三张报表的时间区间使用毫秒时间戳；财务指标使用专用报告期字符串，不可互换。
+
+## 估值数据
+
+| 工具 | 适用场景 | 关键参数与边界 | 常见错误 |
+| --- | --- | --- | --- |
+| `get_a_share_valuations_snapshot` | 批量查询 A 股最新估值快照 | `thscodes` 必填、英文逗号分隔，原始 token 默认最多 100 个；去重保序；固定返回 `pe_ttm`、`pe_mrq`、`pb_mrq`、`ps_ttm`、`pcf_ttm` | 查询历史估值、传指数/板块/基金代码、期待 `roe_ttm`、把 `null` 或负数改写为零 |
 
 ## 日历
 

@@ -7,6 +7,7 @@
 | 名称、ticker、代码消歧与代码表 | `hithink-finance-symbol` | `symbol search/list` |
 | 行情、K 线、公司行为、交易日历、面板 | `hithink-finance-market` | `market *` 与远端/本地路由 |
 | 利润表、资产负债表、现金流量表、指标 | `hithink-finance-financials` | `financials *` |
+| A 股市盈率、市净率、市销率和市现率快照 | `hithink-finance-valuation` | `valuation *` |
 | 指数/板块目录、成分与行情 | `hithink-finance-index` | `index *` |
 | 涨停、异动、热榜、龙虎榜 | `hithink-finance-special-data` | `special *` |
 | 基金资料、净值、收益、持仓、持有人、ETF/LOF 行情 | `hithink-finance-fund` | `fund *` |

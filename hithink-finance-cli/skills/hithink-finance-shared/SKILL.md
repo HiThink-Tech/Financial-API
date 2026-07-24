@@ -42,14 +42,14 @@ description: '用于 Agent 通过 hithink-finance CLI 做安装后自检、API K
 
 ## 权限表
 
-| 能力                                               | 凭据                                              |
-| -------------------------------------------------- | ------------------------------------------------- |
-| 本地 data/db/market panel                          | 通常不需要 API Key，除非需要同步或初始化远端 dump |
-| symbol/market remote/special/financials/index/fund | 需要统一 API Key                                  |
-| skills/update/uninstall                            | 需要本机文件系统权限；不要写全局非 CLI 管理目录   |
+| 能力                                                         | 凭据                                              |
+| ------------------------------------------------------------ | ------------------------------------------------- |
+| 本地 data/db/market panel                                    | 通常不需要 API Key，除非需要同步或初始化远端 dump |
+| symbol/market remote/special/financials/index/fund/valuation | 需要统一 API Key                                  |
+| skills/update/uninstall                                      | 需要本机文件系统权限；不要写全局非 CLI 管理目录   |
 
 ## 边界声明
 
-- 业务取数请求必须切到 symbol、market、special-data、financials、index、fund、data 或 research skill。
+- 业务取数请求必须切到 symbol、market、special-data、financials、index、fund、valuation、data 或 research skill。
 - 不要把 API Key 写入命令、配置文件、日志、Markdown、Git 或对话正文；优先 stdin 或系统凭据库。
 - 不要把 stderr 更新提示、诊断详情或完整大数据结果当作最终答案原样展开。

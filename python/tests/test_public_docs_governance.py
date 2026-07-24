@@ -107,6 +107,7 @@ def test_upstream_api_contract_has_one_canonical_source_and_skill_mirror() -> No
         "endpoints-meta.md",
         "endpoints-prices.md",
         "endpoints-special-data.md",
+        "endpoints-valuations.md",
     }
 
     assert {path.name for path in canonical_root.glob("*.md")} == contract_files | {
@@ -125,6 +126,13 @@ def test_upstream_api_contract_has_one_canonical_source_and_skill_mirror() -> No
         check=False,
     )
     assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_temporary_special_data_capabilities_are_not_public() -> None:
+    combined = "\n".join(path.read_text(encoding="utf-8") for path in PUBLIC_MARKDOWN)
+
+    assert "/api/a-share/special-data/temporary-" not in combined
+    assert "get_a_share_special_data_temporary_" not in combined
 
 
 def test_obsolete_local_llms_contracts_and_legacy_skill_names_are_absent() -> None:

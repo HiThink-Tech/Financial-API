@@ -77,7 +77,7 @@ const domainConfigs = {
       ['预览卸载', '`hithink-finance uninstall --plan --format json`'],
     ],
     boundaries: [
-      '业务取数请求必须切到 symbol、market、special-data、financials、index、fund、data 或 research skill。',
+      '业务取数请求必须切到 symbol、market、special-data、financials、index、fund、valuation、data 或 research skill。',
       '不要把 API Key 写入命令、配置文件、日志、Markdown、Git 或对话正文；优先 stdin 或系统凭据库。',
       '不要把 stderr 更新提示、诊断详情或完整大数据结果当作最终答案原样展开。',
     ],
@@ -189,6 +189,23 @@ const domainConfigs = {
       '基金数据不是投资建议，不要据此扩写买卖或收益承诺。',
     ],
   },
+  valuation: {
+    description:
+      '用于 Agent 通过 hithink-finance CLI 查询 A 股当前估值快照，包括市盈率、市净率、市销率和市现率；历史估值、ROE 和投资建议不在本 skill 范围。',
+    identity:
+      'A 股当前估值快照入口。按用户给出的股票代码批量返回服务端口径的估值指标，不自行补算或扩展指标。',
+    decisions: [
+      ['查询一只或多只 A 股当前估值', '`valuation snapshot --thscodes <codes>`'],
+      ['用户给出名称或简称而非 thscode', '先切到 `hithink-finance-symbol` 完成消歧'],
+      ['用户要价格、涨跌或 K 线', '切到 `hithink-finance-market`'],
+      ['用户要历史估值或 ROE', '说明当前能力不支持，不得用其他字段臆算替代'],
+    ],
+    boundaries: [
+      '`--thscodes` 最多接受 100 个原始逗号分隔 token；空 token 或非 A 股代码会被拒绝。',
+      '代码会转为大写并按首次出现顺序去重；估值字段允许为空或为负数，不要擅自过滤。',
+      '估值数据不是投资建议，不要据此扩写买卖、目标价或收益承诺。',
+    ],
+  },
   data: {
     description:
       '用于 Agent 通过 hithink-finance CLI 管理本地 DuckDB：初始化、同步、状态、校验、迁移、修复、清理、删除、只读 SQL、导出；远端实时数据转对应业务 skill。',
@@ -243,6 +260,7 @@ const domainOrder = [
   'financials',
   'index',
   'fund',
+  'valuation',
   'data',
   'research',
 ];
@@ -425,8 +443,8 @@ hithink-finance skills remove --format json
 
 - \`status\` 检查已安装 Skills 是否与 CLI 包内 manifest 一致。
 - \`sync\` 修复缺失或漂移的受管文件；用户改过的受管文件会备份。
-- \`remove\` 只移除本 CLI manifest 拥有的 9 个 skill，不做全局清空。
-- 若某个 Agent 不在自动安装范围内，读取 \`status --format json\` 的 \`canonical\` 目录，并把其中 9 个 \`hithink-finance-*\` 目录复制到该 Agent 文档声明的 skills 发现目录。
+- \`remove\` 只移除本 CLI manifest 拥有的 10 个 skill，不做全局清空。
+- 若某个 Agent 不在自动安装范围内，读取 \`status --format json\` 的 \`canonical\` 目录，并把其中 10 个 \`hithink-finance-*\` 目录复制到该 Agent 文档声明的 skills 发现目录。
 
 ## 常见错误
 
@@ -552,7 +570,11 @@ function referenceContent(capability) {
       required === '' ? (localArgs === '' ? '' : ` ${localArgs}`) : ` ${required}`
     } --format json`,
   ];
-  if (isRemote && capability.options.some((option) => option.flags.startsWith('--thscodes '))) {
+  if (
+    isRemote &&
+    capability.id !== 'valuation.snapshot' &&
+    capability.options.some((option) => option.flags.startsWith('--thscodes '))
+  ) {
     examples.push(
       `hithink-finance ${capability.command.join(' ')} --codes-file codes.txt --output result.json --format json`,
     );
@@ -600,9 +622,13 @@ ${lines([
 
 ${lines([
   '批量或全量请求必须落盘，最终只报告路径、行数和窗口。',
-  isRemote && capability.options.some((option) => option.flags.startsWith('--thscodes '))
+  isRemote &&
+  capability.id !== 'valuation.snapshot' &&
+  capability.options.some((option) => option.flags.startsWith('--thscodes '))
     ? '支持 `--codes-file` 或 `--codes-stdin` 读取多 thscode；不要同时用 `--api-key-stdin` 和 `--codes-stdin`。'
-    : '如果需要多标的循环，逐批执行并记录每批参数；不要把完整结果塞进上下文。',
+    : capability.id === 'valuation.snapshot'
+      ? '通过必填的 `--thscodes` 传入最多 100 个原始 token；大结果用 `--output` 落盘。'
+      : '如果需要多标的循环，逐批执行并记录每批参数；不要把完整结果塞进上下文。',
 ])}
 `;
 }
@@ -644,7 +670,7 @@ ${table([['用户意图', '首选命令 / 路由'], ['---', '---'], ...config.de
 | 能力 | 凭据 |
 | --- | --- |
 | 本地 data/db/market panel | 通常不需要 API Key，除非需要同步或初始化远端 dump |
-| symbol/market remote/special/financials/index/fund | 需要统一 API Key |
+| symbol/market remote/special/financials/index/fund/valuation | 需要统一 API Key |
 | skills/update/uninstall | 需要本机文件系统权限；不要写全局非 CLI 管理目录 |
 
 ## 边界声明

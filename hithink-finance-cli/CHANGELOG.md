@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.4 - 2026-07-24
+
+- 新增 `valuation snapshot` 命令，用于批量查询 A 股当前估值快照。
+- 新增 `hithink-finance-valuation` Agent Skill，能力契约总数更新为 31。
+- 估值代码输入按服务契约校验原始 token 上限，统一大写并保持首次出现顺序去重。
+
 ## 0.1.3 - 2026-07-20
 
 - `fund holders` 新增 `--merge-scope all|merged|separate`，默认 `all`；同步持有人披露口径和报告日契约。

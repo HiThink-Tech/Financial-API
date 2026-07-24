@@ -1,6 +1,6 @@
 # 远端数据 Python toolkit
 
-本目录提供同花顺金融数据服务的 Python 适配层，用于从 Python、Shell、CI 或 Notebook 获取最新行情、财报、指数、基金、标的目录和特色数据。历史全市场研究与本地 SQL 请使用 [`../marketdb/`](../marketdb/README.md)。
+本目录提供同花顺金融数据服务的 Python 适配层，用于从 Python、Shell、CI 或 Notebook 获取最新行情、财报、估值、指数、基金、标的目录和特色数据。历史全市场研究与本地 SQL 请使用 [`../marketdb/`](../marketdb/README.md)。
 
 这里维护的是 **Python 函数和脚本运行方式**。上游 REST 端点参数、响应字段和错误码统一在 [`docs/api/`](../../../docs/api/README.md) 维护，本目录不保存 `llms.txt`、`llms-full.txt` 或重复契约。
 
@@ -20,6 +20,7 @@ python/toolkit/fuyao/
 - 最新或当天 A 股行情
 - 历史 K 线按标的补缺
 - 公司行动、财务报表、财务指标和交易日历
+- A 股当前估值快照
 - 股票/指数名称、ticker、`thscode` 检索与消歧
 - 指数/板块目录、成分股和行情
 - 基金档案、持仓、净值、收益、持有人和场内基金行情
@@ -74,6 +75,9 @@ python python/toolkit/fuyao/scripts/fuyao.py prices-historical \
 python python/toolkit/fuyao/scripts/fuyao.py financials-income --thscode 600519.SH --limit 4
 python python/toolkit/fuyao/scripts/fuyao.py financials-indicators --thscode 600519.SH --report 2025-4
 
+# 估值
+python python/toolkit/fuyao/scripts/fuyao.py valuations-snapshot --thscodes 600519.SH,000001.SZ
+
 # 指数与板块
 python python/toolkit/fuyao/scripts/fuyao.py index-catalog --tag cn_concept
 python python/toolkit/fuyao/scripts/fuyao.py index-constituents --thscode 000300.SH
@@ -97,6 +101,7 @@ python python/toolkit/fuyao/scripts/fuyao.py dragon-tiger-list --board-type all
 | 标的 | `tickers-search`, `tickers-list` |
 | 个股行情与公司行动 | `prices-snapshot`, `prices-historical`, `corp-actions` |
 | 财务 | `financials-income`, `financials-balance`, `financials-cashflow`, `financials-indicators` |
+| 估值 | `valuations-snapshot` |
 | 日历 | `calendar-trading-days` |
 | 指数 | `index-catalog`, `index-constituents`, `index-snapshot`, `index-historical` |
 | 基金 | `fund-profile`, `fund-holdings`, `fund-nav`, `fund-returns`, `fund-holders`, `fund-snapshot`, `fund-historical` |
@@ -115,6 +120,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path("python/toolkit/fuyao/scripts").resolve()))
 
 from fuyao_client import (
+    a_share_valuations_snapshot,
     financials_income_statements,
     prices_snapshot,
     tickers_search,
@@ -123,6 +129,7 @@ from fuyao_client import (
 hit = tickers_search("贵州茅台", limit=1)[0]
 snapshot = prices_snapshot([hit["thscode"]])
 income = financials_income_statements(hit["thscode"], period="annual", limit=4)
+valuations = a_share_valuations_snapshot([hit["thscode"]])
 ```
 
 调用前从名称消歧为唯一 `thscode`，不要猜交易所后缀。Python 函数会处理其明确支持的输入校验、重试、分页或时间窗口辅助；不要从旧文档推断当前签名。

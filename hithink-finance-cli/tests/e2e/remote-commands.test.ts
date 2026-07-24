@@ -112,6 +112,77 @@ test('maps fund command options to the published query contract', async () => {
   }
 });
 
+test('normalizes and deduplicates valuation codes before the HTTP request', async () => {
+  const server = createServer((request, response) => {
+    const url = new URL(request.url ?? '/', 'http://fixture');
+    expect(url.pathname).toBe('/api/a-share/valuations/snapshot');
+    expect(url.searchParams.get('thscodes')).toBe('600519.SH,000001.SZ');
+    response.setHeader('content-type', 'application/json');
+    response.end(
+      JSON.stringify({
+        code: 0,
+        message: 'ok',
+        request_id: 'req_valuation_fixture',
+        data: { timestamp: 1, total: 0, item: [] },
+      }),
+    );
+  });
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+  try {
+    const address = server.address();
+    if (address === null || typeof address === 'string') throw new Error('fixture unavailable');
+    const result = await execa(
+      'node',
+      [
+        'dist/cli/main.js',
+        'valuation',
+        'snapshot',
+        '--thscodes',
+        ' 600519.sh,000001.SZ,600519.SH ',
+        '--format',
+        'json',
+      ],
+      {
+        env: {
+          HITHINK_FINANCE_API_KEY: 'fixture-key',
+          HITHINK_FINANCE_FUYAO_BASE_URL: `http://127.0.0.1:${address.port}`,
+        },
+      },
+    );
+    expect(JSON.parse(result.stdout)).toMatchObject({
+      ok: true,
+      command: 'valuation.snapshot',
+      meta: { source: 'remote', request_id: 'req_valuation_fixture' },
+    });
+  } finally {
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+  }
+});
+
+test('rejects valuation raw token overflow before making an HTTP request', async () => {
+  const repeated = Array.from({ length: 101 }, () => '600519.SH').join(',');
+  const result = await execa(
+    'node',
+    ['dist/cli/main.js', 'valuation', 'snapshot', '--thscodes', repeated, '--format', 'json'],
+    {
+      env: {
+        HITHINK_FINANCE_API_KEY: 'fixture-key',
+        HITHINK_FINANCE_FUYAO_BASE_URL: 'http://127.0.0.1:1',
+      },
+      reject: false,
+    },
+  );
+
+  expect(result.exitCode).toBe(2);
+  expect(result.stdout).toBe('');
+  expect(JSON.parse(result.stderr)).toMatchObject({
+    ok: false,
+    command: 'valuation',
+    error: { code: 'CLI_BAD_ARGUMENT' },
+  });
+  expect(result.stderr).toContain('at most 100 raw tokens');
+});
+
 test('writes remote command output to a file and keeps stdout bounded', async () => {
   const root = await mkdtemp(path.join(tmpdir(), 'hithink-remote-output-'));
   const output = path.join(root, 'symbol-search.json');

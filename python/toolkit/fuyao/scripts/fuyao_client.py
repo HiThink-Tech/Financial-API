@@ -622,7 +622,43 @@ def financials_indicators(thscode: str, report: str) -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
-# 10. Calendar
+# 10. A-share valuation snapshot
+# ---------------------------------------------------------------------------
+
+
+_VALUATION_MAX_RAW_THSCODES = 100
+
+
+def a_share_valuations_snapshot(
+    thscodes: Iterable[str] | str,
+) -> dict[str, Any]:
+    """Return the current valuation snapshot for 1..100 raw A-share code tokens."""
+    raw_codes = (
+        thscodes.split(",") if isinstance(thscodes, str) else list(thscodes or [])
+    )
+    if not raw_codes:
+        raise ValueError("thscodes must be non-empty")
+    if len(raw_codes) > _VALUATION_MAX_RAW_THSCODES:
+        raise ValueError("thscodes accepts at most 100 raw tokens")
+
+    normalized: list[str] = []
+    seen: set[str] = set()
+    for raw in raw_codes:
+        code = raw.strip().upper() if isinstance(raw, str) else ""
+        if not _A_SHARE_THSCODE_PATTERN.fullmatch(code):
+            raise ValueError(f"thscodes must contain valid A-share codes; got {raw!r}")
+        if code not in seen:
+            seen.add(code)
+            normalized.append(code)
+
+    return _get(
+        "/api/a-share/valuations/snapshot",
+        {"thscodes": ",".join(normalized)},
+    )
+
+
+# ---------------------------------------------------------------------------
+# 11. Calendar
 # ---------------------------------------------------------------------------
 
 
@@ -1086,6 +1122,7 @@ __all__ = [
     "financials_balance_sheets",
     "financials_cash_flow_statements",
     "financials_indicators",
+    "a_share_valuations_snapshot",
     "calendar_trading_days",
     "index_catalog_ths_index_list",
     "index_constituents_ths_stock_list",

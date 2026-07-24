@@ -26,6 +26,7 @@ import { registerSpecialCommands } from '../commands/special/index.js';
 import { registerFinancialCommands } from '../commands/financials/index.js';
 import { registerIndexCommands } from '../commands/index/index.js';
 import { registerFundCommands } from '../commands/fund/index.js';
+import { registerValuationCommands } from '../commands/valuation/index.js';
 import { registerCapabilitiesCommand } from '../commands/system/capabilities.js';
 import { registerSchemaCommand } from '../commands/system/schema.js';
 import { registerSkillsCommands } from '../commands/skills/index.js';
@@ -95,6 +96,7 @@ export interface ProgramDependencies {
  * | `special`  | 1 (limit-up / hot-stock…)              |
  * | `financials` | 1 (income / balance-sheet…)           |
  * | `index`    | 1 (catalog / constituents…)            |
+ * | `valuation` | 1 (snapshot)                           |
  * | `system`   | 5 (capabilities / schema / update / uninstall / doctor) |
  * | `skills`   | 1 (skills sub-tree)                    |
  * | `data`     | 1 (init / sync / status / …)           |
@@ -213,6 +215,7 @@ export function createProgram(
   registerFinancialCommands(program, context, remoteDependencies);
   registerIndexCommands(program, context, remoteDependencies);
   registerFundCommands(program, context, remoteDependencies);
+  registerValuationCommands(program, context, remoteDependencies);
   registerCapabilitiesCommand(program, context);
   registerSchemaCommand(program, context);
   registerSkillsCommands(program, context, dependencies.packageRoot);

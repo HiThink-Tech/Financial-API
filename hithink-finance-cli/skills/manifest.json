@@ -1,6 +1,6 @@
 {
   "protocolVersion": "1",
-  "cliVersion": "0.1.3",
+  "cliVersion": "0.1.4",
   "files": {
     "hithink-finance-data/SKILL.md": "98d36ee1de8adb94149a747f77d3d10c29f41e8f77b04b30d10bdd4df7ce7955",
     "hithink-finance-data/references/data-clean.md": "49422a4a8f1ea0ced02da7b1130f91ec273286205ead881b6beb5e93ba93b55b",
@@ -41,11 +41,11 @@
     "hithink-finance-market/references/market-snapshot.md": "a7c08d2ea387ec85781f159a3d92404e31f47159564d39ed639565299b517af4",
     "hithink-finance-research/SKILL.md": "7f4ded9d172a2bb2578ac81266ef869521c7d753f2a021c7aa79fc6d0f92541c",
     "hithink-finance-research/references/research-workflow.md": "3f73f179339b21403e7f8f6bfd7fcb2649f06ffc6b6bccb428b18cb19929dad5",
-    "hithink-finance-shared/SKILL.md": "9293ba3384d128e8187dacf799f6645a8778113d75569a53d07f2d8082b16870",
+    "hithink-finance-shared/SKILL.md": "b7b28b534a5171589f2658e4823f0838824f4f0c9f4289d89c6dce44ac0934a0",
     "hithink-finance-shared/references/auth-and-config.md": "2685090dd9e78ba344f3f1efc4e8d83dc737e09308aaae197d5af154ab5d8609",
     "hithink-finance-shared/references/global-rules.md": "21b6ef14ffd656240d5f31349bb6e430fdff6ffd790268a3ae115ffdc16e6102",
     "hithink-finance-shared/references/lifecycle.md": "087b3aaa8e8299cc3f6b733a0de07f8dbd43b9a6ebf25addf5b3e77ded21f8fe",
-    "hithink-finance-shared/references/skills-management.md": "7bfbebd716ef58a5718217931b5a76634018e622402957a10db47944514a28b2",
+    "hithink-finance-shared/references/skills-management.md": "46c5f6a8edb89974fc22de4c58f28db31721a656cbfa078f0687a5434329ab9c",
     "hithink-finance-special-data/SKILL.md": "d824662f6bc12912f8b89f52a1b7f938dca36c2342174732380606e609ebc30b",
     "hithink-finance-special-data/references/special-anomaly-list.md": "98f7bac44eb040ff80fd06185bd9ac811fdd7d46fa6c7695a32e808eda3bd2fd",
     "hithink-finance-special-data/references/special-anomaly-stock.md": "5bb7878964e76c6b37b46ffe6eb1f43c2df709b34a3f3be24bc0729ccf31188d",
@@ -58,6 +58,8 @@
     "hithink-finance-special-data/references/special-skyrocket.md": "8b8791551cb044902bc70301f34614f7cc358f96111b4208e286d114f24d7e86",
     "hithink-finance-symbol/SKILL.md": "398867892e734766aa3efbf7d57d92e7ae895eb3485164673e4b48252daef659",
     "hithink-finance-symbol/references/symbol-list.md": "a9947c8e3ae19f680ff04a2d82efc5f4cd05a78c2b449eea8e3a0dacdb91d852",
-    "hithink-finance-symbol/references/symbol-search.md": "d711ee78891c296b1b7df14fa79224f45a97970dd690c00e5feb6f8e239936d0"
+    "hithink-finance-symbol/references/symbol-search.md": "d711ee78891c296b1b7df14fa79224f45a97970dd690c00e5feb6f8e239936d0",
+    "hithink-finance-valuation/SKILL.md": "de47766e17860777e8a01655261c4bf2b98d4f3a409518a758499cdc89071b04",
+    "hithink-finance-valuation/references/valuation-snapshot.md": "3229d9f8762b49fae0540b0b3e2d15c39c57b3715eeec82e343680abae5e13a5"
   }
 }

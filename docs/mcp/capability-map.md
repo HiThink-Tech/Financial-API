@@ -1,6 +1,6 @@
 # MCP 能力与意图总览
 
-本页是同花顺金融数据服务 4 个 MCP 端点、29 个工具的固化功能契约，用于 Agent 的意图识别和工具路由。当前连接的 `tools/list` 用于确认实际可用性与调用 schema，不应取代本页的任务语义。
+本页是同花顺金融数据服务 4 个 MCP 端点、30 个工具的固化功能契约，用于 Agent 的意图识别和工具路由。当前连接的 `tools/list` 用于确认实际可用性与调用 schema，不应取代本页的任务语义。
 
 ## 先选服务
 
@@ -12,6 +12,7 @@
 | 分红、送股、配股等复权事件 | `hithink-finance-a-share` | `get_a_share_corporate_actions_adjustment_factors` |
 | 利润表、资产负债表、现金流量表 | `hithink-finance-a-share` | 对应 `get_a_share_financials_*` 工具 |
 | 指定报告期的财务指标 | `hithink-finance-a-share` | `get_a_share_financials_indicators` |
+| 批量查询 A 股最新估值快照 | `hithink-finance-a-share` | `get_a_share_valuations_snapshot` |
 | 交易日历 | `hithink-finance-a-share` | `get_a_share_calendar_trading_days` |
 | 涨停池、连板、个股异动、热榜、龙虎榜 | `hithink-finance-a-share` | 对应 `get_a_share_special_data_*` 工具 |
 | 查找概念、区域、特色或行业指数 | `hithink-finance-a-share-index` | `get_a_share_index_catalog_ths_index_list` |
@@ -27,7 +28,7 @@
 
 1. 用 `get_meta_tickers_search` 将名称消歧为唯一 `thscode`。
 2. 根据 `asset_type` 选择 A 股或指数服务。
-3. 调用对应行情、财务或特色数据工具。
+3. 调用对应行情、财务、估值或特色数据工具。
 
 ### 基金名称到数据
 

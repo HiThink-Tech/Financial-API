@@ -25,6 +25,9 @@ EXPECTED_ENDPOINTS = {
         "GET /api/a-share/financials/cash-flow-statements",
         "GET /api/a-share/financials/indicators",
     },
+    "endpoints-valuations.md": {
+        "GET /api/a-share/valuations/snapshot",
+    },
     "endpoints-calendar.md": {"GET /api/a-share/calendar/trading-days"},
     "endpoints-index.md": {
         "GET /api/a-share-index/catalog/ths-index-list",
@@ -64,8 +67,10 @@ def read(filename: str) -> str:
     return (API_ROOT / filename).read_text(encoding="utf-8")
 
 
-def test_all_33_endpoints_are_documented_once() -> None:
-    assert sum(map(len, EXPECTED_ENDPOINTS.values())) == 33
+def test_all_34_endpoints_are_documented_once() -> None:
+    assert sum(map(len, EXPECTED_ENDPOINTS.values())) == 34
+    for filename in EXPECTED_ENDPOINTS:
+        assert (API_ROOT / filename).is_file(), filename
     combined = "\n".join(read(filename) for filename in EXPECTED_ENDPOINTS)
 
     for filename, endpoints in EXPECTED_ENDPOINTS.items():
@@ -190,6 +195,32 @@ def test_fund_and_meta_contracts_preserve_backend_boundaries() -> None:
         assert asset_type in meta
     assert "逗号" in meta and "多个" in meta
     assert "3004" in entry
+
+
+def test_valuation_snapshot_contract_preserves_fixed_metrics_and_batch_boundaries() -> None:
+    path = API_ROOT / "endpoints-valuations.md"
+    assert path.is_file()
+    valuations = path.read_text(encoding="utf-8")
+
+    for required in (
+        "get_a_share_valuations_snapshot",
+        "GET /api/a-share/valuations/snapshot",
+        "thscodes",
+        "100",
+        "去重",
+        "timestamp",
+        "total",
+        "item",
+        "pe_ttm",
+        "pe_mrq",
+        "pb_mrq",
+        "ps_ttm",
+        "pcf_ttm",
+        "null",
+        "负数",
+    ):
+        assert required in valuations
+    assert not re.search(r"^\| `roe_ttm` \|", valuations, re.M)
 
 
 def test_error_envelope_always_keeps_null_data() -> None:

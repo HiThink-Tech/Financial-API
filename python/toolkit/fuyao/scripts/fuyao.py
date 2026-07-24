@@ -21,6 +21,7 @@ sys.path.insert(0, str(_SCRIPT_DIR))
 
 from fuyao_client import (  # noqa: E402
     FuyaoApiError,
+    a_share_valuations_snapshot,
     calendar_trading_days,
     corp_actions_adjustment_factors,
     financials_balance_sheets,
@@ -151,6 +152,10 @@ def _financials_args(fn):
 
 def cmd_financials_indicators(args):
     return financials_indicators(args.thscode, args.report)
+
+
+def cmd_valuations_snapshot(args):
+    return a_share_valuations_snapshot(_split_csv(args.thscodes))
 
 
 def cmd_calendar(_args):
@@ -298,7 +303,7 @@ def _add_financials_subparser(sub, name: str, help_text: str, handler):
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="fuyao",
-        description="Fuyao financial data CLI (30 REST capabilities). JSON-only stdout. "
+        description="Fuyao financial data CLI (31 REST capabilities). JSON-only stdout. "
         "Auth: HITHINK_FINANCE_API_KEY or user credentials file.",
     )
     parser.add_argument("--compact", action="store_true", help="emit single-line JSON")
@@ -390,6 +395,14 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--thscode", required=True)
     p.add_argument("--report", required=True, help="report quarter in YYYY-[1-4] format")
     p.set_defaults(func=cmd_financials_indicators)
+
+    # valuations
+    p = sub.add_parser(
+        "valuations-snapshot",
+        help="current A-share valuation snapshot for up to 100 raw codes",
+    )
+    p.add_argument("--thscodes", required=True, help="comma-separated A-share thscodes")
+    p.set_defaults(func=cmd_valuations_snapshot)
 
     # calendar
     p = sub.add_parser("calendar-trading-days", help="A-share trading-day calendar (~1 year)")

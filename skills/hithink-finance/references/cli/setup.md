@@ -119,7 +119,7 @@ hithink-finance auth login
 hithink-finance skills status --format json
 ```
 
-输出中的 `canonical` 是随 CLI 发布的官方 Skills 来源；它不能证明当前 Agent 已发现 9 个 CLI 配套 Skill。确定使用 CLI 后，Agent 必须先从自身运行时配置定位**当前 Agent 的 Skills 目录**，并检查下列每个目录都存在且含有 `SKILL.md`：`hithink-finance-shared`、`hithink-finance-symbol`、`hithink-finance-market`、`hithink-finance-financials`、`hithink-finance-index`、`hithink-finance-special-data`、`hithink-finance-fund`、`hithink-finance-data`、`hithink-finance-research`。
+输出中的 `canonical` 是随 CLI 发布的官方 Skills 来源；它不能证明当前 Agent 已发现 10 个 CLI 配套 Skill。确定使用 CLI 后，Agent 必须先从自身运行时配置定位**当前 Agent 的 Skills 目录**，并检查下列每个目录都存在且含有 `SKILL.md`：`hithink-finance-shared`、`hithink-finance-symbol`、`hithink-finance-market`、`hithink-finance-financials`、`hithink-finance-valuation`、`hithink-finance-index`、`hithink-finance-special-data`、`hithink-finance-fund`、`hithink-finance-data`、`hithink-finance-research`。
 
 任何目录缺失时，先执行：
 

@@ -8,7 +8,7 @@
 
 | 客户端服务名 | 地址 | 职责 | 工具数 |
 | --- | --- | --- | ---: |
-| `hithink-finance-a-share` | `https://fuyao.aicubes.cn/mcp/a-share` | A 股行情、公司行为、财务、日历和特色数据 | 16 |
+| `hithink-finance-a-share` | `https://fuyao.aicubes.cn/mcp/a-share` | A 股行情、公司行为、财务、估值、日历和特色数据 | 17 |
 | `hithink-finance-a-share-index` | `https://fuyao.aicubes.cn/mcp/a-share-index` | 指数/板块目录、成分和行情 | 4 |
 | `hithink-finance-meta` | `https://fuyao.aicubes.cn/mcp/meta` | 标的搜索、名称消歧和代码表 | 2 |
 | `hithink-finance-fund` | `https://fuyao.aicubes.cn/mcp/fund` | 基金资料、披露、净值、收益和场内行情 | 7 |
@@ -73,7 +73,7 @@ Skill 中的能力快照用于意图识别、工具选择和参数避错；当�
 
 ## 能力边界
 
-- 当前固化快照共 29 个 MCP 工具：A 股 16 个、指数 4 个、元数据 2 个、基金 7 个。
+- 当前固化快照共 30 个 MCP 工具：A 股 17 个、指数 4 个、元数据 2 个、基金 7 个。
 - MCP 适合 Chat 场景和自然语言调用；终端自动化、本地 DuckDB 与大结果工作流优先考虑 `hithink-finance` CLI。
 - 当前快照不覆盖分钟 K、tick、Level-2、港股、美股、基金申赎交易、基金风险指标、期货、新闻、研报或回测引擎。
 - 文档或静态快照不能证明当前会话已经连接，也不能证明账号具有相应权限；只有实际授权请求才能完成线上验证。

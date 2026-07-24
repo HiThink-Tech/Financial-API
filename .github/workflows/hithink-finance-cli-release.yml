@@ -1,12 +1,15 @@
 name: hithink-finance-cli release
 on:
+  push:
+    tags: ["v*"]
   workflow_dispatch:
     inputs:
       tag:
+        description: Existing v-prefixed tag to republish or recover
         required: true
         type: string
 permissions:
-  contents: read
+  contents: write
   id-token: write
 jobs:
   publish:
@@ -15,19 +18,55 @@ jobs:
     defaults:
       run:
         working-directory: hithink-finance-cli
+    env:
+      RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.tag }}
+          ref: ${{ inputs.tag || github.ref_name }}
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org
       - run: npm ci --ignore-scripts
       - name: Verify immutable tag and package version
-        env:
-          RELEASE_TAG: ${{ inputs.tag }}
         run: node -e "const p=require('./package.json'); if (process.env.RELEASE_TAG !== 'v'+p.version) { console.error('tag/version mismatch'); process.exit(1) }"
       - run: npm run verify
       - run: npm pack --dry-run --ignore-scripts
-      - run: npm publish --provenance --access public --tag ${{ contains(inputs.tag, '-') && 'next' || 'latest' }}
+      - name: Publish once with provenance
+        shell: bash
+        run: |
+          version="$(node -p \"require('./package.json').version\")"
+          if npm view "@hithink-tech/hithink-finance-cli@$version" version --json > existing-version.json 2>/dev/null; then
+            existing="$(node -p \"require('./existing-version.json')\")"
+            if [ "$existing" != "$version" ]; then
+              echo "Registry returned an unexpected version for $version: $existing" >&2
+              exit 1
+            fi
+            echo "@hithink-tech/hithink-finance-cli@$version is already published; skipping duplicate publish."
+          else
+            npm publish --provenance --access public --tag ${{ contains(inputs.tag || github.ref_name, '-') && 'next' || 'latest' }}
+          fi
+  release:
+    needs: publish
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Create GitHub Release after npm publication
+        shell: bash
+        run: |
+          if gh release view "$RELEASE_TAG" > /dev/null 2>&1; then
+            echo "GitHub Release $RELEASE_TAG already exists."
+          elif [[ "$RELEASE_TAG" == *-* ]]; then
+            gh release create "$RELEASE_TAG" \
+              --title "同花顺金融数据服务 $RELEASE_TAG" \
+              --generate-notes \
+              --prerelease
+          else
+            gh release create "$RELEASE_TAG" \
+              --title "同花顺金融数据服务 $RELEASE_TAG" \
+              --generate-notes \
+              --latest
+          fi

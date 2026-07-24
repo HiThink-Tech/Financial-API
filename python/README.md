@@ -33,7 +33,7 @@ python -m pip install -e ./python
 
 | 目标 | 使用 |
 | --- | --- |
-| 最新行情、财报、财务指标、指数、特色数据、标的检索 | [`toolkit/fuyao/`](toolkit/fuyao/README.md) |
+| 最新行情、财报、财务指标、估值、指数、特色数据、标的检索 | [`toolkit/fuyao/`](toolkit/fuyao/README.md) |
 | 历史行情、复权、面板、SQL、研究数据准备 | [`toolkit/marketdb/`](toolkit/marketdb/README.md) |
 | 不确定数据在哪或需要组合两者 | [`toolkit/README.md`](toolkit/README.md) |
 
@@ -49,6 +49,7 @@ python -m pip install -e ./python
 python python/toolkit/fuyao/scripts/fuyao.py tickers-search --q "贵州茅台"
 python python/toolkit/fuyao/scripts/fuyao.py prices-snapshot --thscodes 600519.SH
 python python/toolkit/fuyao/scripts/fuyao.py financials-income --thscode 600519.SH --limit 4
+python python/toolkit/fuyao/scripts/fuyao.py valuations-snapshot --thscodes 600519.SH,000001.SZ
 ```
 
 ### 本地数据库

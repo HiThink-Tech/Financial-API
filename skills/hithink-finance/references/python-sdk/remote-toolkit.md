@@ -13,6 +13,7 @@ python python/toolkit/fuyao/scripts/fuyao.py --help
 python python/toolkit/fuyao/scripts/fuyao.py tickers-search --q "贵州茅台"
 python python/toolkit/fuyao/scripts/fuyao.py prices-snapshot --thscodes 600519.SH
 python python/toolkit/fuyao/scripts/fuyao.py financials-income --thscode 600519.SH --limit 4
+python python/toolkit/fuyao/scripts/fuyao.py valuations-snapshot --thscodes 600519.SH,000001.SZ
 python python/toolkit/fuyao/scripts/fuyao.py fund-history --thscode 510300.SH --start-ms 1704038400000 --end-ms 1735660799000
 ```
 
@@ -24,10 +25,16 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path("python/toolkit/fuyao/scripts").resolve()))
 
-from fuyao_client import fund_market_historical, prices_snapshot, tickers_search
+from fuyao_client import (
+    a_share_valuations_snapshot,
+    fund_market_historical,
+    prices_snapshot,
+    tickers_search,
+)
 
 hit = tickers_search("贵州茅台", limit=1)[0]
 snapshot = prices_snapshot([hit["thscode"]])
+valuations = a_share_valuations_snapshot(["600519.SH", "000001.SZ"])
 fund_bars = fund_market_historical("510300.SH", 1704038400000, 1735660799000)
 ```
 

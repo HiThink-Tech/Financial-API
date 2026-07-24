@@ -2,6 +2,11 @@
 
 本文件记录“同花顺金融数据服务（hithink finance）”对外可见的重要变化。版本升级与路径兼容说明见 [Monorepo 版本升级指南](docs/monorepo-migration.md)。
 
+## 2026-07-24 — A 股估值快照能力
+
+- 新增批量 A 股当前估值快照，返回市盈率 TTM/MRQ、市净率 MRQ、市销率 TTM 和市现率 TTM。
+- REST API、MCP、CLI、Python SDK 与统一 Agent Skill 同步支持估值能力。
+
 ## 2026-07-17 — 公募基金能力
 
 - 新增基金资料、定期披露持仓、净值、区间收益和持有人结构查询。

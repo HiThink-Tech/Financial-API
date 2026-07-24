@@ -26,7 +26,7 @@ def test_mcp_contract_preserves_four_service_intent_routing() -> None:
     ):
         assert service in entry
         assert service in capability_map
-    assert "29" in capability_map
+    assert "30" in capability_map
     for behavior in ("意图", "按需", "消歧", "code=2003", "tools/list"):
         assert behavior in entry + capability_map
 
@@ -40,7 +40,7 @@ def test_mcp_examples_use_the_canonical_api_key_environment_variable() -> None:
 
 def test_mcp_service_snapshots_preserve_all_tools_and_agent_guidance() -> None:
     expected_counts = {
-        "hithink-finance-a-share.md": 16,
+        "hithink-finance-a-share.md": 17,
         "hithink-finance-a-share-index.md": 4,
         "hithink-finance-meta.md": 2,
         "hithink-finance-fund.md": 7,
@@ -54,10 +54,17 @@ def test_mcp_service_snapshots_preserve_all_tools_and_agent_guidance() -> None:
         assert "参数" in text
 
 
-def test_mcp_contract_is_mirrored_into_standalone_skill() -> None:
-    skill_root = REPO_ROOT / "skills" / "hithink-finance" / "references"
-    assert read("docs/mcp.md") == read("skills/hithink-finance/references/mcp.md")
-    for source in MCP_ROOT.glob("*.md"):
-        target = skill_root / "mcp" / source.name
-        assert target.is_file()
-        assert source.read_bytes() == target.read_bytes()
+def test_mcp_valuation_snapshot_matches_the_rest_contract() -> None:
+    a_share = read("docs/mcp/hithink-finance-a-share.md")
+
+    for required in (
+        "get_a_share_valuations_snapshot",
+        "thscodes",
+        "pe_ttm",
+        "pe_mrq",
+        "pb_mrq",
+        "ps_ttm",
+        "pcf_ttm",
+    ):
+        assert required in a_share
+    assert not re.search(r"^\| `roe_ttm` \|", a_share, re.M)

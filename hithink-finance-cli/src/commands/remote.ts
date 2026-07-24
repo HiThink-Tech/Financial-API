@@ -116,6 +116,16 @@ function normalizedCodes(...inputs: Array<string | undefined>): string | undefin
   return codes.length === 0 ? undefined : [...new Set(codes)].join(',');
 }
 
+/**
+ * Merge code inputs without normalizing them so capability-specific schemas can
+ * enforce raw-token limits and reject empty tokens before deduplication.
+ */
+function rawCodes(...inputs: Array<string | undefined>): string | undefined {
+  const supplied = inputs.filter((input): input is string => input !== undefined);
+  if (supplied.length === 0) return undefined;
+  return supplied.flatMap((input) => input.replace(/\r\n?/gu, '\n').split(/[,\n]/u)).join(',');
+}
+
 async function writeOutputEnvelope(outputPath: string, envelope: unknown): Promise<string> {
   const absolutePath = path.resolve(process.cwd(), outputPath);
   await mkdir(path.dirname(absolutePath), { recursive: true });
@@ -235,7 +245,10 @@ export function registerRemoteCapabilityGroup(
       delete schemaInput.codesStdin;
       delete schemaInput.output;
       // 合并所有来源的股票代码并去重
-      const combinedCodes = normalizedCodes(raw.thscodes, fileCodes, stdinCodes);
+      const combinedCodes =
+        capability.id === 'valuation.snapshot'
+          ? rawCodes(raw.thscodes, fileCodes, stdinCodes)
+          : normalizedCodes(raw.thscodes, fileCodes, stdinCodes);
       if (combinedCodes !== undefined) schemaInput.thscodes = combinedCodes;
       const parsed = capability.inputSchema.safeParse(schemaInput);
       if (!parsed.success) {

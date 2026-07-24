@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { remoteCapabilities } from '../../src/contracts/remote-capabilities.js';
 
-const EXPECTED_30_IDS = [
+const EXPECTED_31_IDS = [
   'symbol.search',
   'symbol.list',
   'market.snapshot',
@@ -11,6 +11,7 @@ const EXPECTED_30_IDS = [
   'financials.balance-sheet',
   'financials.cash-flow',
   'financials.indicators',
+  'valuation.snapshot',
   'market.calendar',
   'index.catalog',
   'index.constituents',
@@ -34,14 +35,38 @@ const EXPECTED_30_IDS = [
   'special.dragon-tiger',
 ];
 
-test('registers exactly the frozen 30 remote capabilities with unique command paths', () => {
+test('registers exactly the frozen 31 remote capabilities with unique command paths', () => {
   expect(remoteCapabilities.map((capability) => capability.id).sort()).toEqual(
-    EXPECTED_30_IDS.sort(),
+    EXPECTED_31_IDS.sort(),
   );
   expect(new Set(remoteCapabilities.map((capability) => capability.command.join(' '))).size).toBe(
-    30,
+    31,
   );
   expect(remoteCapabilities.every((capability) => capability.method === 'GET')).toBe(true);
+});
+
+test('maps valuation snapshot to its dedicated command and validates raw code tokens', () => {
+  const valuation = remoteCapabilities.find((candidate) => candidate.id === 'valuation.snapshot')!;
+
+  expect(valuation.command.join(' ')).toEqual('valuation snapshot');
+  expect(valuation.endpoint).toEqual('/api/a-share/valuations/snapshot');
+  expect(valuation.options).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ flags: '--thscodes <codes>', required: true }),
+    ]),
+  );
+  expect(
+    valuation.inputSchema.parse({
+      thscodes: ' 600519.sh,000001.SZ,600519.SH ',
+    }),
+  ).toEqual({ thscodes: '600519.SH,000001.SZ' });
+  expect(
+    valuation.inputSchema.safeParse({
+      thscodes: Array.from({ length: 101 }, () => '600519.SH').join(','),
+    }).success,
+  ).toBe(false);
+  expect(valuation.inputSchema.safeParse({ thscodes: '600519.SH,' }).success).toBe(false);
+  expect(valuation.inputSchema.safeParse({ thscodes: '000300.TI' }).success).toBe(false);
 });
 
 test('keeps all seven fund capabilities under the fund command group', () => {

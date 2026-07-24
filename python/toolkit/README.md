@@ -16,7 +16,7 @@ python/toolkit/
 | 判断 | 选择 |
 | --- | --- |
 | 数据已在 `data/market.duckdb` 且新鲜度满足任务 | [`marketdb`](marketdb/README.md) |
-| 需要最新/当天数据、财报、指数、特色数据或标的目录 | [`fuyao`](fuyao/README.md) |
+| 需要最新/当天数据、财报、估值、指数、特色数据或标的目录 | [`fuyao`](fuyao/README.md) |
 | 不确定本地覆盖范围 | 先运行 `marketdb describe --db data/market.duckdb` |
 | 需要全市场、多年研究数据 | 先建库/同步，再用 marketdb；不要逐标的拉远端历史 |
 
@@ -28,6 +28,7 @@ python/toolkit/
 | 最新行情快照 | 不适用 | 主路径 |
 | 公司行动 | 本地事件与日级复权因子 | 最新事件流 |
 | 财务报表与财务指标 | 不适用 | 主路径 |
+| A 股当前估值快照 | 不适用 | 主路径 |
 | 标的目录 | `dim_symbol` / `v_symbol` | 检索、分页与刷新 |
 | 交易日历 | 可从本地交易日推导 | 官方窗口 |
 | 指数/板块 | 不适用 | 目录、成分和行情 |

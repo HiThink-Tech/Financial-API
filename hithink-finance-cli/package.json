@@ -1,6 +1,6 @@
 {
   "name": "@hithink-tech/hithink-finance-cli",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "hithink finance CLI for humans, automation, and AI agents",
   "type": "module",
   "bin": {
@@ -22,12 +22,12 @@
     "build": "tsc -p tsconfig.json",
     "generate:contracts": "npm run build && node scripts/generate-contracts.mjs && prettier --write \"schemas/*.json\" \"skills/**/*.md\"",
     "postinstall": "node scripts/postinstall.mjs",
-    "pretest": "npm run build",
-    "test": "vitest run",
+    "test": "npm run build && vitest run",
+    "test:built": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint .",
     "format": "prettier --check .",
-    "verify": "npm run format && npm run lint && npm run typecheck && npm run test && npm run build",
+    "verify": "npm run format && npm run lint && npm run typecheck && npm run build && npm run test:built",
     "prepublishOnly": "node scripts/check-license.mjs && npm run verify"
   },
   "engines": {

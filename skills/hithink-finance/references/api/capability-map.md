@@ -2,7 +2,7 @@
 
 > 根据用户意图快速定位到具体 REST 端点。本页只做路由，参数与字段细节在各端点详情页。
 
-## 全部端点一览（33 个）
+## 全部端点一览（34 个）
 
 ### 元信息（2 个）
 
@@ -33,6 +33,14 @@
 | `GET /api/a-share/financials/indicators` | 指定报告期的五类财务指标 | 「茅台 2024 年报的财务指标」 |
 
 详情：[endpoints-financials.md](endpoints-financials.md)
+
+### 估值数据（1 个）
+
+| 端点 | 用途 | 典型问题 |
+| --- | --- | --- |
+| `GET /api/a-share/valuations/snapshot` | 批量查询 A 股最新市盈率、市净率、市销率和市现率快照 | 「茅台和平安银行当前估值是多少」「批量获取这些股票的五项估值指标」 |
+
+详情：[endpoints-valuations.md](endpoints-valuations.md)
 
 ### 交易日历（1 个）
 
@@ -101,7 +109,7 @@
 
 1. 用 `/api/meta/tickers/search?q=<名称>` 消歧为唯一 `thscode`。
 2. 判断 `asset_type`：`a-share` 走个股端点，`a-share-index` 走指数端点，`fund-*` 走基金端点。
-3. 调用对应行情、财务或特色数据端点。
+3. 调用对应行情、财务、估值或特色数据端点。
 
 ### 概念板块到成分股行情
 
@@ -114,6 +122,12 @@
 1. 用财报端点获取指定报告期数据。
 2. 用行情端点获取明确时间窗口的数据。
 3. 明确报告期、行情日期、复权口径和数据时间，避免把不同口径直接比较。
+
+### 多股票估值快照
+
+1. 用元信息端点把名称或纯 ticker 消歧为唯一 A 股 `thscode`。
+2. 把有限标的合并为逗号分隔列表调用 `/api/a-share/valuations/snapshot`；原始 token 最多 100 个。
+3. 保留 `null` 和负数，按 `timestamp` 标记数据时间，不把估值指标直接解释为投资建议。
 
 ## 能力边界
 

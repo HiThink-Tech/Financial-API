@@ -52,6 +52,38 @@ const record = z.record(z.string(), z.unknown());
 const itemOutput = z.object({ item: z.array(record) }).passthrough();
 const objectOutput = z.object({}).passthrough();
 
+const valuationCodes = z
+  .string()
+  .superRefine((value, context) => {
+    const tokens = value.split(',');
+    if (tokens.length > 100) {
+      context.addIssue({ code: 'custom', message: 'thscodes accepts at most 100 raw tokens' });
+    }
+    if (
+      tokens.length === 0 ||
+      tokens.some(
+        (token) => token.trim().length === 0 || !aShareCode.safeParse(token.trim()).success,
+      )
+    ) {
+      context.addIssue({
+        code: 'custom',
+        message: 'thscodes must be comma-separated A-share codes',
+      });
+    }
+  })
+  .transform((value) => {
+    const seen = new Set<string>();
+    return value
+      .split(',')
+      .map((token) => token.trim().toUpperCase())
+      .filter((token) => {
+        if (seen.has(token)) return false;
+        seen.add(token);
+        return true;
+      })
+      .join(',');
+  });
+
 const historyInput = z
   .object({
     thscode: aShareCode,
@@ -411,6 +443,25 @@ export const remoteCapabilities: readonly RemoteCapabilityDescriptor[] = [
       {
         flags: '--report <period>',
         description: 'report quarter YYYY-[1-4]',
+        type: 'string',
+        required: true,
+      },
+    ],
+    paging: 'none',
+    window: 'none',
+  },
+  {
+    id: 'valuation.snapshot',
+    command: ['valuation', 'snapshot'],
+    description: 'Query current A-share valuation metrics',
+    endpoint: '/api/a-share/valuations/snapshot',
+    method: 'GET',
+    inputSchema: z.object({ thscodes: valuationCodes }).strict(),
+    outputSchema: itemOutput,
+    options: [
+      {
+        flags: '--thscodes <codes>',
+        description: 'comma-separated A-share thscodes (at most 100 raw tokens)',
         type: 'string',
         required: true,
       },

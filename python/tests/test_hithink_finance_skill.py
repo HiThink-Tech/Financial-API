@@ -36,6 +36,7 @@ def test_hithink_finance_skill_covers_recent_remote_capabilities() -> None:
         "hot-stock-list",
         "hot-stock-rank-trend",
         "dragon-tiger-list",
+        "/api/a-share/valuations/snapshot",
         "/api/fund/profile/detail",
         "/api/fund/market/historical",
     ):
@@ -86,6 +87,7 @@ def test_cli_entry_covers_setup_lifecycle_and_routes_to_builtin_skills() -> None
         "hithink-finance-research",
         "hithink-finance-shared",
         "hithink-finance-fund",
+        "hithink-finance-valuation",
     ):
         assert skill_name in builtin
     assert "已安装" in cli and "内置 Skill" in cli
@@ -104,7 +106,7 @@ def test_cli_skill_contract_verifies_the_active_agent_and_handles_long_data_init
 
     for required in (
         "当前 Agent 的 Skills 目录",
-        "9 个 CLI 配套 Skill",
+        "10 个 CLI 配套 Skill",
         "不能证明当前 Agent 已发现",
         "主动复制",
         "不覆盖无关 Skills",
@@ -156,6 +158,29 @@ def test_skill_routes_fund_tasks_across_all_access_modes() -> None:
         assert phrase in skill + api + mcp + python_sdk
     assert "hithink-finance-fund" in mcp
     assert "fund_market_historical" in python_sdk + remote_toolkit
+
+
+def test_skill_routes_valuation_tasks_across_all_access_modes() -> None:
+    skill = _skill_text()
+    api = _api_capability_text()
+    mcp = (
+        SKILL_ROOT / "references" / "mcp" / "hithink-finance-a-share.md"
+    ).read_text(encoding="utf-8")
+    builtin = (
+        SKILL_ROOT / "references" / "cli" / "builtin-skills.md"
+    ).read_text(encoding="utf-8")
+    python_sdk = (SKILL_ROOT / "references" / "python-sdk.md").read_text(
+        encoding="utf-8"
+    )
+    remote_toolkit = (
+        SKILL_ROOT / "references" / "python-sdk" / "remote-toolkit.md"
+    ).read_text(encoding="utf-8")
+
+    assert "估值" in skill
+    assert "/api/a-share/valuations/snapshot" in api
+    assert "get_a_share_valuations_snapshot" in mcp
+    assert "hithink-finance-valuation" in builtin
+    assert "a_share_valuations_snapshot" in python_sdk + remote_toolkit
 
 
 def test_skill_never_routes_agents_to_remote_llms_contract() -> None:
