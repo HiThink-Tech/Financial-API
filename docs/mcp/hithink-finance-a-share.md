@@ -33,11 +33,20 @@
 | --- | --- | --- | --- |
 | `get_a_share_calendar_trading_days` | 判断最近一年 A 股交易日 | 无参数，固定为 Asia/Shanghai 今日向前一年 | 用它查询任意十年日历，或把非交易日空数据当服务故障 |
 
+## 集合竞价
+
+| 工具 | 适用场景 | 关键参数与边界 | 常见错误 |
+| --- | --- | --- | --- |
+| `get_a_share_auction_snapshot` | 批量查询集合竞价快照 | `thscodes` 必填且最多 100 个；`stage=live/final`，默认 `final`；`timestamp` 是响应组装时间，上游行情时间仅用于判断新鲜度 | 把 `timestamp` 当上游竞价发生时间，或省略标的拉全市场 |
+| `get_a_share_auction_short_term_benchmark` | 查询集合竞价短期强弱基准 | `date` 可选且为 `YYYY-MM-DD`，缺失或空字符串时使用 `Asia/Shanghai` 当日；返回 `timestamp/date/date_ms/item` | 用毫秒戳传日期、期待非交易日自动回退，或把基准榜直接当投资建议 |
+
 ## 涨停与连板
 
 | 工具 | 适用场景 | 关键参数与边界 | 常见错误 |
 | --- | --- | --- | --- |
 | `get_a_share_special_data_limit_up_pool` | 指定交易日的全市场涨停股清单 | `date_ms` 为上海时区自然日零点毫秒戳；`page/size` 分页；排序字段有白名单 | 在非交易日期待报错；混用 `limit/offset` |
+| `get_a_share_special_data_limit_down_pool` | 指定交易日的全市场跌停股清单 | `date_ms` 可选；`page>=1`、`size=1..200`；可按 `first_limit_time/last_limit_time/turnover_ratio_pct` 排序 | 把 `last_limit_time` 当毫秒戳，或混用 `limit/offset` |
+| `get_a_share_special_data_limit_break_pool` | 指定交易日的全市场炸板股清单 | `date_ms` 可选；`page>=1`、`size=1..200`；返回 `open_times` 等字段 | 把开板次数当连续涨停数，或忽略分页 |
 | `get_a_share_special_data_limit_up_ladder` | 观察近 30 个交易日、2/3/4/5/6/7+ 板梯队 | 无参数，返回固定窗口矩阵 | 期待逐股明细或自定义时间窗口 |
 
 ## 异动与热榜

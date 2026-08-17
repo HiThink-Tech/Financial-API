@@ -7,7 +7,7 @@
 
 **同花顺金融数据服务（hithink-finance）** 是由同花顺官方提供和维护的 A股金融数据服务，面向 AI Agent、量化研究者和应用开发者。
 
-通过一个统一的 API Key，即可查询 A股最新行情快照、历史行情、财务报表、估值、指数、板块、公募基金资料与净值、涨停、连板、个股异动、热榜和龙虎榜等数据，并将数据接入 AI 工具、Python 研究脚本、量化程序或业务系统。
+通过一个统一的 API Key，即可查询 A股最新行情、集合竞价、财务报表、估值、指数、板块、公募基金资料与净值、涨跌停、炸板、个股异动、热榜和龙虎榜等数据，并将数据接入 AI 工具、Python 研究脚本、量化程序或业务系统。
 
 > 一站式同花顺官方金融数据能力，覆盖 API、MCP、CLI、Python SDK、本地数据库和 Agent Skill。
 
@@ -25,8 +25,8 @@
 - 查询上市公司的利润表、资产负债表、现金流量表和财务指标。
 - 批量查询 A 股最新市盈率、市净率、市销率和市现率估值快照。
 - 获取交易日历、公司行动、复权因子等基础研究数据。
-- 查询涨停池、连板天梯、个股异动、热榜和龙虎榜等同花顺特色数据。
-- 查询公募基金资料、披露持仓、净值、区间收益、持有人结构以及 ETF/LOF 场内行情。
+- 查询集合竞价快照、短期基准、涨跌停池、炸板池、连板天梯、个股异动、热榜和龙虎榜。
+- 查询公募基金资料、公司、经理、财务、持仓、业绩、公开资讯以及 ETF/LOF 场内行情。
 - 下载全市场数据，为回测、选股、因子研究和 AI 分析准备数据。
 - 让 Claude、Cursor、Windsurf 等支持 MCP 或 Agent Skill 的工具直接调用金融数据。
 - 在本地构建 DuckDB 数据库，完成增量同步、SQL 查询、复权计算和文件导出。
@@ -41,7 +41,7 @@
 
 ### 有什么数据
 
-覆盖 A股行情、标的目录、公司行动、财务报表与指标、估值、交易日历、指数、板块、公募基金、涨停、连板、个股异动、热榜、龙虎榜和全市场数据文件。
+覆盖 A股行情、集合竞价、标的目录、公司行动、财务报表与指标、估值、交易日历、指数、板块、公募基金、涨跌停、炸板、个股异动、热榜、龙虎榜和全市场数据文件。
 
 ### 怎么使用
 
@@ -76,11 +76,12 @@
 | 公司行动与复权 | 查询分红、送转等公司行动，并生成前复权、后复权数据 | CLI / marketdb |
 | 财务报表与财务指标 | 查询利润表、资产负债表、现金流量表和五类财务指标 | CLI / API / MCP / Python |
 | A 股估值快照 | 批量查询市盈率 TTM/MRQ、市净率 MRQ、市销率 TTM 和市现率 TTM | CLI / API / MCP / Python |
+| A 股集合竞价 | 批量查询竞价实时/终态快照与短期强弱基准 | CLI / API / MCP / Python |
 | 标的目录 | 根据股票名称、代码或关键词查找唯一 `thscode` | CLI / API / MCP / Python |
 | 交易日历 | 判断交易日、安排数据同步和回测时间 | CLI / API / MCP / Python |
 | 指数与板块 | 查询指数和板块目录、成分股、行情及历史 K 线 | CLI / API / MCP / Python |
-| 同花顺特色数据 | 获取涨停池、连板、异动、热榜和龙虎榜 | CLI / API / MCP / Python |
-| 公募基金 | 查询资料、披露持仓、净值、收益、持有人结构、ETF/LOF 快照与 ETF 日线 | CLI / API / MCP / Python |
+| 同花顺特色数据 | 获取涨跌停池、炸板池、连板、异动、热榜和龙虎榜 | CLI / API / MCP / Python |
+| 公募基金 | 查询资料、公司、经理、财务、披露持仓、业绩、资讯和场内行情 | CLI / API / MCP / Python |
 | 全市场数据导出 | 下载全量或增量日 K、公司行动等标准数据文件 | CLI / Market Dumps |
 | 本地 DuckDB | 完成数据初始化、同步、校验、修复、SQL 查询和导出 | CLI / marketdb |
 
@@ -282,7 +283,7 @@ MCP 适合 Claude Desktop、Cursor、Windsurf 和其他支持 MCP 的客户端�
 - `hithink-finance-a-share`：A股行情、财务和特色数据；
 - `hithink-finance-a-share-index`：指数、板块及相关行情；
 - `hithink-finance-meta`：标的检索、能力发现等基础信息。
-- `hithink-finance-fund`：基金资料、披露、净值、收益和场内行情。
+- `hithink-finance-fund`：基金资料、公司、经理、披露、财务、净值、收益、资讯和场内行情。
 
 配置位置、安全方式、意图路由和验证步骤见 [MCP 接入说明](docs/mcp.md)。
 
@@ -503,13 +504,17 @@ marketdb query \
 
 ## 最新变化
 
-当前 monorepo 版本包含四项关键变化，完整历史见 [`CHANGELOG.md`](CHANGELOG.md)。
+当前 monorepo 版本包含五项关键变化，完整历史见 [`CHANGELOG.md`](CHANGELOG.md)。
 
-### 1. 新增公募基金能力
+### 1. 扩展集合竞价、特色数据与公募基金能力
+
+REST API、MCP、CLI 与 Python SDK 新增集合竞价快照/短期基准、跌停池、炸板池，以及 21 项基金公司、经理、业绩、财务、资讯、发行与历史持仓能力。
+
+### 2. 新增公募基金能力
 
 REST API、MCP、CLI 与 Python SDK 统一支持基金资料、披露持仓、净值、区间收益、持有人结构、ETF/LOF 快照和 ETF 历史日线。
 
-### 2. 新增 `hithink-finance` Node.js CLI
+### 3. 新增 `hithink-finance` Node.js CLI
 
 统一提供：
 
@@ -522,7 +527,7 @@ REST API、MCP、CLI 与 Python SDK 统一支持基金资料、披露持仓、�
 
 推荐直接从 npm 安装。
 
-### 3. 新增统一 `hithink-finance` Skill
+### 4. 新增统一 `hithink-finance` Skill
 
 原根目录中的通用、REST、MCP 和 CLI Setup Skills 已合并为一个可以独立安装的入口，统一覆盖：
 
@@ -532,7 +537,7 @@ REST API、MCP、CLI 与 Python SDK 统一支持基金资料、披露持仓、�
 - Python SDK；
 - 安全与大结果处理规范。
 
-### 4. 仓库升级为 monorepo
+### 5. 仓库升级为 monorepo
 
 Python 项目已迁入 `python/`。
 

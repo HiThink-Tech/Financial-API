@@ -4,10 +4,10 @@
  * 程序构建器模块 — 组装完整的 Commander 命令树。
  *
  * This module is responsible for creating the root Commander instance, attaching
- * all global options, registering every sub-command (31 in total), wiring the
+ * all global options, registering every command group, wiring the
  * pre-action validation hook, and exposing a factory (`createProgram`) that
  * `main.ts` calls to boot the CLI.
- * 此模块负责创建 Commander 根实例、挂载所有全局选项、注册所有子命令（共 31 个）、
+ * 此模块负责创建 Commander 根实例、挂载所有全局选项、注册所有命令组、
  * 连接 preAction 校验钩子，并暴露 `main.ts` 在启动 CLI 时调用的工厂函数 `createProgram`。
  */
 
@@ -84,7 +84,7 @@ export interface ProgramDependencies {
  * registered and global options attached.
  * 创建完全配置好的 Commander `Command` 实例，已注册所有子命令并挂载全局选项。
  *
- * ## 31-command tree 命令树结构
+ * ## Command tree 命令树结构
  *
  * | Group      | Commands registered                    |
  * |------------|----------------------------------------|
@@ -197,7 +197,7 @@ export function createProgram(
     },
   };
 
-  // ---- 注册所有子命令（31 个命令的完整命令树） ----
+  // ---- 注册完整命令树 ----
   versionDescriptor.register(program);
   registerAuthCommands(program, context, metadata, dependencies.authProvider);
   registerConfigCommands(program, context, dependencies.resolvedConfig);

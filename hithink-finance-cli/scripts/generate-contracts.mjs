@@ -100,17 +100,19 @@ const domainConfigs = {
   },
   market: {
     description:
-      '用于 Agent 通过 hithink-finance CLI 获取普通 A 股行情快照、历史 K 线、交易日历、复权因子、公司行动、本地全市场面板；涨停、热榜、龙虎榜、异动和游资机构榜转 hithink-finance-special-data。',
+      '用于 Agent 通过 hithink-finance CLI 获取 A 股集合竞价快照与短期基准、普通行情快照、历史 K 线、交易日历、复权因子、公司行动和本地全市场面板；涨跌停、炸板、热榜、龙虎榜、异动和游资机构榜转 hithink-finance-special-data。',
     identity:
       '普通行情和本地行情派生能力。优先使用本地库覆盖的历史/面板能力，必要时走远端同花顺金融数据服务。',
     decisions: [
       ['单票历史日线/K 线', '`market history`；`--source auto` 会在本地覆盖时走本地'],
       ['实时或分页行情快照', '`market snapshot`'],
+      ['集合竞价实时/终态快照', '`market auction-snapshot`'],
+      ['集合竞价短期基准', '`market auction-benchmark`'],
       ['交易日历', '`market calendar`'],
       ['复权因子', '`market adjustment-factors`'],
       ['公司行动/除权除息事件', '`market corporate-actions`'],
       ['全市场区间面板/批量研究输入', '`market panel --output <file>`'],
-      ['涨停池、连板、热股、龙虎榜、异动', '切到 `hithink-finance-special-data`'],
+      ['涨跌停池、炸板池、连板、热股、龙虎榜、异动', '切到 `hithink-finance-special-data`'],
     ],
     boundaries: [
       '不提供投资建议、买卖判断或收益承诺；只返回数据或中立统计。',
@@ -119,12 +121,14 @@ const domainConfigs = {
   },
   'special-data': {
     description:
-      '用于 Agent 通过 hithink-finance CLI 查询特色数据：涨停池、连板天梯、个股异动、异动原因、飙升榜、热股榜、热度历史/趋势、龙虎榜、游资和机构榜；普通行情转 hithink-finance-market。',
+      '用于 Agent 通过 hithink-finance CLI 查询特色数据：涨停池、跌停池、炸板池、连板天梯、个股异动、异动原因、飙升榜、热股榜、热度历史/趋势、龙虎榜、游资和机构榜；普通行情转 hithink-finance-market。',
     identity: '特色榜单和事件型数据入口。强调窗口约束和榜单口径，不替代普通行情或财报。',
     decisions: [
       ['今日异动列表/异动标签', '`special anomaly-list`，仅今日'],
       ['最多 50 只股票的今日异动原因', '`special anomaly-stock`，仅今日'],
       ['涨停池分页', '`special limit-up-pool`'],
+      ['跌停池分页', '`special limit-down-pool`'],
+      ['炸板池分页', '`special limit-break-pool`'],
       ['连板天梯', '`special limit-up-ladder`'],
       ['飙升榜', '`special skyrocket`'],
       ['当前热股榜', '`special hot-stock`'],
@@ -171,14 +175,28 @@ const domainConfigs = {
   },
   fund: {
     description:
-      '用于 Agent 通过 hithink-finance CLI 查询基金档案、持仓、净值、区间收益、持有人结构、ETF/LOF 快照和 ETF 历史；A 股行情转 hithink-finance-market，基金代码搜索转 hithink-finance-symbol。',
-    identity: '基金基础信息、业绩、持有人和场内行情入口。根据基金类型与市场形态选择稳定命令。',
+      '用于 Agent 通过 hithink-finance CLI 查询基金档案、公司、经理、财务、诊断、资讯、募集、持仓、净值、收益、持有人结构、ETF/LOF 快照和 ETF 历史；A 股行情转 hithink-finance-market，基金代码搜索转 hithink-finance-symbol。',
+    identity:
+      '基金资料、机构与经理、财务、业绩、披露和场内行情入口。根据基金类型、标识来源与市场形态选择稳定命令。',
     decisions: [
       ['基金档案', '`fund profile`'],
       ['基金持仓', '`fund holdings`'],
       ['基金净值', '`fund nav`'],
       ['基金区间收益', '`fund returns`'],
       ['基金持有人结构', '`fund holders`'],
+      ['基金公司详情', '`fund company-detail`'],
+      [
+        '基金经理资料/经历/业绩/风格',
+        '`fund manager-detail/manager-experience/manager-performance/manager-style`',
+      ],
+      [
+        '基金财务指标/利润表/资产负债表',
+        '`fund financial-indicators/income-statements/balance-sheets`',
+      ],
+      ['基金诊断', '`fund diagnostics`'],
+      ['基金资讯', '`fund news`'],
+      ['在售或待售基金', '`fund offerings`'],
+      ['历史股票/债券持仓', '先用对应 `report-dates`，再调用 `stock-history` 或 `bond-history`'],
       ['ETF/LOF 快照', '`fund snapshot`'],
       ['ETF 历史日线', '`fund history`'],
       ['基金代码或名称搜索', '切到 `hithink-finance-symbol`'],
@@ -515,7 +533,10 @@ function windowText(window) {
   }[window];
 }
 
-function pagingText(paging) {
+function pagingText(paging, pagingEnd) {
+  if (paging === 'offset' && pagingEnd === 'has-more') {
+    return '使用 `--limit` + `--offset` 游标翻页；全量抓取时循环到响应 `has_more=false`，不要依赖本页条数或不存在的 total。';
+  }
   return {
     none: '无分页参数；仍检查返回中的 count/数组长度。',
     offset: '使用 `--limit` + `--offset` 翻页；全量抓取时循环到返回条数小于 limit。',
@@ -604,7 +625,7 @@ ${isRemote ? optionRows(capability) : lines(detail.parameters ?? ['读取 schema
 
 ## 窗口与分页
 
-${isRemote ? lines([windowText(capability.window), pagingText(capability.paging)]) : lines(['本地命令无远端分页；只有声明 `--output` 的命令可直接落盘；其他大结果改用导出命令。'])}
+${isRemote ? lines([windowText(capability.window), pagingText(capability.paging, capability.pagingEnd)]) : lines(['本地命令无远端分页；只有声明 `--output` 的命令可直接落盘；其他大结果改用导出命令。'])}
 
 ## 常见错误
 

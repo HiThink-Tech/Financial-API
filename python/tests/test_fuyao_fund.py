@@ -86,6 +86,27 @@ import fuyao_client  # noqa: E402
                 "end": 1_710_000_000_000,
             },
         ),
+        ("fund_companies_detail", ("company-1",), {}, "/api/fund/companies/detail", {"company_id": "company-1"}),
+        ("fund_portfolio_industry_allocation", ("025480.OF",), {"fund_type": "otc"}, "/api/fund/portfolio/industry-allocation", {"fund_type": "otc", "thscode": "025480.OF"}),
+        ("fund_performance_indicators_historical", ("025480.OF", 1, 2), {"fund_type": "otc"}, "/api/fund/performance/indicators-historical", {"fund_type": "otc", "thscode": "025480.OF", "start": 1, "end": 2}),
+        ("fund_performance_drawdowns", ("025480.OF",), {"fund_type": "otc"}, "/api/fund/performance/drawdowns", {"fund_type": "otc", "thscode": "025480.OF"}),
+        ("fund_holders_top", ("025480.OF",), {"fund_type": "otc", "limit": 10}, "/api/fund/holders/top", {"fund_type": "otc", "thscode": "025480.OF", "limit": 10}),
+        ("fund_corporate_actions_dividends", ("025480.OF",), {"fund_type": "otc"}, "/api/fund/corporate-actions/dividends", {"fund_type": "otc", "thscode": "025480.OF"}),
+        ("fund_diagnostics_detail", ("025480.OF",), {"fund_type": "otc"}, "/api/fund/diagnostics/detail", {"fund_type": "otc", "thscode": "025480.OF"}),
+        ("fund_financials_indicators", ("025480.OF",), {"fund_type": "otc"}, "/api/fund/financials/indicators", {"fund_type": "otc", "thscode": "025480.OF"}),
+        ("fund_financials_income_statements", ("025480.OF",), {"fund_type": "otc"}, "/api/fund/financials/income-statements", {"fund_type": "otc", "thscode": "025480.OF"}),
+        ("fund_financials_balance_sheets", ("025480.OF",), {"fund_type": "otc"}, "/api/fund/financials/balance-sheets", {"fund_type": "otc", "thscode": "025480.OF"}),
+        ("fund_managers_investment_style", ("manager-1",), {}, "/api/fund/managers/investment-style", {"manager_id": "manager-1"}),
+        ("fund_managers_performance", ("manager-1",), {"range": "year"}, "/api/fund/managers/performance", {"manager_id": "manager-1", "range": "year"}),
+        ("fund_managers_experience", ("manager-1",), {}, "/api/fund/managers/experience", {"manager_id": "manager-1"}),
+        ("fund_managers_detail", ("manager-1",), {}, "/api/fund/managers/detail", {"manager_id": "manager-1"}),
+        ("fund_news_article_list", ("025480.OF",), {"fund_type": "otc", "limit": 20, "offset": "next"}, "/api/fund/news/article-list", {"fund_type": "otc", "thscode": "025480.OF", "limit": 20, "offset": "next"}),
+        ("fund_offerings_list", ("active",), {}, "/api/fund/offerings/list", {"subscribe": "active"}),
+        ("fund_portfolio_stock_history", ("025480.OF", "quarter", "2025-12-31"), {"fund_type": "otc"}, "/api/fund/portfolio/stock-history", {"fund_type": "otc", "thscode": "025480.OF", "report_type": "quarter", "end_date": "2025-12-31"}),
+        ("fund_portfolio_stock_report_dates", ("025480.OF",), {"fund_type": "otc", "report_type": "quarter"}, "/api/fund/portfolio/stock-report-dates", {"fund_type": "otc", "thscode": "025480.OF", "report_type": "quarter"}),
+        ("fund_portfolio_bond_history", ("025480.OF", "quarter", "2025-12-31"), {"fund_type": "otc"}, "/api/fund/portfolio/bond-history", {"fund_type": "otc", "thscode": "025480.OF", "report_type": "quarter", "end_date": "2025-12-31"}),
+        ("fund_portfolio_bond_report_dates", ("025480.OF",), {"fund_type": "otc", "report_type": "quarter"}, "/api/fund/portfolio/bond-report-dates", {"fund_type": "otc", "thscode": "025480.OF", "report_type": "quarter"}),
+        ("fund_portfolio_asset_allocation", ("025480.OF",), {"fund_type": "otc"}, "/api/fund/portfolio/asset-allocation", {"fund_type": "otc", "thscode": "025480.OF"}),
     ],
 )
 def test_fund_functions_map_the_published_contract(
@@ -140,6 +161,12 @@ def test_fund_functions_map_the_published_contract(
             ),
             "five years",
         ),
+        (lambda: fuyao_client.fund_companies_detail(""), "company_id"),
+        (lambda: fuyao_client.fund_performance_indicators_historical("025480.OF", 2, 1, fund_type="otc"), "end_ms"),
+        (lambda: fuyao_client.fund_holders_top("025480.OF", fund_type="otc", limit=11), "limit"),
+        (lambda: fuyao_client.fund_managers_performance("manager-1", range="invalid"), "range"),
+        (lambda: fuyao_client.fund_news_article_list("025480.OF", fund_type="otc", limit=101), "limit"),
+        (lambda: fuyao_client.fund_offerings_list("closed"), "subscribe"),
     ],
 )
 def test_fund_functions_reject_invalid_input_before_http(monkeypatch, call, message):
@@ -236,3 +263,13 @@ def test_fund_holders_cli_maps_merge_scope(monkeypatch):
     args.func(args)
 
     assert calls == [("025480.OF", {"fund_type": "otc", "merge_scope": "separate"})]
+
+
+def test_fund_function_docs_explain_narrow_payloads_and_cursor_end() -> None:
+    indicators_doc = fuyao_client.fund_performance_indicators_historical.__doc__ or ""
+    news_doc = fuyao_client.fund_news_article_list.__doc__ or ""
+
+    assert "timestamp and item only" in indicators_doc
+    assert "no top-level thscode/interval" in indicators_doc
+    assert "has_more" in news_doc
+    assert "no total" in news_doc

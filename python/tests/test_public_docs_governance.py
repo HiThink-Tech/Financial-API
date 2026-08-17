@@ -99,6 +99,7 @@ def test_upstream_api_contract_has_one_canonical_source_and_skill_mirror() -> No
     mirror_root = REPO_ROOT / "skills" / "hithink-finance" / "references" / "api"
     contract_files = {
         "capability-map.md",
+        "endpoints-auction.md",
         "endpoints-calendar.md",
             "endpoints-financials.md",
             "endpoints-fund.md",

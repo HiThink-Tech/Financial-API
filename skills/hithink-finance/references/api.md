@@ -38,9 +38,10 @@ curl 'https://fuyao.aicubes.cn/api/meta/tickers/search?q=600519&limit=1' \
 | 利润表、资产负债表、现金流量表、财务指标 | [财务数据端点](api/endpoints-financials.md) |
 | A 股市盈率、市净率、市销率和市现率快照 | [估值数据端点](api/endpoints-valuations.md) |
 | 交易日历 | [交易日历端点](api/endpoints-calendar.md) |
+| A 股集合竞价快照与短期基准 | [集合竞价端点](api/endpoints-auction.md) |
 | 指数/板块目录、成分股、指数行情 | [指数与板块端点](api/endpoints-index.md) |
-| 基金资料、净值、收益、持仓、持有人和场内行情 | [公募基金端点](api/endpoints-fund.md) |
-| 涨停、连板、异动、热榜、龙虎榜 | [特色数据端点](api/endpoints-special-data.md) |
+| 基金资料、经理、净值、收益、持仓、财务、资讯和场内行情 | [公募基金端点](api/endpoints-fund.md) |
+| 涨停、跌停、炸板、连板、异动、热榜、龙虎榜 | [特色数据端点](api/endpoints-special-data.md) |
 | 全市场 Parquet 与本地建库数据源 | [全市场数据导出](api/endpoints-market-dumps.md) |
 
 ## 错误处理

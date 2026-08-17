@@ -500,3 +500,49 @@ curl 'https://fuyao.aicubes.cn/api/a-share/special-data/dragon-tiger-list?board_
 
 - 假设省略 `date` 一定等于今天：省略 `date` 时服务端取最新可用交易日，不一定是今天（非交易日时取前一交易日）。
 - 显式传非交易日：需为最近一年内的交易日，非交易日无数据。
+
+---
+
+## 10. 跌停股票池
+
+```text
+GET /api/a-share/special-data/limit-down-pool
+```
+
+按交易日返回 A 股跌停池。参数使用 `page/size` 分页：`date_ms` 可选；`page` 默认 `1`；`size` 默认 `50`、范围 1–200；`sort_dir=asc/desc`，默认 `desc`。`sort_field` 可选 `last_limit_time`、`first_limit_time`、`last_price`、`price_change_ratio_pct`、`turnover_ratio_pct`，默认 `last_limit_time`。
+
+```bash
+curl 'https://fuyao.aicubes.cn/api/a-share/special-data/limit-down-pool?page=1&size=50&sort_field=last_limit_time&sort_dir=desc' \
+  -H 'X-api-key: <your-api-key>'
+```
+
+`data` 为 `{timestamp, pagination, item[]}`，分页结构与涨停池一致。`item[]` 字段为 `thscode`、`ticker`、`name`、`last_price`、`price_change_ratio_pct`、`first_limit_time`、`last_limit_time`、`turnover_ratio_pct`；两个跌停时间均为上海时区 `HH:mm`。
+
+### 避错要点
+
+- 本端点只返回跌停池，不要用涨停池加价格条件自行推导。
+- `date_ms` 是上海时区自然日零点毫秒戳；不要传 `YYYY-MM-DD`。
+- 混用 `limit/offset`、`size>200` 或非白名单排序字段会返回参数错误。
+
+---
+
+## 11. 涨停炸板股票池
+
+```text
+GET /api/a-share/special-data/limit-break-pool
+```
+
+按交易日返回曾触及涨停但已开板的 A 股股票池。`date_ms`、`page`、`size`、`sort_dir` 与跌停池相同；`sort_field` 可选 `price_change_ratio_pct`、`open_times`、`last_price`、`turnover_ratio_pct`、`turnover`，默认 `price_change_ratio_pct`。
+
+```bash
+curl 'https://fuyao.aicubes.cn/api/a-share/special-data/limit-break-pool?page=1&size=50&sort_field=open_times&sort_dir=desc' \
+  -H 'X-api-key: <your-api-key>'
+```
+
+`data` 为 `{timestamp, pagination, item[]}`。`item[]` 字段为 `thscode`、`ticker`、`name`、`last_price`、`price_change_ratio_pct`、`open_times`、`turnover_ratio_pct`、`turnover`。
+
+### 避错要点
+
+- 股票集合由上游直接提供；不要在客户端用盘口或收盘价重建炸板规则。
+- `open_times` 是开板次数，不是连续涨停天数。
+- 无数据时保留空集合语义，不使用涨停池近似替代。

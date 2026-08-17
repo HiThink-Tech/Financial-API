@@ -2,7 +2,7 @@
 
 > 根据用户意图快速定位到具体 REST 端点。本页只做路由，参数与字段细节在各端点详情页。
 
-## 全部端点一览（34 个）
+## 全部端点一览（59 个）
 
 ### 元信息（2 个）
 
@@ -50,6 +50,15 @@
 
 详情：[endpoints-calendar.md](endpoints-calendar.md)
 
+### 集合竞价（2 个）
+
+| 端点 | 用途 | 典型问题 |
+| --- | --- | --- |
+| `GET /api/a-share/auction/snapshot` | 批量查询 A 股集合竞价实时或终态快照 | 「这几只股票今天竞价表现如何」 |
+| `GET /api/a-share/auction/short-term-benchmark` | 查询指定日期的集合竞价短期强弱基准 | 「今天竞价涨幅靠前的股票有哪些」 |
+
+详情：[endpoints-auction.md](endpoints-auction.md)
+
 ### 指数与板块（4 个）
 
 | 端点 | 用途 | 典型问题 |
@@ -61,7 +70,7 @@
 
 详情：[endpoints-index.md](endpoints-index.md)
 
-### 公募基金（7 个）
+### 公募基金（28 个）
 
 | 端点 | 用途 | 典型问题 |
 | --- | --- | --- |
@@ -72,14 +81,37 @@
 | `GET /api/fund/holders/detail` | 持有人结构 | 「机构和个人持有比例是多少」 |
 | `GET /api/fund/market/snapshot` | ETF/LOF 场内快照 | 「510300.SH 当前价格多少」 |
 | `GET /api/fund/market/historical` | ETF 历史日线 | 「510300.SH 最近一年的日线行情」 |
+| `GET /api/fund/companies/detail` | 基金公司详情 | 「这家基金公司的管理规模和负责人是谁」 |
+| `GET /api/fund/portfolio/industry-allocation` | 行业配置 | 「这只基金主要配置哪些行业」 |
+| `GET /api/fund/performance/indicators-historical` | 指定日期区间的历史业绩指标 | 「近三年风险收益指标如何变化」 |
+| `GET /api/fund/performance/drawdowns` | 回撤区间 | 「这只基金历史主要回撤有哪些」 |
+| `GET /api/fund/holders/top` | 前十大持有人 | 「这只基金前十大持有人是谁」 |
+| `GET /api/fund/corporate-actions/dividends` | 分红记录 | 「这只基金历次分红情况」 |
+| `GET /api/fund/diagnostics/detail` | 基金诊断详情 | 「这只基金的诊断雷达如何」 |
+| `GET /api/fund/financials/indicators` | 基金财务指标 | 「这只基金最新财务指标」 |
+| `GET /api/fund/financials/income-statements` | 基金利润表 | 「这只基金的利润表」 |
+| `GET /api/fund/financials/balance-sheets` | 基金资产负债表 | 「这只基金的资产负债表」 |
+| `GET /api/fund/managers/investment-style` | 基金经理投资风格 | 「这位基金经理偏好什么风格」 |
+| `GET /api/fund/managers/performance` | 基金经理业绩 | 「这位基金经理的任职业绩」 |
+| `GET /api/fund/managers/experience` | 基金经理任职经历 | 「这位基金经理管理过哪些产品」 |
+| `GET /api/fund/managers/detail` | 基金经理详情 | 「这位基金经理的履历」 |
+| `GET /api/fund/news/article-list` | 基金资讯列表 | 「这只基金最近有哪些公开资讯」 |
+| `GET /api/fund/offerings/list` | 在售或待售基金列表 | 「当前有哪些在售基金」 |
+| `GET /api/fund/portfolio/stock-history` | 股票持仓历史 | 「这只基金某报告期持有哪些股票」 |
+| `GET /api/fund/portfolio/stock-report-dates` | 股票持仓报告期 | 「有哪些可用的股票持仓报告期」 |
+| `GET /api/fund/portfolio/bond-history` | 债券持仓历史 | 「这只基金某报告期持有哪些债券」 |
+| `GET /api/fund/portfolio/bond-report-dates` | 债券持仓报告期 | 「有哪些可用的债券持仓报告期」 |
+| `GET /api/fund/portfolio/asset-allocation` | 大类资产配置 | 「股票、债券和现金各占多少」 |
 
 详情：[endpoints-fund.md](endpoints-fund.md)
 
-### 特色数据（9 个）
+### 特色数据（11 个）
 
 | 端点 | 用途 | 典型问题 |
 | --- | --- | --- |
 | `GET /api/a-share/special-data/limit-up-pool` | 指定交易日的涨停 / 连板股票池 | 「今天有哪些涨停股」「某天的涨停股清单」 |
+| `GET /api/a-share/special-data/limit-down-pool` | 指定交易日的跌停股票池 | 「今天有哪些跌停股」 |
+| `GET /api/a-share/special-data/limit-break-pool` | 指定交易日的炸板股票池 | 「今天有哪些股票炸板」 |
 | `GET /api/a-share/special-data/limit-up-ladder` | 近 30 个交易日的连板梯队矩阵 | 「最近连板情况如何」「连板天梯」 |
 | `GET /api/a-share/special-data/anomaly-analysis-list` | 当日全市场个股异动原因（REST only） | 「今天哪些股票异动了」 |
 | `GET /api/a-share/special-data/anomaly-analysis-stock` | 按 thscode 批量查询当日个股异动原因 | 「茅台今天为什么异动」「这几只股票的异动原因」 |
@@ -131,8 +163,8 @@
 
 ## 能力边界
 
-- 覆盖 **A 股**（沪深京）、**A 股指数 / 板块**和公募基金资料/披露/净值/收益；场内行情覆盖 ETF/LOF 快照与 ETF 日线。
-- **不覆盖**：分钟 K、tick、Level-2、港股、美股、基金申赎交易、基金风险指标、期货、期权。
+- 覆盖 **A 股**（沪深京）、**A 股指数 / 板块**和公募基金资料、经理、披露、财务、净值、收益与公开资讯；场内行情覆盖 ETF/LOF 快照与 ETF 日线。
+- **不覆盖**：分钟 K、tick、Level-2、港股、美股、基金申赎交易、期货、期权。
 - 财务指标端点不返回行业均值、评分、排名或点评。
 - 端点提供数据，不提供回测引擎、alpha 模型或确定性投资建议。
 - 异动分析（`anomaly-analysis-list` / `anomaly-analysis-stock`）仅支持当日快照，不支持历史查询。

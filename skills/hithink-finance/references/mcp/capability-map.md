@@ -1,6 +1,6 @@
 # MCP 能力与意图总览
 
-本页是同花顺金融数据服务 4 个 MCP 端点、30 个工具的固化功能契约，用于 Agent 的意图识别和工具路由。当前连接的 `tools/list` 用于确认实际可用性与调用 schema，不应取代本页的任务语义。
+本页是同花顺金融数据服务 4 个 MCP 端点、55 个工具的固化功能契约，用于 Agent 的意图识别和工具路由。当前连接的 `tools/list` 用于确认实际可用性与调用 schema，不应取代本页的任务语义。
 
 ## 先选服务
 
@@ -14,11 +14,13 @@
 | 指定报告期的财务指标 | `hithink-finance-a-share` | `get_a_share_financials_indicators` |
 | 批量查询 A 股最新估值快照 | `hithink-finance-a-share` | `get_a_share_valuations_snapshot` |
 | 交易日历 | `hithink-finance-a-share` | `get_a_share_calendar_trading_days` |
-| 涨停池、连板、个股异动、热榜、龙虎榜 | `hithink-finance-a-share` | 对应 `get_a_share_special_data_*` 工具 |
+| 集合竞价快照或短期基准 | `hithink-finance-a-share` | `get_a_share_auction_snapshot` / `get_a_share_auction_short_term_benchmark` |
+| 涨停池、跌停池、炸板池、连板、个股异动、热榜、龙虎榜 | `hithink-finance-a-share` | 对应 `get_a_share_special_data_*` 工具 |
 | 查找概念、区域、特色或行业指数 | `hithink-finance-a-share-index` | `get_a_share_index_catalog_ths_index_list` |
 | 查询指数或板块成分股 | `hithink-finance-a-share-index` | `get_a_share_index_constituents_ths_stock_list` |
 | 指数/板块最新行情或历史 K 线 | `hithink-finance-a-share-index` | `get_a_share_index_prices_snapshot` / `get_a_share_index_prices_historical` |
-| 基金资料、披露、净值、收益或持有人结构 | `hithink-finance-fund` | 对应 `get_fund_*` 工具 |
+| 基金资料、公司、经理、披露、财务、净值、收益、诊断或持有人结构 | `hithink-finance-fund` | 对应 `get_fund_*` 工具 |
+| 基金公开资讯、发行状态或历史持仓 | `hithink-finance-fund` | 对应 `get_fund_news_*`、`get_fund_offerings_*` 或 `get_fund_portfolio_*` 工具 |
 | ETF/LOF 实时行情 | `hithink-finance-fund` | `get_fund_market_snapshot` |
 | ETF 历史日线 | `hithink-finance-fund` | `get_fund_market_historical` |
 
@@ -50,7 +52,7 @@
 
 ## 按需连接检查
 
-- 不要在任务开始时对三个服务执行全量连接探测。
+- 不要在任务开始时对四个服务执行全量连接探测。
 - 仅检查意图命中的服务；若名称尚未消歧，先检查 `hithink-finance-meta`。
 - `tools/list` 只需在首次调用、连接诊断或参数错误后读取，不要每次重复加载完整 schema。
 - 遇到 `code=2003` 或 `Invalid or revoked API key`，按主入口的认证恢复流程处理，不要改用模拟数据。
@@ -64,8 +66,8 @@
 
 ## 能力边界
 
-- 当前快照覆盖 A 股、A 股指数/板块和公募基金资料/披露/净值/收益；场内行情覆盖 ETF/LOF 快照与 ETF 日线。
-- 不覆盖分钟 K、tick、Level-2、港股、美股、基金申赎交易、基金风险指标或期货。
+- 当前快照覆盖 A 股、A 股指数/板块和公募基金资料、经理、披露、财务、净值、收益与公开资讯；场内行情覆盖 ETF/LOF 快照与 ETF 日线。
+- 不覆盖分钟 K、tick、Level-2、港股、美股、基金申赎交易或期货。
 - 财务指标工具不返回行业、评分、排名、行业均值或点评。
 - 工具提供数据，不提供回测引擎、alpha 模型或确定性投资建议。
 - 若当前 `tools/list` 出现本快照未登记的新工具，可报告潜在版本差异；在契约更新前不要猜测其业务语义。

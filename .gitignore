@@ -66,3 +66,4 @@ out/
 *.duckdb
 *.parquet
 *.log
+local-test/*

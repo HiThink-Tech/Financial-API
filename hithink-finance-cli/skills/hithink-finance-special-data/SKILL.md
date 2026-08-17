@@ -1,6 +1,6 @@
 ---
 name: hithink-finance-special-data
-description: '用于 Agent 通过 hithink-finance CLI 查询特色数据：涨停池、连板天梯、个股异动、异动原因、飙升榜、热股榜、热度历史/趋势、龙虎榜、游资和机构榜；普通行情转 hithink-finance-market。'
+description: '用于 Agent 通过 hithink-finance CLI 查询特色数据：涨停池、跌停池、炸板池、连板天梯、个股异动、异动原因、飙升榜、热股榜、热度历史/趋势、龙虎榜、游资和机构榜；普通行情转 hithink-finance-market。'
 ---
 
 # hithink-finance-special-data
@@ -23,6 +23,8 @@ description: '用于 Agent 通过 hithink-finance CLI 查询特色数据：涨�
 | 今日异动列表/异动标签        | `special anomaly-list`，仅今日  |
 | 最多 50 只股票的今日异动原因 | `special anomaly-stock`，仅今日 |
 | 涨停池分页                   | `special limit-up-pool`         |
+| 跌停池分页                   | `special limit-down-pool`       |
+| 炸板池分页                   | `special limit-break-pool`      |
 | 连板天梯                     | `special limit-up-ladder`       |
 | 飙升榜                       | `special skyrocket`             |
 | 当前热股榜                   | `special hot-stock`             |
@@ -40,6 +42,8 @@ description: '用于 Agent 通过 hithink-finance CLI 查询特色数据：涨�
 | [special hot-stock](references/special-hot-stock.md)                 | Query the current hot-stock ranking                     |
 | [special hot-stock-history](references/special-hot-stock-history.md) | Query a historical hot-stock ranking                    |
 | [special hot-stock-trend](references/special-hot-stock-trend.md)     | Query one stock hot-rank trend                          |
+| [special limit-break-pool](references/special-limit-break-pool.md)   | Query the limit-break stock pool                        |
+| [special limit-down-pool](references/special-limit-down-pool.md)     | Query the limit-down stock pool                         |
 | [special limit-up-ladder](references/special-limit-up-ladder.md)     | Query the 30-day limit-up ladder                        |
 | [special limit-up-pool](references/special-limit-up-pool.md)         | Query the limit-up stock pool                           |
 | [special skyrocket](references/special-skyrocket.md)                 | Query the skyrocket ranking                             |

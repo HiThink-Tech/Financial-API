@@ -33,7 +33,7 @@ python -m pip install -e ./python
 
 | 目标 | 使用 |
 | --- | --- |
-| 最新行情、财报、财务指标、估值、指数、特色数据、标的检索 | [`toolkit/fuyao/`](toolkit/fuyao/README.md) |
+| 最新行情、集合竞价、财报、财务指标、估值、指数、基金、特色数据、标的检索 | [`toolkit/fuyao/`](toolkit/fuyao/README.md) |
 | 历史行情、复权、面板、SQL、研究数据准备 | [`toolkit/marketdb/`](toolkit/marketdb/README.md) |
 | 不确定数据在哪或需要组合两者 | [`toolkit/README.md`](toolkit/README.md) |
 

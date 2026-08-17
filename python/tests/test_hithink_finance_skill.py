@@ -39,6 +39,10 @@ def test_hithink_finance_skill_covers_recent_remote_capabilities() -> None:
         "/api/a-share/valuations/snapshot",
         "/api/fund/profile/detail",
         "/api/fund/market/historical",
+        "/api/a-share/auction/snapshot",
+        "/api/a-share/special-data/limit-down-pool",
+        "/api/fund/managers/detail",
+        "/api/fund/news/article-list",
     ):
         assert capability in capability_map
 
@@ -158,6 +162,23 @@ def test_skill_routes_fund_tasks_across_all_access_modes() -> None:
         assert phrase in skill + api + mcp + python_sdk
     assert "hithink-finance-fund" in mcp
     assert "fund_market_historical" in python_sdk + remote_toolkit
+
+
+def test_skill_routes_auction_and_extended_fund_tasks() -> None:
+    skill = _skill_text()
+    mcp_a_share = (
+        SKILL_ROOT / "references" / "mcp" / "hithink-finance-a-share.md"
+    ).read_text(encoding="utf-8")
+    mcp_fund = (
+        SKILL_ROOT / "references" / "mcp" / "hithink-finance-fund.md"
+    ).read_text(encoding="utf-8")
+
+    for phrase in ("集合竞价", "跌停", "炸板", "基金经理", "基金公司", "基金资讯"):
+        assert phrase in skill
+    assert "get_a_share_auction_snapshot" in mcp_a_share
+    assert "get_a_share_special_data_limit_break_pool" in mcp_a_share
+    assert "get_fund_managers_detail" in mcp_fund
+    assert "get_fund_news_article_list" in mcp_fund
 
 
 def test_skill_routes_valuation_tasks_across_all_access_modes() -> None:

@@ -2,7 +2,7 @@
 
 本目录是“同花顺金融数据服务”上游 REST API 在本仓库中的唯一契约源。它面向直接 HTTP 调用者、SDK/CLI 维护者和 AI Agent，统一维护端点、参数、响应字段、错误码与能力边界。
 
-> 上游完整机器可读契约始终以 <https://fuyao.aicubes.cn/llms-full.txt> 为准。仓库不保存 `llms.txt` 或 `llms-full.txt`，避免远端更新后出现双份真相。
+> 线上 <https://fuyao.aicubes.cn/llms-full.txt> 是由文档前端生成的 LLM 友好全文聚合，适合检索和阅读，但不是 OpenAPI 等机器契约源。本目录根据后端 OpenAPI、`@Capability`、DTO、`consumer-views.yaml` 与 MCP YAML 维护公开 REST 契约；仓库不保存 `llms.txt` 或 `llms-full.txt` 副本，避免与线上展示产物形成双份维护。
 
 ## 通用协议
 
@@ -39,9 +39,10 @@ curl 'https://fuyao.aicubes.cn/api/meta/tickers/search?q=600519&limit=1' \
 | 利润表、资产负债表、现金流量表、财务指标 | [财务数据端点](endpoints-financials.md) |
 | A 股市盈率、市净率、市销率和市现率快照 | [估值数据端点](endpoints-valuations.md) |
 | 交易日历 | [交易日历端点](endpoints-calendar.md) |
+| A 股集合竞价快照与短期基准 | [集合竞价端点](endpoints-auction.md) |
 | 指数/板块目录、成分股、指数行情 | [指数与板块端点](endpoints-index.md) |
-| 基金资料、净值、收益、持仓、持有人和场内行情 | [公募基金端点](endpoints-fund.md) |
-| 涨停、连板、异动、热榜、龙虎榜 | [特色数据端点](endpoints-special-data.md) |
+| 基金资料、经理、净值、收益、持仓、财务、资讯和场内行情 | [公募基金端点](endpoints-fund.md) |
+| 涨停、跌停、炸板、连板、异动、热榜、龙虎榜 | [特色数据端点](endpoints-special-data.md) |
 | 全市场 Parquet 与本地建库数据源 | [全市场数据导出](endpoints-market-dumps.md) |
 
 ## 错误处理

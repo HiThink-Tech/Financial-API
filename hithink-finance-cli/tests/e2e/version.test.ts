@@ -70,7 +70,7 @@ test('prints cached update notice to stderr after normal JSON command', async ()
   expect(result.stderr).toContain('hithink-finance update --check');
   expect(JSON.parse(await readFile(cacheFile, 'utf8'))).toMatchObject({
     promptedAt: expect.any(Number),
-    promptedCurrentVersion: '0.1.4',
+    promptedCurrentVersion: '0.1.5',
     promptedLatestVersion: '0.2.0',
   });
 });

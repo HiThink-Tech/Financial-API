@@ -657,6 +657,42 @@ def a_share_valuations_snapshot(
     )
 
 
+def a_share_auction_snapshot(
+    thscodes: Iterable[str] | str,
+    *,
+    stage: Literal["live", "final"] = "final",
+) -> dict[str, Any]:
+    """Return auction snapshots; data.timestamp is the response assembly timestamp."""
+    if stage not in ("live", "final"):
+        raise ValueError("stage must be live or final")
+    raw_codes = (
+        thscodes.split(",") if isinstance(thscodes, str) else list(thscodes or [])
+    )
+    if not raw_codes or len(raw_codes) > 100:
+        raise ValueError("thscodes must contain 1..100 raw tokens")
+    normalized: list[str] = []
+    for raw in raw_codes:
+        code = _normalize_a_share_thscode(raw)
+        if code not in normalized:
+            normalized.append(code)
+    return _get(
+        "/api/a-share/auction/snapshot",
+        {"thscodes": ",".join(normalized), "stage": stage},
+    )
+
+
+def a_share_auction_short_term_benchmark(
+    *, date: str | None = None
+) -> dict[str, Any]:
+    """Return the benchmark; omit date for the Asia/Shanghai current date.
+
+    The response data includes the resolved date/date_ms and an assembly timestamp.
+    """
+    if date is not None:
+        _parse_iso_date(date, "date")
+    return _get("/api/a-share/auction/short-term-benchmark", {"date": date})
+
+
 # ---------------------------------------------------------------------------
 # 11. Calendar
 # ---------------------------------------------------------------------------
@@ -878,6 +914,254 @@ def fund_market_historical(
     )
 
 
+def _required_identifier(value: str, field_name: str) -> str:
+    normalized = value.strip() if isinstance(value, str) else ""
+    if not normalized:
+        raise ValueError(f"{field_name} must be non-empty")
+    return normalized
+
+
+def fund_companies_detail(company_id: str) -> dict[str, Any]:
+    return _get(
+        "/api/fund/companies/detail",
+        {"company_id": _required_identifier(company_id, "company_id")},
+    )
+
+
+def fund_portfolio_industry_allocation(
+    thscode: str, *, fund_type: FundType
+) -> dict[str, Any]:
+    return _fund_detail(
+        "/api/fund/portfolio/industry-allocation", thscode, fund_type
+    )
+
+
+def fund_performance_indicators_historical(
+    thscode: str,
+    start_ms: int,
+    end_ms: int,
+    *,
+    fund_type: FundType,
+) -> dict[str, Any]:
+    """Return DataPayload data with timestamp and item only; no top-level thscode/interval."""
+    normalized_type, normalized_code = _validate_fund_target(fund_type, thscode)
+    if not isinstance(start_ms, int) or not isinstance(end_ms, int):
+        raise ValueError("start_ms / end_ms must be int milliseconds")
+    if end_ms < start_ms:
+        raise ValueError("end_ms must be >= start_ms")
+    if end_ms > _five_year_limit_ms(start_ms):
+        raise ValueError("indicator history window must not exceed five years")
+    return _get(
+        "/api/fund/performance/indicators-historical",
+        {
+            "fund_type": normalized_type,
+            "thscode": normalized_code,
+            "start": start_ms,
+            "end": end_ms,
+        },
+    )
+
+
+def fund_performance_drawdowns(
+    thscode: str, *, fund_type: FundType
+) -> dict[str, Any]:
+    return _fund_detail("/api/fund/performance/drawdowns", thscode, fund_type)
+
+
+def fund_holders_top(
+    thscode: str, *, fund_type: FundType, limit: int | None = None
+) -> dict[str, Any]:
+    normalized_type, normalized_code = _validate_fund_target(fund_type, thscode)
+    if limit is not None and (not isinstance(limit, int) or not 1 <= limit <= 10):
+        raise ValueError("limit must be in [1, 10]")
+    return _get(
+        "/api/fund/holders/top",
+        {"fund_type": normalized_type, "thscode": normalized_code, "limit": limit},
+    )
+
+
+def fund_corporate_actions_dividends(
+    thscode: str, *, fund_type: FundType
+) -> dict[str, Any]:
+    return _fund_detail(
+        "/api/fund/corporate-actions/dividends", thscode, fund_type
+    )
+
+
+def fund_diagnostics_detail(
+    thscode: str, *, fund_type: FundType
+) -> dict[str, Any]:
+    return _fund_detail("/api/fund/diagnostics/detail", thscode, fund_type)
+
+
+def fund_financials_indicators(
+    thscode: str, *, fund_type: FundType
+) -> dict[str, Any]:
+    return _fund_detail("/api/fund/financials/indicators", thscode, fund_type)
+
+
+def fund_financials_income_statements(
+    thscode: str, *, fund_type: FundType
+) -> dict[str, Any]:
+    return _fund_detail(
+        "/api/fund/financials/income-statements", thscode, fund_type
+    )
+
+
+def fund_financials_balance_sheets(
+    thscode: str, *, fund_type: FundType
+) -> dict[str, Any]:
+    return _fund_detail("/api/fund/financials/balance-sheets", thscode, fund_type)
+
+
+def _fund_manager(path: str, manager_id: str) -> dict[str, Any]:
+    return _get(path, {"manager_id": _required_identifier(manager_id, "manager_id")})
+
+
+def fund_managers_investment_style(manager_id: str) -> dict[str, Any]:
+    return _fund_manager("/api/fund/managers/investment-style", manager_id)
+
+
+def fund_managers_performance(
+    manager_id: str,
+    *,
+    range: Literal["month", "tmonth", "year", "nowyear", "now"],
+) -> dict[str, Any]:
+    if range not in ("month", "tmonth", "year", "nowyear", "now"):
+        raise ValueError("range must be month/tmonth/year/nowyear/now")
+    return _get(
+        "/api/fund/managers/performance",
+        {
+            "manager_id": _required_identifier(manager_id, "manager_id"),
+            "range": range,
+        },
+    )
+
+
+def fund_managers_experience(manager_id: str) -> dict[str, Any]:
+    return _fund_manager("/api/fund/managers/experience", manager_id)
+
+
+def fund_managers_detail(manager_id: str) -> dict[str, Any]:
+    return _fund_manager("/api/fund/managers/detail", manager_id)
+
+
+def fund_news_article_list(
+    thscode: str,
+    *,
+    fund_type: FundType,
+    limit: int = 20,
+    offset: str | None = None,
+) -> dict[str, Any]:
+    """Return cursor-paginated news data with has_more and no total field."""
+    normalized_type, normalized_code = _validate_fund_target(fund_type, thscode)
+    if not isinstance(limit, int) or not 1 <= limit <= 100:
+        raise ValueError("limit must be in [1, 100]")
+    if offset is not None and (not isinstance(offset, str) or not offset):
+        raise ValueError("offset must be a non-empty opaque cursor")
+    return _get(
+        "/api/fund/news/article-list",
+        {
+            "fund_type": normalized_type,
+            "thscode": normalized_code,
+            "limit": limit,
+            "offset": offset,
+        },
+    )
+
+
+def fund_offerings_list(
+    subscribe: Literal["active", "upcoming"],
+) -> dict[str, Any]:
+    if subscribe not in ("active", "upcoming"):
+        raise ValueError("subscribe must be active or upcoming")
+    return _get("/api/fund/offerings/list", {"subscribe": subscribe})
+
+
+def _fund_portfolio_history(
+    path: str,
+    thscode: str,
+    report_type: str,
+    end_date: str,
+    fund_type: FundType,
+) -> dict[str, Any]:
+    normalized_type, normalized_code = _validate_fund_target(fund_type, thscode)
+    return _get(
+        path,
+        {
+            "fund_type": normalized_type,
+            "thscode": normalized_code,
+            "report_type": _required_identifier(report_type, "report_type"),
+            "end_date": _required_identifier(end_date, "end_date"),
+        },
+    )
+
+
+def fund_portfolio_stock_history(
+    thscode: str, report_type: str, end_date: str, *, fund_type: FundType
+) -> dict[str, Any]:
+    return _fund_portfolio_history(
+        "/api/fund/portfolio/stock-history",
+        thscode,
+        report_type,
+        end_date,
+        fund_type,
+    )
+
+
+def fund_portfolio_bond_history(
+    thscode: str, report_type: str, end_date: str, *, fund_type: FundType
+) -> dict[str, Any]:
+    return _fund_portfolio_history(
+        "/api/fund/portfolio/bond-history",
+        thscode,
+        report_type,
+        end_date,
+        fund_type,
+    )
+
+
+def _fund_report_dates(
+    path: str,
+    thscode: str,
+    fund_type: FundType,
+    report_type: str | None,
+) -> dict[str, Any]:
+    normalized_type, normalized_code = _validate_fund_target(fund_type, thscode)
+    if report_type is not None:
+        report_type = _required_identifier(report_type, "report_type")
+    return _get(
+        path,
+        {
+            "fund_type": normalized_type,
+            "thscode": normalized_code,
+            "report_type": report_type,
+        },
+    )
+
+
+def fund_portfolio_stock_report_dates(
+    thscode: str, *, fund_type: FundType, report_type: str | None = None
+) -> dict[str, Any]:
+    return _fund_report_dates(
+        "/api/fund/portfolio/stock-report-dates", thscode, fund_type, report_type
+    )
+
+
+def fund_portfolio_bond_report_dates(
+    thscode: str, *, fund_type: FundType, report_type: str | None = None
+) -> dict[str, Any]:
+    return _fund_report_dates(
+        "/api/fund/portfolio/bond-report-dates", thscode, fund_type, report_type
+    )
+
+
+def fund_portfolio_asset_allocation(
+    thscode: str, *, fund_type: FundType
+) -> dict[str, Any]:
+    return _fund_detail("/api/fund/portfolio/asset-allocation", thscode, fund_type)
+
+
 # ---------------------------------------------------------------------------
 # 22/23. Special data — limit-up pool & limit-up ladder
 # ---------------------------------------------------------------------------
@@ -920,6 +1204,86 @@ def special_data_limit_up_pool(
             "sort_field": sort_field,
             "sort_dir": sort_dir,
         },
+    )
+
+
+def _special_data_pool(
+    path: str,
+    sort_fields: tuple[str, ...],
+    *,
+    date_ms: int | None,
+    page: int,
+    size: int,
+    sort_field: str,
+    sort_dir: str,
+) -> dict[str, Any]:
+    if page < 1:
+        raise ValueError("page must be >= 1")
+    if not 1 <= size <= 200:
+        raise ValueError("size must be in [1, 200]")
+    if sort_field not in sort_fields:
+        raise ValueError(f"sort_field must be one of {sort_fields}")
+    if sort_dir not in ("asc", "desc"):
+        raise ValueError("sort_dir must be asc or desc")
+    return _get(
+        path,
+        {
+            "date_ms": date_ms,
+            "page": page,
+            "size": size,
+            "sort_field": sort_field,
+            "sort_dir": sort_dir,
+        },
+    )
+
+
+def special_data_limit_down_pool(
+    *,
+    date_ms: int | None = None,
+    page: int = 1,
+    size: int = 50,
+    sort_field: str = "last_limit_time",
+    sort_dir: Literal["asc", "desc"] = "desc",
+) -> dict[str, Any]:
+    return _special_data_pool(
+        "/api/a-share/special-data/limit-down-pool",
+        (
+            "last_limit_time",
+            "first_limit_time",
+            "last_price",
+            "price_change_ratio_pct",
+            "turnover_ratio_pct",
+        ),
+        date_ms=date_ms,
+        page=page,
+        size=size,
+        sort_field=sort_field,
+        sort_dir=sort_dir,
+    )
+
+
+def special_data_limit_break_pool(
+    *,
+    date_ms: int | None = None,
+    page: int = 1,
+    size: int = 50,
+    sort_field: str = "price_change_ratio_pct",
+    sort_dir: Literal["asc", "desc"] = "desc",
+) -> dict[str, Any]:
+    return _special_data_pool(
+        "/api/a-share/special-data/limit-break-pool",
+        (
+            "price_change_ratio_pct",
+            "open_times",
+            "last_price",
+            "turnover_ratio_pct",
+            "turnover",
+        ),
+        date_ms=date_ms,
+        page=page,
+        size=size,
+        sort_field=sort_field,
+        sort_dir=sort_dir,
     )
 
 
@@ -1123,6 +1487,8 @@ __all__ = [
     "financials_cash_flow_statements",
     "financials_indicators",
     "a_share_valuations_snapshot",
+    "a_share_auction_snapshot",
+    "a_share_auction_short_term_benchmark",
     "calendar_trading_days",
     "index_catalog_ths_index_list",
     "index_constituents_ths_stock_list",
@@ -1135,7 +1501,30 @@ __all__ = [
     "fund_holders_detail",
     "fund_market_snapshot",
     "fund_market_historical",
+    "fund_companies_detail",
+    "fund_portfolio_industry_allocation",
+    "fund_performance_indicators_historical",
+    "fund_performance_drawdowns",
+    "fund_holders_top",
+    "fund_corporate_actions_dividends",
+    "fund_diagnostics_detail",
+    "fund_financials_indicators",
+    "fund_financials_income_statements",
+    "fund_financials_balance_sheets",
+    "fund_managers_investment_style",
+    "fund_managers_performance",
+    "fund_managers_experience",
+    "fund_managers_detail",
+    "fund_news_article_list",
+    "fund_offerings_list",
+    "fund_portfolio_stock_history",
+    "fund_portfolio_stock_report_dates",
+    "fund_portfolio_bond_history",
+    "fund_portfolio_bond_report_dates",
+    "fund_portfolio_asset_allocation",
     "special_data_limit_up_pool",
+    "special_data_limit_down_pool",
+    "special_data_limit_break_pool",
     "special_data_limit_up_ladder",
     "special_data_anomaly_analysis_list",
     "special_data_anomaly_analysis_stock",

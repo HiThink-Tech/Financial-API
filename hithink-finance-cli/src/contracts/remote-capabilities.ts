@@ -20,6 +20,7 @@ export interface RemoteCapabilityDescriptor {
   outputSchema: ZodType<unknown>;
   options: readonly RemoteOptionDescriptor[];
   paging: 'none' | 'offset' | 'page';
+  pagingEnd?: 'short-page' | 'has-more';
   window: 'none' | 'ten-years' | 'five-years' | 'one-year' | 'today-only';
 }
 
@@ -201,7 +202,19 @@ function financial(
 }
 
 function fundDetail(
-  command: 'profile' | 'holdings' | 'returns' | 'holders',
+  command:
+    | 'profile'
+    | 'holdings'
+    | 'returns'
+    | 'holders'
+    | 'industry-allocation'
+    | 'drawdowns'
+    | 'dividends'
+    | 'diagnostics'
+    | 'financial-indicators'
+    | 'income-statements'
+    | 'balance-sheets'
+    | 'asset-allocation',
   description: string,
   endpoint: string,
 ): RemoteCapabilityDescriptor {
@@ -232,6 +245,224 @@ function fundDetail(
       },
     ],
     paging: 'none',
+    window: 'none',
+  };
+}
+
+function fundManager(
+  command: 'manager-style' | 'manager-performance' | 'manager-experience' | 'manager-detail',
+  description: string,
+  endpoint: string,
+): RemoteCapabilityDescriptor {
+  const needsRange = command === 'manager-performance';
+  const ranges = ['month', 'tmonth', 'year', 'nowyear', 'now'] as const;
+  return {
+    id: `fund.${command}`,
+    command: ['fund', command],
+    description,
+    endpoint,
+    method: 'GET',
+    inputSchema: needsRange
+      ? z.object({ managerId: z.string().min(1), range: z.enum(ranges) }).strict()
+      : z.object({ managerId: z.string().min(1) }).strict(),
+    outputSchema: itemOutput,
+    options: [
+      {
+        flags: '--manager-id <id>',
+        description: 'fund manager identifier',
+        type: 'string',
+        required: true,
+        queryName: 'manager_id',
+      },
+      ...(needsRange
+        ? [
+            {
+              flags: '--range <range>',
+              description: 'performance range',
+              type: 'string' as const,
+              required: true,
+              choices: ranges,
+            },
+          ]
+        : []),
+    ],
+    paging: 'none',
+    window: 'none',
+  };
+}
+
+function fundPortfolioHistory(
+  command: 'stock-history' | 'bond-history',
+  description: string,
+  endpoint: string,
+): RemoteCapabilityDescriptor {
+  return {
+    id: `fund.${command}`,
+    command: ['fund', command],
+    description,
+    endpoint,
+    method: 'GET',
+    inputSchema: z
+      .object({
+        fundType: z.enum(['otc', 'exchange', 'reits']),
+        thscode: fundCode,
+        reportType: z.string().min(1),
+        endDate: z.string().min(1),
+      })
+      .strict(),
+    outputSchema: itemOutput,
+    options: [
+      {
+        flags: '--fund-type <type>',
+        description: 'fund type',
+        type: 'string',
+        required: true,
+        choices: ['otc', 'exchange', 'reits'],
+        queryName: 'fund_type',
+      },
+      {
+        flags: '--thscode <code>',
+        description: 'single fund thscode',
+        type: 'string',
+        required: true,
+      },
+      {
+        flags: '--report-type <type>',
+        description: 'report type returned by the report-dates capability',
+        type: 'string',
+        required: true,
+        queryName: 'report_type',
+      },
+      {
+        flags: '--end-date <date>',
+        description: 'report end date returned by the report-dates capability',
+        type: 'string',
+        required: true,
+        queryName: 'end_date',
+      },
+    ],
+    paging: 'none',
+    window: 'none',
+  };
+}
+
+function fundReportDates(
+  command: 'stock-report-dates' | 'bond-report-dates',
+  description: string,
+  endpoint: string,
+): RemoteCapabilityDescriptor {
+  return {
+    id: `fund.${command}`,
+    command: ['fund', command],
+    description,
+    endpoint,
+    method: 'GET',
+    inputSchema: z
+      .object({
+        fundType: z.enum(['otc', 'exchange', 'reits']),
+        thscode: fundCode,
+        reportType: z.string().min(1).optional(),
+      })
+      .strict(),
+    outputSchema: itemOutput,
+    options: [
+      {
+        flags: '--fund-type <type>',
+        description: 'fund type',
+        type: 'string',
+        required: true,
+        choices: ['otc', 'exchange', 'reits'],
+        queryName: 'fund_type',
+      },
+      {
+        flags: '--thscode <code>',
+        description: 'single fund thscode',
+        type: 'string',
+        required: true,
+      },
+      {
+        flags: '--report-type <type>',
+        description: 'optional report type filter',
+        type: 'string',
+        queryName: 'report_type',
+      },
+    ],
+    paging: 'none',
+    window: 'none',
+  };
+}
+
+function specialPool(
+  command: 'limit-down-pool' | 'limit-break-pool',
+  description: string,
+  endpoint: string,
+): RemoteCapabilityDescriptor {
+  const sortFields =
+    command === 'limit-down-pool'
+      ? ([
+          'last_limit_time',
+          'first_limit_time',
+          'last_price',
+          'price_change_ratio_pct',
+          'turnover_ratio_pct',
+        ] as const)
+      : ([
+          'price_change_ratio_pct',
+          'open_times',
+          'last_price',
+          'turnover_ratio_pct',
+          'turnover',
+        ] as const);
+  const defaultSortField =
+    command === 'limit-down-pool' ? 'last_limit_time' : 'price_change_ratio_pct';
+  return {
+    id: `special.${command}`,
+    command: ['special', command],
+    description,
+    endpoint,
+    method: 'GET',
+    inputSchema: z
+      .object({
+        dateMs: z.number().int().nonnegative().optional(),
+        page: z.number().int().min(1).default(1),
+        size: z.number().int().min(1).max(200).default(50),
+        sortField: z.enum(sortFields).default(defaultSortField),
+        sortDir: z.enum(['asc', 'desc']).default('desc'),
+      })
+      .strict(),
+    outputSchema: itemOutput,
+    options: [
+      {
+        flags: '--date-ms <milliseconds>',
+        description: 'trade date at Asia/Shanghai midnight',
+        type: 'integer',
+        queryName: 'date_ms',
+      },
+      { flags: '--page <number>', description: 'page number', type: 'integer', defaultValue: 1 },
+      {
+        flags: '--size <number>',
+        description: 'page size (1-200)',
+        type: 'integer',
+        defaultValue: 50,
+      },
+      {
+        flags: '--sort-field <field>',
+        description: 'sort field',
+        type: 'string',
+        choices: sortFields,
+        defaultValue: defaultSortField,
+        queryName: 'sort_field',
+      },
+      {
+        flags: '--sort-dir <direction>',
+        description: 'sort direction',
+        type: 'string',
+        choices: ['asc', 'desc'],
+        defaultValue: 'desc',
+        queryName: 'sort_dir',
+      },
+    ],
+    paging: 'page',
     window: 'none',
   };
 }
@@ -482,6 +713,53 @@ export const remoteCapabilities: readonly RemoteCapabilityDescriptor[] = [
     window: 'one-year',
   },
   {
+    id: 'market.auction-snapshot',
+    command: ['market', 'auction-snapshot'],
+    description: 'Query auction snapshots whose timestamp is the response assembly timestamp',
+    endpoint: '/api/a-share/auction/snapshot',
+    method: 'GET',
+    inputSchema: z
+      .object({ thscodes: valuationCodes, stage: z.enum(['live', 'final']).default('final') })
+      .strict(),
+    outputSchema: itemOutput,
+    options: [
+      {
+        flags: '--thscodes <codes>',
+        description: 'comma-separated A-share thscodes (at most 100 raw tokens)',
+        type: 'string',
+        required: true,
+      },
+      {
+        flags: '--stage <stage>',
+        description: 'auction stage',
+        type: 'string',
+        choices: ['live', 'final'],
+        defaultValue: 'final',
+      },
+    ],
+    paging: 'none',
+    window: 'today-only',
+  },
+  {
+    id: 'market.auction-benchmark',
+    command: ['market', 'auction-benchmark'],
+    description:
+      'Query the short-term auction benchmark; omit date for the Asia/Shanghai current date and read resolved date/date_ms from data',
+    endpoint: '/api/a-share/auction/short-term-benchmark',
+    method: 'GET',
+    inputSchema: z.object({ date: isoDate.optional() }).strict(),
+    outputSchema: itemOutput,
+    options: [
+      {
+        flags: '--date <date>',
+        description: 'optional trade date YYYY-MM-DD; omit for the Asia/Shanghai current date',
+        type: 'string',
+      },
+    ],
+    paging: 'none',
+    window: 'none',
+  },
+  {
     id: 'index.catalog',
     command: ['index', 'catalog'],
     description: 'List THS indices by category',
@@ -728,6 +1006,245 @@ export const remoteCapabilities: readonly RemoteCapabilityDescriptor[] = [
     window: 'five-years',
   },
   {
+    id: 'fund.company-detail',
+    command: ['fund', 'company-detail'],
+    description: 'Query fund company detail',
+    endpoint: '/api/fund/companies/detail',
+    method: 'GET',
+    inputSchema: z.object({ companyId: z.string().min(1) }).strict(),
+    outputSchema: itemOutput,
+    options: [
+      {
+        flags: '--company-id <id>',
+        description: 'fund company identifier',
+        type: 'string',
+        required: true,
+        queryName: 'company_id',
+      },
+    ],
+    paging: 'none',
+    window: 'none',
+  },
+  fundDetail(
+    'industry-allocation',
+    'Query fund industry allocation',
+    '/api/fund/portfolio/industry-allocation',
+  ),
+  {
+    id: 'fund.indicators-history',
+    command: ['fund', 'indicators-history'],
+    description:
+      'Query historical fund performance indicators with data timestamp/item only and no top-level thscode/interval',
+    endpoint: '/api/fund/performance/indicators-historical',
+    method: 'GET',
+    inputSchema: z
+      .object({
+        fundType: z.enum(['otc', 'exchange', 'reits']),
+        thscode: fundCode,
+        startMs: z.number().int().nonnegative(),
+        endMs: z.number().int().nonnegative(),
+      })
+      .strict()
+      .superRefine((value, context) => {
+        if (value.endMs < value.startMs) {
+          context.addIssue({ code: 'custom', message: 'end-ms must be >= start-ms' });
+          return;
+        }
+        const latest = new Date(value.startMs);
+        latest.setUTCFullYear(latest.getUTCFullYear() + 5);
+        if (value.endMs > latest.getTime()) {
+          context.addIssue({
+            code: 'custom',
+            message: 'indicator window must not exceed five years',
+          });
+        }
+      }),
+    outputSchema: itemOutput,
+    options: [
+      {
+        flags: '--fund-type <type>',
+        description: 'fund type',
+        type: 'string',
+        required: true,
+        choices: ['otc', 'exchange', 'reits'],
+        queryName: 'fund_type',
+      },
+      {
+        flags: '--thscode <code>',
+        description: 'single fund thscode',
+        type: 'string',
+        required: true,
+      },
+      {
+        flags: '--start-ms <milliseconds>',
+        description: 'range start in milliseconds',
+        type: 'integer',
+        required: true,
+        queryName: 'start',
+      },
+      {
+        flags: '--end-ms <milliseconds>',
+        description: 'range end in milliseconds',
+        type: 'integer',
+        required: true,
+        queryName: 'end',
+      },
+    ],
+    paging: 'none',
+    window: 'five-years',
+  },
+  fundDetail('drawdowns', 'Query fund drawdown periods', '/api/fund/performance/drawdowns'),
+  {
+    id: 'fund.top-holders',
+    command: ['fund', 'top-holders'],
+    description: 'Query top fund holders',
+    endpoint: '/api/fund/holders/top',
+    method: 'GET',
+    inputSchema: z
+      .object({
+        fundType: z.enum(['otc', 'exchange', 'reits']),
+        thscode: fundCode,
+        limit: z.number().int().min(1).max(10).optional(),
+      })
+      .strict(),
+    outputSchema: itemOutput,
+    options: [
+      {
+        flags: '--fund-type <type>',
+        description: 'fund type',
+        type: 'string',
+        required: true,
+        choices: ['otc', 'exchange', 'reits'],
+        queryName: 'fund_type',
+      },
+      {
+        flags: '--thscode <code>',
+        description: 'single fund thscode',
+        type: 'string',
+        required: true,
+      },
+      { flags: '--limit <number>', description: 'maximum holders (1-10)', type: 'integer' },
+    ],
+    paging: 'none',
+    window: 'none',
+  },
+  fundDetail('dividends', 'Query fund dividend records', '/api/fund/corporate-actions/dividends'),
+  fundDetail('diagnostics', 'Query fund diagnostics', '/api/fund/diagnostics/detail'),
+  fundDetail(
+    'financial-indicators',
+    'Query fund financial indicators',
+    '/api/fund/financials/indicators',
+  ),
+  fundDetail(
+    'income-statements',
+    'Query fund income statements',
+    '/api/fund/financials/income-statements',
+  ),
+  fundDetail('balance-sheets', 'Query fund balance sheets', '/api/fund/financials/balance-sheets'),
+  fundManager(
+    'manager-style',
+    'Query fund manager investment style',
+    '/api/fund/managers/investment-style',
+  ),
+  fundManager(
+    'manager-performance',
+    'Query fund manager performance',
+    '/api/fund/managers/performance',
+  ),
+  fundManager(
+    'manager-experience',
+    'Query fund manager experience',
+    '/api/fund/managers/experience',
+  ),
+  fundManager('manager-detail', 'Query fund manager detail', '/api/fund/managers/detail'),
+  {
+    id: 'fund.news',
+    command: ['fund', 'news'],
+    description: 'Query cursor-paginated public fund article metadata with has_more and no total',
+    endpoint: '/api/fund/news/article-list',
+    method: 'GET',
+    inputSchema: z
+      .object({
+        fundType: z.enum(['otc', 'exchange', 'reits']),
+        thscode: fundCode,
+        limit: z.number().int().min(1).max(100).default(20),
+        offset: z.string().min(1).optional(),
+      })
+      .strict(),
+    outputSchema: itemOutput,
+    options: [
+      {
+        flags: '--fund-type <type>',
+        description: 'fund type',
+        type: 'string',
+        required: true,
+        choices: ['otc', 'exchange', 'reits'],
+        queryName: 'fund_type',
+      },
+      {
+        flags: '--thscode <code>',
+        description: 'single fund thscode',
+        type: 'string',
+        required: true,
+      },
+      {
+        flags: '--limit <number>',
+        description: 'page size (1-100)',
+        type: 'integer',
+        defaultValue: 20,
+      },
+      { flags: '--offset <cursor>', description: 'opaque pagination cursor', type: 'string' },
+    ],
+    paging: 'offset',
+    pagingEnd: 'has-more',
+    window: 'none',
+  },
+  {
+    id: 'fund.offerings',
+    command: ['fund', 'offerings'],
+    description: 'Query active or upcoming fund offerings',
+    endpoint: '/api/fund/offerings/list',
+    method: 'GET',
+    inputSchema: z.object({ subscribe: z.enum(['active', 'upcoming']) }).strict(),
+    outputSchema: itemOutput,
+    options: [
+      {
+        flags: '--subscribe <status>',
+        description: 'offering status',
+        type: 'string',
+        required: true,
+        choices: ['active', 'upcoming'],
+      },
+    ],
+    paging: 'none',
+    window: 'none',
+  },
+  fundPortfolioHistory(
+    'stock-history',
+    'Query historical fund stock holdings',
+    '/api/fund/portfolio/stock-history',
+  ),
+  fundReportDates(
+    'stock-report-dates',
+    'Query fund stock holding report dates',
+    '/api/fund/portfolio/stock-report-dates',
+  ),
+  fundPortfolioHistory(
+    'bond-history',
+    'Query historical fund bond holdings',
+    '/api/fund/portfolio/bond-history',
+  ),
+  fundReportDates(
+    'bond-report-dates',
+    'Query fund bond holding report dates',
+    '/api/fund/portfolio/bond-report-dates',
+  ),
+  fundDetail(
+    'asset-allocation',
+    'Query fund asset allocation',
+    '/api/fund/portfolio/asset-allocation',
+  ),
+  {
     id: 'special.limit-up-pool',
     command: ['special', 'limit-up-pool'],
     description: 'Query the limit-up stock pool',
@@ -779,6 +1296,16 @@ export const remoteCapabilities: readonly RemoteCapabilityDescriptor[] = [
     paging: 'page',
     window: 'none',
   },
+  specialPool(
+    'limit-down-pool',
+    'Query the limit-down stock pool',
+    '/api/a-share/special-data/limit-down-pool',
+  ),
+  specialPool(
+    'limit-break-pool',
+    'Query the limit-break stock pool',
+    '/api/a-share/special-data/limit-break-pool',
+  ),
   {
     id: 'special.limit-up-ladder',
     command: ['special', 'limit-up-ladder'],

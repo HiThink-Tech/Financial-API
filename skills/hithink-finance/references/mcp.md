@@ -4,14 +4,14 @@
 
 本页既是项目中的 MCP 主入口，也是 `hithink-finance` Skill 的内置入口契约。详细能力快照位于 [`docs/mcp/`](mcp/capability-map.md)，由脚本完整镜像到 Skill，Agent 不需要为了理解能力而加载官网长文档。
 
-## 三个服务
+## 四个服务
 
 | 客户端服务名 | 地址 | 职责 | 工具数 |
 | --- | --- | --- | ---: |
-| `hithink-finance-a-share` | `https://fuyao.aicubes.cn/mcp/a-share` | A 股行情、公司行为、财务、估值、日历和特色数据 | 17 |
+| `hithink-finance-a-share` | `https://fuyao.aicubes.cn/mcp/a-share` | A 股行情、公司行为、财务、估值、集合竞价、日历和特色数据 | 21 |
 | `hithink-finance-a-share-index` | `https://fuyao.aicubes.cn/mcp/a-share-index` | 指数/板块目录、成分和行情 | 4 |
 | `hithink-finance-meta` | `https://fuyao.aicubes.cn/mcp/meta` | 标的搜索、名称消歧和代码表 | 2 |
-| `hithink-finance-fund` | `https://fuyao.aicubes.cn/mcp/fund` | 基金资料、披露、净值、收益和场内行情 | 7 |
+| `hithink-finance-fund` | `https://fuyao.aicubes.cn/mcp/fund` | 基金资料、经理、披露、财务、净值、收益、资讯和场内行情 | 28 |
 
 `hithink-finance-*` 是推荐写入客户端配置的本地服务名；URL 路径保持不变。
 
@@ -50,7 +50,7 @@
 
 ## Agent 决策流程
 
-1. **先理解意图**：用 [能力与意图总览](mcp/capability-map.md) 选择服务和工具，不要先把三个服务全部探测一遍。
+1. **先理解意图**：用 [能力与意图总览](mcp/capability-map.md) 选择服务和工具，不要先把四个服务全部探测一遍。
 2. **先消歧再取数**：用户只给名称、ticker 或不完整代码时，先调用 `hithink-finance-meta` 的搜索工具确认唯一 `thscode`。
 3. **只读取相关快照**：确定服务后，只加载对应的一份详细契约：
    - [A 股工具](mcp/hithink-finance-a-share.md)
@@ -73,8 +73,8 @@ Skill 中的能力快照用于意图识别、工具选择和参数避错；当�
 
 ## 能力边界
 
-- 当前固化快照共 30 个 MCP 工具：A 股 17 个、指数 4 个、元数据 2 个、基金 7 个。
+- 当前固化快照共 55 个 MCP 工具：A 股 21 个、指数 4 个、元数据 2 个、基金 28 个。
 - MCP 适合 Chat 场景和自然语言调用；终端自动化、本地 DuckDB 与大结果工作流优先考虑 `hithink-finance` CLI。
-- 当前快照不覆盖分钟 K、tick、Level-2、港股、美股、基金申赎交易、基金风险指标、期货、新闻、研报或回测引擎。
+- 当前快照不覆盖分钟 K、tick、Level-2、港股、美股、基金申赎交易、期货、研报或回测引擎；基金资讯仅提供已公开文章的元数据列表。
 - 文档或静态快照不能证明当前会话已经连接，也不能证明账号具有相应权限；只有实际授权请求才能完成线上验证。
 - 未支持能力必须明确说明，不得用近似数据、静态示例或模拟数据冒充。

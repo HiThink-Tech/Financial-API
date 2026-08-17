@@ -21,6 +21,8 @@ sys.path.insert(0, str(_SCRIPT_DIR))
 
 from fuyao_client import (  # noqa: E402
     FuyaoApiError,
+    a_share_auction_short_term_benchmark,
+    a_share_auction_snapshot,
     a_share_valuations_snapshot,
     calendar_trading_days,
     corp_actions_adjustment_factors,
@@ -29,11 +31,32 @@ from fuyao_client import (  # noqa: E402
     financials_indicators,
     financials_income_statements,
     fund_holders_detail,
+    fund_holders_top,
+    fund_companies_detail,
+    fund_corporate_actions_dividends,
+    fund_diagnostics_detail,
+    fund_financials_balance_sheets,
+    fund_financials_income_statements,
+    fund_financials_indicators,
+    fund_managers_detail,
+    fund_managers_experience,
+    fund_managers_investment_style,
+    fund_managers_performance,
     fund_market_historical,
     fund_market_snapshot,
     fund_performance_nav,
     fund_performance_returns,
+    fund_performance_drawdowns,
+    fund_performance_indicators_historical,
+    fund_news_article_list,
+    fund_offerings_list,
+    fund_portfolio_asset_allocation,
+    fund_portfolio_bond_history,
+    fund_portfolio_bond_report_dates,
     fund_portfolio_holdings,
+    fund_portfolio_industry_allocation,
+    fund_portfolio_stock_history,
+    fund_portfolio_stock_report_dates,
     fund_profile_detail,
     index_catalog_ths_index_list,
     index_constituents_ths_stock_list,
@@ -43,6 +66,8 @@ from fuyao_client import (  # noqa: E402
     prices_snapshot,
     special_data_limit_up_ladder,
     special_data_limit_up_pool,
+    special_data_limit_break_pool,
+    special_data_limit_down_pool,
     special_data_anomaly_analysis_list,
     special_data_anomaly_analysis_stock,
     special_data_dragon_tiger_list,
@@ -158,6 +183,14 @@ def cmd_valuations_snapshot(args):
     return a_share_valuations_snapshot(_split_csv(args.thscodes))
 
 
+def cmd_auction_snapshot(args):
+    return a_share_auction_snapshot(_split_csv(args.thscodes), stage=args.stage)
+
+
+def cmd_auction_benchmark(args):
+    return a_share_auction_short_term_benchmark(date=args.date)
+
+
 def cmd_calendar(_args):
     return calendar_trading_days()
 
@@ -224,6 +257,67 @@ def cmd_fund_historical(args):
     )
 
 
+def cmd_fund_company_detail(args):
+    return fund_companies_detail(args.company_id)
+
+
+def cmd_fund_indicators_history(args):
+    return fund_performance_indicators_historical(
+        args.thscode, args.start_ms, args.end_ms, fund_type=args.fund_type
+    )
+
+
+def cmd_fund_top_holders(args):
+    return fund_holders_top(
+        args.thscode, fund_type=args.fund_type, limit=args.limit
+    )
+
+
+def _fund_manager_args(fn, *, with_range=False):
+    def _run(args):
+        if with_range:
+            return fn(args.manager_id, range=args.range)
+        return fn(args.manager_id)
+
+    return _run
+
+
+def cmd_fund_news(args):
+    return fund_news_article_list(
+        args.thscode,
+        fund_type=args.fund_type,
+        limit=args.limit,
+        offset=args.offset,
+    )
+
+
+def cmd_fund_offerings(args):
+    return fund_offerings_list(args.subscribe)
+
+
+def _fund_portfolio_history_args(fn):
+    def _run(args):
+        return fn(
+            args.thscode,
+            args.report_type,
+            args.end_date,
+            fund_type=args.fund_type,
+        )
+
+    return _run
+
+
+def _fund_report_dates_args(fn):
+    def _run(args):
+        return fn(
+            args.thscode,
+            fund_type=args.fund_type,
+            report_type=args.report_type,
+        )
+
+    return _run
+
+
 def cmd_limit_up_pool(args):
     return special_data_limit_up_pool(
         date_ms=args.date_ms,
@@ -232,6 +326,19 @@ def cmd_limit_up_pool(args):
         sort_field=args.sort_field,
         sort_dir=args.sort_dir,
     )
+
+
+def _special_pool_args(fn):
+    def _run(args):
+        return fn(
+            date_ms=args.date_ms,
+            page=args.page,
+            size=args.size,
+            sort_field=args.sort_field,
+            sort_dir=args.sort_dir,
+        )
+
+    return _run
 
 
 def cmd_limit_up_ladder(_args):
@@ -303,7 +410,7 @@ def _add_financials_subparser(sub, name: str, help_text: str, handler):
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="fuyao",
-        description="Fuyao financial data CLI (31 REST capabilities). JSON-only stdout. "
+        description="Fuyao financial data CLI (56 REST capabilities). JSON-only stdout. "
         "Auth: HITHINK_FINANCE_API_KEY or user credentials file.",
     )
     parser.add_argument("--compact", action="store_true", help="emit single-line JSON")
@@ -404,6 +511,15 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--thscodes", required=True, help="comma-separated A-share thscodes")
     p.set_defaults(func=cmd_valuations_snapshot)
 
+    p = sub.add_parser("auction-snapshot", help="live or final A-share auction snapshots")
+    p.add_argument("--thscodes", required=True, help="comma-separated A-share thscodes")
+    p.add_argument("--stage", default="final", choices=["live", "final"])
+    p.set_defaults(func=cmd_auction_snapshot)
+
+    p = sub.add_parser("auction-benchmark", help="short-term auction benchmark")
+    p.add_argument("--date", help="optional trade date YYYY-MM-DD")
+    p.set_defaults(func=cmd_auction_benchmark)
+
     # calendar
     p = sub.add_parser("calendar-trading-days", help="A-share trading-day calendar (~1 year)")
     p.set_defaults(func=cmd_calendar)
@@ -502,6 +618,82 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--interval", default="1d", choices=["1d"])
     p.set_defaults(func=cmd_fund_historical)
 
+    p = sub.add_parser("fund-company-detail", help="fund company detail")
+    p.add_argument("--company-id", dest="company_id", required=True)
+    p.set_defaults(func=cmd_fund_company_detail)
+
+    for name, help_text, handler in (
+        ("fund-industry-allocation", "fund industry allocation", _fund_detail_args(fund_portfolio_industry_allocation)),
+        ("fund-drawdowns", "fund drawdown periods", _fund_detail_args(fund_performance_drawdowns)),
+        ("fund-dividends", "fund dividend records", _fund_detail_args(fund_corporate_actions_dividends)),
+        ("fund-diagnostics", "fund diagnostics", _fund_detail_args(fund_diagnostics_detail)),
+        ("fund-financial-indicators", "fund financial indicators", _fund_detail_args(fund_financials_indicators)),
+        ("fund-income-statements", "fund income statements", _fund_detail_args(fund_financials_income_statements)),
+        ("fund-balance-sheets", "fund balance sheets", _fund_detail_args(fund_financials_balance_sheets)),
+        ("fund-asset-allocation", "fund asset allocation", _fund_detail_args(fund_portfolio_asset_allocation)),
+    ):
+        p = sub.add_parser(name, help=help_text)
+        p.add_argument("--fund-type", dest="fund_type", required=True, choices=["otc", "exchange", "reits"])
+        p.add_argument("--thscode", required=True)
+        p.set_defaults(func=handler)
+
+    p = sub.add_parser("fund-indicators-history", help="historical fund performance indicators")
+    p.add_argument("--fund-type", dest="fund_type", required=True, choices=["otc", "exchange", "reits"])
+    p.add_argument("--thscode", required=True)
+    p.add_argument("--start-ms", dest="start_ms", type=int, required=True)
+    p.add_argument("--end-ms", dest="end_ms", type=int, required=True)
+    p.set_defaults(func=cmd_fund_indicators_history)
+
+    p = sub.add_parser("fund-top-holders", help="top fund holders")
+    p.add_argument("--fund-type", dest="fund_type", required=True, choices=["otc", "exchange", "reits"])
+    p.add_argument("--thscode", required=True)
+    p.add_argument("--limit", type=int)
+    p.set_defaults(func=cmd_fund_top_holders)
+
+    for name, help_text, handler, needs_range in (
+        ("fund-manager-style", "fund manager investment style", fund_managers_investment_style, False),
+        ("fund-manager-performance", "fund manager performance", fund_managers_performance, True),
+        ("fund-manager-experience", "fund manager experience", fund_managers_experience, False),
+        ("fund-manager-detail", "fund manager detail", fund_managers_detail, False),
+    ):
+        p = sub.add_parser(name, help=help_text)
+        p.add_argument("--manager-id", dest="manager_id", required=True)
+        if needs_range:
+            p.add_argument("--range", required=True, choices=["month", "tmonth", "year", "nowyear", "now"])
+        p.set_defaults(func=_fund_manager_args(handler, with_range=needs_range))
+
+    p = sub.add_parser("fund-news", help="public fund article metadata")
+    p.add_argument("--fund-type", dest="fund_type", required=True, choices=["otc", "exchange", "reits"])
+    p.add_argument("--thscode", required=True)
+    p.add_argument("--limit", type=int, default=20)
+    p.add_argument("--offset")
+    p.set_defaults(func=cmd_fund_news)
+
+    p = sub.add_parser("fund-offerings", help="active or upcoming fund offerings")
+    p.add_argument("--subscribe", required=True, choices=["active", "upcoming"])
+    p.set_defaults(func=cmd_fund_offerings)
+
+    for name, help_text, handler in (
+        ("fund-stock-history", "historical fund stock holdings", _fund_portfolio_history_args(fund_portfolio_stock_history)),
+        ("fund-bond-history", "historical fund bond holdings", _fund_portfolio_history_args(fund_portfolio_bond_history)),
+    ):
+        p = sub.add_parser(name, help=help_text)
+        p.add_argument("--fund-type", dest="fund_type", required=True, choices=["otc", "exchange", "reits"])
+        p.add_argument("--thscode", required=True)
+        p.add_argument("--report-type", dest="report_type", required=True)
+        p.add_argument("--end-date", dest="end_date", required=True)
+        p.set_defaults(func=handler)
+
+    for name, help_text, handler in (
+        ("fund-stock-report-dates", "fund stock holding report dates", _fund_report_dates_args(fund_portfolio_stock_report_dates)),
+        ("fund-bond-report-dates", "fund bond holding report dates", _fund_report_dates_args(fund_portfolio_bond_report_dates)),
+    ):
+        p = sub.add_parser(name, help=help_text)
+        p.add_argument("--fund-type", dest="fund_type", required=True, choices=["otc", "exchange", "reits"])
+        p.add_argument("--thscode", required=True)
+        p.add_argument("--report-type", dest="report_type")
+        p.set_defaults(func=handler)
+
     # special-data limit-up-pool
     p = sub.add_parser(
         "limit-up-pool",
@@ -526,6 +718,18 @@ def build_parser() -> argparse.ArgumentParser:
         "--sort-dir", dest="sort_dir", default="desc", choices=["asc", "desc"]
     )
     p.set_defaults(func=cmd_limit_up_pool)
+
+    for name, help_text, handler, sort_fields, default_sort_field in (
+        ("limit-down-pool", "A-share 跌停股票池", special_data_limit_down_pool, ["last_limit_time", "first_limit_time", "last_price", "price_change_ratio_pct", "turnover_ratio_pct"], "last_limit_time"),
+        ("limit-break-pool", "A-share 炸板股票池", special_data_limit_break_pool, ["price_change_ratio_pct", "open_times", "last_price", "turnover_ratio_pct", "turnover"], "price_change_ratio_pct"),
+    ):
+        p = sub.add_parser(name, help=help_text)
+        p.add_argument("--date-ms", dest="date_ms", type=int)
+        p.add_argument("--page", type=int, default=1)
+        p.add_argument("--size", type=int, default=50)
+        p.add_argument("--sort-field", dest="sort_field", default=default_sort_field, choices=sort_fields)
+        p.add_argument("--sort-dir", dest="sort_dir", default="desc", choices=["asc", "desc"])
+        p.set_defaults(func=_special_pool_args(handler))
 
     # special-data limit-up-ladder
     p = sub.add_parser(

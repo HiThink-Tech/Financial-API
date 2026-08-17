@@ -1,6 +1,6 @@
 # 远端数据 Python toolkit
 
-本目录提供同花顺金融数据服务的 Python 适配层，用于从 Python、Shell、CI 或 Notebook 获取最新行情、财报、估值、指数、基金、标的目录和特色数据。历史全市场研究与本地 SQL 请使用 [`../marketdb/`](../marketdb/README.md)。
+本目录提供同花顺金融数据服务的 Python 适配层，用于从 Python、Shell、CI 或 Notebook 获取最新行情、集合竞价、财报、估值、指数、基金、标的目录和特色数据。历史全市场研究与本地 SQL 请使用 [`../marketdb/`](../marketdb/README.md)。
 
 这里维护的是 **Python 函数和脚本运行方式**。上游 REST 端点参数、响应字段和错误码统一在 [`docs/api/`](../../../docs/api/README.md) 维护，本目录不保存 `llms.txt`、`llms-full.txt` 或重复契约。
 
@@ -21,10 +21,11 @@ python/toolkit/fuyao/
 - 历史 K 线按标的补缺
 - 公司行动、财务报表、财务指标和交易日历
 - A 股当前估值快照
+- A 股集合竞价快照与短期基准
 - 股票/指数名称、ticker、`thscode` 检索与消歧
 - 指数/板块目录、成分股和行情
-- 基金档案、持仓、净值、收益、持有人和场内基金行情
-- 涨停、连板、当日异动、热榜和龙虎榜
+- 基金档案、公司、经理、持仓、财务、净值、收益、公开资讯和场内基金行情
+- 涨停、跌停、炸板、连板、当日异动、热榜和龙虎榜
 - 全市场 Market Dumps 的远端签出流程
 
 分钟 K、tick、海外行情、宏观数据、新闻公告原文和研报不在当前公开能力内。
@@ -78,6 +79,9 @@ python python/toolkit/fuyao/scripts/fuyao.py financials-indicators --thscode 600
 # 估值
 python python/toolkit/fuyao/scripts/fuyao.py valuations-snapshot --thscodes 600519.SH,000001.SZ
 
+# 集合竞价
+python python/toolkit/fuyao/scripts/fuyao.py auction-snapshot --thscodes 600519.SH --stage final
+
 # 指数与板块
 python python/toolkit/fuyao/scripts/fuyao.py index-catalog --tag cn_concept
 python python/toolkit/fuyao/scripts/fuyao.py index-constituents --thscode 000300.SH
@@ -87,9 +91,11 @@ python python/toolkit/fuyao/scripts/fuyao.py fund-nav --fund-type otc --thscode 
 python python/toolkit/fuyao/scripts/fuyao.py fund-holders --fund-type otc --thscode 161725.SZ --merge-scope all
 python python/toolkit/fuyao/scripts/fuyao.py fund-historical --thscode 510300.SH \
   --start-ms 1704038400000 --end-ms 1735660800000
+python python/toolkit/fuyao/scripts/fuyao.py fund-manager-detail --manager-id <manager-id>
 
 # 特色数据
 python python/toolkit/fuyao/scripts/fuyao.py limit-up-pool --size 50
+python python/toolkit/fuyao/scripts/fuyao.py limit-break-pool --size 50
 python python/toolkit/fuyao/scripts/fuyao.py hot-stock-list --period day
 python python/toolkit/fuyao/scripts/fuyao.py dragon-tiger-list --board-type all
 ```
@@ -102,12 +108,15 @@ python python/toolkit/fuyao/scripts/fuyao.py dragon-tiger-list --board-type all
 | 个股行情与公司行动 | `prices-snapshot`, `prices-historical`, `corp-actions` |
 | 财务 | `financials-income`, `financials-balance`, `financials-cashflow`, `financials-indicators` |
 | 估值 | `valuations-snapshot` |
+| 集合竞价 | `auction-snapshot`, `auction-benchmark` |
 | 日历 | `calendar-trading-days` |
 | 指数 | `index-catalog`, `index-constituents`, `index-snapshot`, `index-historical` |
-| 基金 | `fund-profile`, `fund-holdings`, `fund-nav`, `fund-returns`, `fund-holders`, `fund-snapshot`, `fund-historical` |
-| 特色数据 | `limit-up-pool`, `limit-up-ladder`, `anomaly-analysis-list`, `anomaly-analysis-stock`, `skyrocket-list`, `hot-stock-list`, `hot-stock-list-history`, `hot-stock-rank-trend`, `dragon-tiger-list` |
+| 基金 | `fund-*`：资料、公司、经理、持仓、财务、净值、收益、资讯、发行状态和场内行情 |
+| 特色数据 | `limit-up-pool`, `limit-down-pool`, `limit-break-pool`, `limit-up-ladder`, `anomaly-analysis-*`, 热榜和龙虎榜命令 |
 
 具体参数始终以当前 `--help` 和函数签名为准；上游字段解释见 [REST API 契约](../../../docs/api/README.md)。
+
+响应分页和时间语义也以 REST 契约为准：基金资讯按 `has_more` 结束游标分页；集合竞价 `timestamp` 是响应组装时间，短期基准省略日期时使用上海时区当日。
 
 ## Python 函数
 
