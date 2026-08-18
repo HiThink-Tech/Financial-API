@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/hithink-tech-financial-api-badge.png)](https://mseep.ai/app/hithink-tech-financial-api)
+
 # 同花顺金融数据服务
 
 [![Website](https://img.shields.io/badge/官网-fuyao.aicubes.cn-0b66ff)](https://fuyao.aicubes.cn/)
