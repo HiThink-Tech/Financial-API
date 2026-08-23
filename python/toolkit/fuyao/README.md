@@ -116,7 +116,7 @@ python python/toolkit/fuyao/scripts/fuyao.py dragon-tiger-list --board-type all
 
 具体参数始终以当前 `--help` 和函数签名为准；上游字段解释见 [REST API 契约](../../../docs/api/README.md)。
 
-响应分页和时间语义也以 REST 契约为准：基金资讯按 `has_more` 结束游标分页；集合竞价 `timestamp` 是响应组装时间，短期基准省略日期时使用上海时区当日。
+响应分页和时间语义也以 REST 契约为准：基金资讯按 `has_more` 结束游标分页；集合竞价 `timestamp` 是响应组装时间，短期基准省略日期时使用上海时区当日。Python helper 会保留 REST 原始字段；其中 `special_data_dragon_tiger_list()` 额外提供 `item` 兼容别名，指向 `stock_items`，便于和其他特色数据函数统一取主股票列表。
 
 ## Python 函数
 

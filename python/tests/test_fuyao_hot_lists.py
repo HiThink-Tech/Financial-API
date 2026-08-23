@@ -155,7 +155,8 @@ def test_hot_stock_rank_trend_rejects_invalid_input_before_http(
 
 def test_dragon_tiger_list_maps_optional_filters(monkeypatch):
     calls = []
-    expected = {"board_type": "hot_money", "stock_items": []}
+    stock_items = [{"thscode": "300033.SZ"}]
+    expected = {"board_type": "hot_money", "stock_items": stock_items}
     monkeypatch.setattr(
         fuyao_client,
         "_get",
@@ -166,13 +167,28 @@ def test_dragon_tiger_list_maps_optional_filters(monkeypatch):
         board_type="hot_money", date="2026-07-01"
     )
 
-    assert result == expected
+    assert result == {**expected, "item": stock_items}
     assert calls == [
         (
             "/api/a-share/special-data/dragon-tiger-list",
             {"board_type": "hot_money", "date": "2026-07-01"},
         )
     ]
+
+
+def test_dragon_tiger_list_keeps_upstream_item_when_present(monkeypatch):
+    stock_items = [{"thscode": "300033.SZ"}]
+    upstream_item = [{"thscode": "600519.SH"}]
+    monkeypatch.setattr(
+        fuyao_client,
+        "_get",
+        lambda _path, _params: {"stock_items": stock_items, "item": upstream_item},
+    )
+
+    result = fuyao_client.special_data_dragon_tiger_list()
+
+    assert result["stock_items"] == stock_items
+    assert result["item"] == upstream_item
 
 
 def test_dragon_tiger_list_defaults_to_all_and_server_date(monkeypatch):

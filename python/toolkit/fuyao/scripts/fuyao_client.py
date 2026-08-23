@@ -1459,7 +1459,12 @@ def special_data_dragon_tiger_list(
     board_type: Literal["all", "org", "hot_money"] = "all",
     date: str | None = None,
 ) -> dict[str, Any]:
-    """Dragon-tiger list, optionally filtered by board type and trade date."""
+    """Dragon-tiger list, optionally filtered by board type and trade date.
+
+    The REST payload uses stock_items/hot_money_items. For consistency with
+    other special-data helpers, expose item as a non-destructive alias for
+    stock_items when the upstream response does not already provide item.
+    """
     normalized_board_type = (
         board_type.strip().lower() if isinstance(board_type, str) else ""
     )
@@ -1469,10 +1474,13 @@ def special_data_dragon_tiger_list(
         )
     if date is not None:
         _parse_iso_date(date, "date")
-    return _get(
+    data = _get(
         "/api/a-share/special-data/dragon-tiger-list",
         {"board_type": normalized_board_type, "date": date},
     )
+    if "item" not in data and "stock_items" in data:
+        data = {**data, "item": data["stock_items"]}
+    return data
 
 
 __all__ = [

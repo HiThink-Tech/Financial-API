@@ -2,6 +2,26 @@
 
 > A 股涨停股票池、连板天梯、当日个股异动、市场热榜与龙虎榜。参数定义、响应字段以本文档为准。
 
+## 列表字段速查
+
+特色数据端点的业务列表字段不完全统一。除龙虎榜同时返回个股榜和游资榜外，其余端点的主要列表字段均为 `data.item[]`。通用解析器不要默认所有端点都有 `item[]`。
+
+| 端点 | 主要列表字段 | 说明 |
+| --- | --- | --- |
+| `limit-up-pool` | `data.item[]` | 涨停股列表。 |
+| `limit-up-ladder` | `data.item[]` | 按日期排列的连板矩阵。 |
+| `anomaly-analysis-list` | `data.item[]` | 当日全市场异动记录。 |
+| `anomaly-analysis-stock` | `data.item[]` | 指定股票的当日异动记录。 |
+| `skyrocket-list` | `data.item[]` | 飙升榜列表。 |
+| `hot-stock-list` | `data.item[]` | 当前热股榜列表。 |
+| `hot-stock-list-history` | `data.item[]` | 单日历史热股排名。 |
+| `hot-stock-rank-trend` | `data.item[]` | 单只股票热榜排名走势。 |
+| `dragon-tiger-list` | `data.stock_items[]`、`data.hot_money_items[]` | 龙虎榜不返回 `data.item[]`；个股明细在 `stock_items[]`，游资明细在 `hot_money_items[]`。 |
+| `limit-down-pool` | `data.item[]` | 跌停股列表。 |
+| `limit-break-pool` | `data.item[]` | 涨停炸板股列表。 |
+
+> 兼容建议：需要统一消费特色数据时，可按端点维护列表字段映射；对龙虎榜，将 `stock_items[]` 作为个股主列表，将 `hot_money_items[]` 作为游资分组列表。
+
 ## 1. 涨停股票池
 
 ```text
@@ -436,6 +456,8 @@ curl 'https://fuyao.aicubes.cn/api/a-share/special-data/dragon-tiger-list?board_
 ### 响应字段
 
 `data` 为 `{timestamp, board_type, trade_date, count, stock_count, stock_items, hot_money_items}`：
+
+> 注意：龙虎榜不返回 `data.item[]`。个股明细列表使用 `data.stock_items[]`，游资分组列表使用 `data.hot_money_items[]`。
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
