@@ -1,12 +1,12 @@
 {
   "name": "@hithink-tech/hithink-finance-cli",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "lockfileVersion": 3,
   "requires": true,
   "packages": {
     "": {
       "name": "@hithink-tech/hithink-finance-cli",
-      "version": "0.1.6",
+      "version": "0.1.7",
       "hasInstallScript": true,
       "license": "UNLICENSED",
       "dependencies": {
