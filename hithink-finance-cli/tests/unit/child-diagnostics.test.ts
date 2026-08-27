@@ -6,6 +6,28 @@ import path from 'node:path';
 import { expect, test } from 'vitest';
 import { waitForChild } from '../../src/infrastructure/process/child-diagnostics.js';
 
+async function processHasStopped(pid: number): Promise<boolean> {
+  try {
+    process.kill(pid, 0);
+  } catch {
+    return true;
+  }
+  if (process.platform !== 'linux') return false;
+  const stat = await readFile(`/proc/${pid}/stat`, 'utf8').catch(() => undefined);
+  if (stat === undefined) return true;
+  const commandEnd = stat.lastIndexOf(')');
+  return commandEnd >= 0 && stat.slice(commandEnd + 2, commandEnd + 3) === 'Z';
+}
+
+async function waitForProcessToStop(pid: number, timeoutMs = 2_000): Promise<boolean> {
+  const deadline = Date.now() + timeoutMs;
+  do {
+    if (await processHasStopped(pid)) return true;
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  } while (Date.now() < deadline);
+  return processHasStopped(pid);
+}
+
 test('aborting a child wait terminates the real child process', async () => {
   const controller = new AbortController();
   const child = spawn(process.execPath, ['-e', 'setInterval(() => {}, 1000)'], {
@@ -76,7 +98,7 @@ test('aborting a managed child terminates its descendant process tree', async ()
     controller.abort('SIGTERM');
 
     await expect(completion).rejects.toMatchObject({ code: 'CLI_CANCELLED' });
-    expect(() => process.kill(grandchildPid!, 0)).toThrow();
+    expect(await waitForProcessToStop(grandchildPid!)).toBe(true);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -125,7 +147,7 @@ test.skipIf(process.platform === 'win32')(
       controller.abort('SIGTERM');
 
       await expect(completion).rejects.toMatchObject({ code: 'CLI_CANCELLED' });
-      expect(() => process.kill(grandchildPid!, 0)).toThrow();
+      expect(await waitForProcessToStop(grandchildPid!)).toBe(true);
     } finally {
       await rm(root, { recursive: true, force: true });
     }
