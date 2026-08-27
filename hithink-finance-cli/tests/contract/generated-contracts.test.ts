@@ -29,6 +29,7 @@ test('checked-in contracts are fresh after line-ending normalization', async () 
       'skills/hithink-finance-fund/SKILL.md',
       'skills/hithink-finance-valuation/SKILL.md',
       'skills/hithink-finance-shared/SKILL.md',
+      'skills/hithink-finance-shared/references/lifecycle.md',
       'skills/manifest.json',
     ]) {
       expect(normalizeLineEndings(await readFile(path.join(output, relative), 'utf8'))).toBe(
@@ -38,6 +39,12 @@ test('checked-in contracts are fresh after line-ending normalization', async () 
   } finally {
     await rm(output, { recursive: true, force: true });
   }
+});
+
+test('generated lifecycle guidance keeps the doctor rule at the top list level', async () => {
+  const lifecycle = await readFile('skills/hithink-finance-shared/references/lifecycle.md', 'utf8');
+  expect(lifecycle).toMatch(/^- 诊断输出包括/imu);
+  expect(lifecycle).not.toMatch(/^\s{2,}- 诊断输出包括/imu);
 });
 
 test('generated Skill manifest pins every owned file by sha256', async () => {

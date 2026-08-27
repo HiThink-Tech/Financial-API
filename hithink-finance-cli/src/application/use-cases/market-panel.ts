@@ -20,9 +20,11 @@ export async function getPanel(
   connection: DuckDBConnection,
   start: string,
   end: string,
+  signal?: AbortSignal,
 ): Promise<Record<string, unknown>[]> {
   return queryReadOnly(
     connection,
     `SELECT * FROM v_daily_qfq WHERE date BETWEEN DATE '${start}' AND DATE '${end}' ORDER BY date,thscode`,
+    signal,
   );
 }

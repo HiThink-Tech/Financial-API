@@ -14,6 +14,7 @@ import type { DuckDBConnection } from '@duckdb/node-api';
 import { importParquetBundle, type ParquetBundle } from '../../infrastructure/duckdb/importer.js';
 import { applyMigrations } from '../../infrastructure/duckdb/migrations.js';
 import { rebuildAdjustmentFactors } from '../../infrastructure/duckdb/factors.js';
+import { throwIfCancelled } from '../../contracts/errors.js';
 
 /**
  * 初始化本地数据 — 从零开始构建可用的本地数据库。
@@ -25,11 +26,17 @@ import { rebuildAdjustmentFactors } from '../../infrastructure/duckdb/factors.js
 export async function initializeData(
   connection: DuckDBConnection,
   bundle: ParquetBundle,
+  signal?: AbortSignal,
 ): Promise<number> {
+  throwIfCancelled(signal);
   // 步骤 1：执行数据库迁移（建表、索引）
   await applyMigrations(connection);
+  throwIfCancelled(signal);
   // 步骤 2：导入 parquet 数据文件
-  await importParquetBundle(connection, bundle);
+  await importParquetBundle(connection, bundle, signal);
   // 步骤 3：重建复权因子派生表
-  return rebuildAdjustmentFactors(connection);
+  const factorRows = await rebuildAdjustmentFactors(connection);
+  // 数据导入提交后进入一致性临界区，必须先完成派生表再响应取消。
+  throwIfCancelled(signal);
+  return factorRows;
 }

@@ -21,6 +21,9 @@
 
 import { spawn } from 'node:child_process';
 import path from 'node:path';
+import { forwardChildDiagnostics, waitForChild } from '../process/child-diagnostics.js';
+
+const SKILLS_CHILD_TIMEOUT_MS = 10 * 60_000;
 
 /**
  * 同步（安装/更新）所有预置技能包
@@ -31,9 +34,12 @@ import path from 'node:path';
  * @param packageRoot - npm 包的根路径（包含 node_modules 和 skills 目录）
  * @returns 子进程退出码 { code: number }
  */
-export async function syncSkills(packageRoot: string): Promise<{ code: number }> {
+export async function syncSkills(
+  packageRoot: string,
+  signal?: AbortSignal,
+): Promise<{ code: number }> {
   const invocation = skillsCliArguments(packageRoot);
-  return run(invocation);
+  return run(invocation, signal);
 }
 
 /**
@@ -44,8 +50,11 @@ export async function syncSkills(packageRoot: string): Promise<{ code: number }>
  * @param packageRoot - npm 包的根路径
  * @returns 子进程退出码 { code: number }
  */
-export async function removeSkills(packageRoot: string): Promise<{ code: number }> {
-  return run(skillsRemoveArguments(packageRoot));
+export async function removeSkills(
+  packageRoot: string,
+  signal?: AbortSignal,
+): Promise<{ code: number }> {
+  return run(skillsRemoveArguments(packageRoot), signal);
 }
 
 /**
@@ -59,19 +68,26 @@ export async function removeSkills(packageRoot: string): Promise<{ code: number 
  * @param invocation - CLI 调用参数
  * @returns Promise 包装的子进程退出码
  */
-function run(invocation: ReturnType<typeof skillsCliArguments>): Promise<{ code: number }> {
-  return new Promise((resolve, reject) => {
-    // spawn 创建子进程，不会创建 shell 中间层，安全性更高
-    const child = spawn(invocation.command, invocation.args, {
-      stdio: ['ignore', 'pipe', 'pipe'],
-      env: invocation.env,
-      windowsHide: true,
-    });
-    // 进程启动失败（如找不到可执行文件）
-    child.once('error', reject);
-    // 进程正常退出，code 为 null 时默认返回 1
-    child.once('exit', (code) => resolve({ code: code ?? 1 }));
+async function run(
+  invocation: ReturnType<typeof skillsCliArguments>,
+  signal?: AbortSignal,
+): Promise<{ code: number }> {
+  // spawn 创建子进程，不会创建 shell 中间层，安全性更高
+  const child = spawn(invocation.command, invocation.args, {
+    stdio: ['ignore', 'pipe', 'pipe'],
+    env: invocation.env,
+    windowsHide: true,
+    detached: process.platform !== 'win32',
   });
+  forwardChildDiagnostics(child);
+  return {
+    code: await waitForChild(child, {
+      ...(signal === undefined ? {} : { signal }),
+      timeoutMs: SKILLS_CHILD_TIMEOUT_MS,
+      processGroup: process.platform !== 'win32',
+      operation: 'Skills synchronization',
+    }),
+  };
 }
 
 /**

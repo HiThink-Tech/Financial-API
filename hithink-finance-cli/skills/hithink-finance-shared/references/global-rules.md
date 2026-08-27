@@ -10,6 +10,8 @@
 
 - 成功以进程退出码 0 和 `ok: true` 为准。
 - 错误以非 0 退出码和 `ok: false` 为准；读取 `error.code`、`error.category`、`error.hint`。
+- 需要诊断时使用 `--debug`；已脱敏的 request ID 与堆栈位于 `meta.diagnostics`，非预期内部错误的预填问题链接位于 `error.report_url`。
+- HTTP 429/502/503/504 优先于响应体中的业务错误信封进行有界重试；耗尽后返回 `UPSTREAM_HTTP_<status>`。
 - 不要按上游旧格式 `code == 0` 判断成功。
 
 ## 大结果纪律

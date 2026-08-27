@@ -14,6 +14,7 @@ test('renders human help in Chinese for a Chinese system locale', async () => {
   expect(result.stdout).toContain('面向人类与 AI Agent 的企业级金融数据命令行工具');
   expect(result.stdout).toContain('管理 API Key 认证');
   expect(result.stdout).toContain('管理本地 DuckDB 数据');
+  expect(result.stdout).not.toContain('--api-key <value>');
 });
 
 describe.each([
@@ -52,4 +53,25 @@ test('renders localized auth and remote command help in Chinese', async () => {
   ]);
   expect(market.stdout).toContain('查询 A 股日线历史行情');
   expect(market.stdout).toContain('单只 A 股 thscode');
+
+  const fund = await execa('node', [
+    'dist/cli/main.js',
+    '--lang',
+    'zh-CN',
+    'fund',
+    'profile',
+    '--help',
+  ]);
+  expect(fund.stdout).toContain('查询基金档案详情');
+  expect(fund.stdout).toContain('基金类型');
+
+  const valuation = await execa('node', [
+    'dist/cli/main.js',
+    '--lang',
+    'zh-CN',
+    'valuation',
+    '--help',
+  ]);
+  expect(valuation.stdout).toContain('A 股估值命令');
+  expect(valuation.stdout).toContain('查询当前 A 股估值指标');
 });

@@ -98,8 +98,20 @@ export async function withExclusiveDataLock<T>(
     // 权限 0o600：仅所有者可读写
     handle = await open(lockPath, 'wx', 0o600);
   } catch (error) {
+    const errorCode = (error as NodeJS.ErrnoException).code;
+    if (errorCode !== 'EEXIST') {
+      throw new CliError({
+        code: 'DATA_LOCK_OPEN_FAILED',
+        category: 'local-data',
+        message: `The data lock file could not be created (${errorCode ?? 'unknown I/O error'}).`,
+        hint: 'Check that the state directory exists and that its permissions and storage are available.',
+        retryable: false,
+        exitCode: 5,
+        ...(error instanceof Error && error.stack !== undefined ? { debugStack: error.stack } : {}),
+      });
+    }
     // 锁文件已存在：读取其中的 PID 信息判断是否为僵尸锁
-    let existing: { pid?: number };
+    let existing: { pid?: number; command?: string; startedAt?: string };
     try {
       existing = JSON.parse(await readFile(lockPath, 'utf8')) as { pid?: number };
     } catch {
@@ -117,8 +129,25 @@ export async function withExclusiveDataLock<T>(
       await rm(lockPath, { force: true });
       return withExclusiveDataLock(lockPath, metadata, action);
     }
-    // 原进程仍存活 → 抛出错误，拒绝并发操作
-    throw error;
+    // 原进程仍存活 → 返回稳定的本地数据错误，避免泄露原始 EEXIST
+    if (typeof existing.pid === 'number') {
+      throw new CliError({
+        code: 'DATA_LOCKED',
+        category: 'local-data',
+        message: `Another data operation is already running with PID ${existing.pid}.`,
+        hint: `Wait for ${existing.command ?? 'the active data command'} to finish, then retry. Do not delete ${lockPath} while that PID is alive.`,
+        retryable: true,
+        exitCode: 5,
+      });
+    }
+    throw new CliError({
+      code: 'DATA_LOCK_CORRUPT',
+      category: 'local-data',
+      message: 'The data lock file does not contain a valid PID.',
+      hint: `Inspect and remove the lock file if no hithink-finance data command is running: ${lockPath}`,
+      retryable: false,
+      exitCode: 5,
+    });
   }
 
   try {

@@ -62,6 +62,7 @@ export function registerDbCommands(program: Command, context: CliContext, fallba
         const rows = await queryReadOnly(
           opened.connection,
           "SELECT table_name,table_type FROM information_schema.tables WHERE table_schema='main' ORDER BY table_name",
+          context.signal,
         );
         await renderResult(
           successEnvelope('db.describe', rows, {
@@ -84,7 +85,11 @@ export function registerDbCommands(program: Command, context: CliContext, fallba
     const opened = await openDatabase(databasePath(query, fallback));
     try {
       // 执行用户提供的只读 SQL 查询
-      const rows = await queryReadOnly(opened.connection, query.opts<{ sql: string }>().sql);
+      const rows = await queryReadOnly(
+        opened.connection,
+        query.opts<{ sql: string }>().sql,
+        context.signal,
+      );
       await renderResult(
         successEnvelope('db.query', rows, { requestId: context.requestId, count: rows.length }),
         context,
@@ -125,6 +130,7 @@ export function registerDbCommands(program: Command, context: CliContext, fallba
         options.sql,
         options.output,
         options.fileFormat as 'ndjson' | 'csv' | 'parquet',
+        context.signal,
       );
       await renderResult(
         successEnvelope(

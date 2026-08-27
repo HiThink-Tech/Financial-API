@@ -29,7 +29,8 @@
  * 这种方案避免了断点续传问题，确保导出的文件要么完整，要么不存在。
  */
 import type { DuckDBConnection } from '@duckdb/node-api';
-import { CliError } from '../../contracts/errors.js';
+import { withDuckDbInterrupt } from '../../infrastructure/duckdb/connection.js';
+import { CliError, throwIfCancelled } from '../../contracts/errors.js';
 import { mkdir, rename, rm } from 'node:fs/promises';
 import path from 'node:path';
 
@@ -62,6 +63,7 @@ function readOnlyViolation(): CliError {
 export async function queryReadOnly(
   connection: DuckDBConnection,
   sql: string,
+  signal?: AbortSignal,
 ): Promise<Record<string, unknown>[]> {
   // 运行时安全加固：关闭外部访问和扩展能力
   await connection.run(
@@ -83,14 +85,16 @@ export async function queryReadOnly(
   } catch {
     throw readOnlyViolation();
   }
-  try {
-    // statementType === 1 表示 SELECT
-    if (prepared.statementType !== 1) throw readOnlyViolation();
-    const reader = await prepared.runAndReadAll();
-    return reader.getRowObjectsJson() as Record<string, unknown>[];
-  } finally {
-    prepared.destroySync();
-  }
+  return withDuckDbInterrupt(connection, signal, async () => {
+    try {
+      // statementType === 1 表示 SELECT
+      if (prepared.statementType !== 1) throw readOnlyViolation();
+      const reader = await prepared.runAndReadAll();
+      return reader.getRowObjectsJson() as Record<string, unknown>[];
+    } finally {
+      prepared.destroySync();
+    }
+  });
 }
 
 /**
@@ -160,6 +164,7 @@ export async function exportQuery(
   sql: string,
   outputPath: string,
   format: 'ndjson' | 'csv' | 'parquet',
+  signal?: AbortSignal,
 ): Promise<number> {
   // 安全验证：确保 SQL 是只读的 SELECT
   await assertReadOnly(connection, sql);
@@ -178,16 +183,19 @@ export async function exportQuery(
         ? 'FORMAT CSV, HEADER true'
         : 'FORMAT JSON, ARRAY false';
   try {
-    // 先写入临时文件
-    await connection.run(`COPY (${sql}) TO '${escaped}' (${copyOptions})`);
-    // 查询导出行数
-    const countReader = await connection.runAndReadAll(`SELECT count(*) FROM (${sql}) q`);
-    const count = Number(countReader.getRowsJson()[0]?.[0] ?? 0);
-    // 原子 rename：临时文件 → 目标文件
+    const count = await withDuckDbInterrupt(connection, signal, async () => {
+      // 先写入临时文件
+      await connection.run(`COPY (${sql}) TO '${escaped}' (${copyOptions})`);
+      // 查询导出行数
+      const countReader = await connection.runAndReadAll(`SELECT count(*) FROM (${sql}) q`);
+      return Number(countReader.getRowsJson()[0]?.[0] ?? 0);
+    });
+    // rename 是提交边界：提交前响应取消，提交后晚到的取消不再反转成功结果。
+    throwIfCancelled(signal);
     await rename(temporary, absolute);
     return count;
   } catch (error) {
-    // 失败时清理临时文件
+    // 失败时清理临时文件；最终文件仅可能由成功的原子 rename 产生。
     await rm(temporary, { force: true });
     throw error;
   }

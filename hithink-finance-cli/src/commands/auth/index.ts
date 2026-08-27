@@ -5,7 +5,7 @@
  * 管理 API Key 的存储、查询和删除（基于系统凭据管理器）。
  *
  * 支持三种 API Key 输入方式：
- * 1. `--api-key <key>`：命令行直接传入（有泄露风险，会显示警告）
+ * 1. `--api-key <key>`：兼容旧调用的弃用输入（有泄露风险）
  * 2. `--api-key-stdin`：从标准输入管道读取（推荐）
  * 3. 交互式隐藏输入：TTY 环境下使用 muted writable stream 遮蔽回显
  *
@@ -20,7 +20,7 @@ import type { CliContext } from '../../cli/context.js';
 import { localizeText, translate } from '../../cli/i18n.js';
 import type { PackageMetadata } from '../../cli/program.js';
 import { successEnvelope } from '../../contracts/envelope.js';
-import { CliError } from '../../contracts/errors.js';
+import { cancelledError, CliError } from '../../contracts/errors.js';
 import { renderResult } from '../../output/renderer.js';
 import type { ApiKeyAuthProvider } from '../../infrastructure/credentials/api-key-provider.js';
 import { readStdin } from '../../infrastructure/filesystem/stdin.js';
@@ -105,7 +105,10 @@ export async function readHiddenApiKey(
         ].join('\n'),
   );
   try {
-    return await readline.question('');
+    return await readline.question('', { signal: context.signal });
+  } catch (error) {
+    if (context.signal.aborted) throw cancelledError();
+    throw error;
   } finally {
     readline.close();
     context.stderr.write('\n');
@@ -120,7 +123,7 @@ export async function readHiddenApiKey(
  * ### auth login
  * 存储 API Key 到系统凭据管理器。
  * - 输入来源优先级：`--api-key` > `--api-key-stdin` > 交互式隐藏输入
- * - `--api-key` 会显示安全警告（可能泄露到 shell 历史记录）
+ * - `--api-key` 的统一弃用警告由根命令 preAction 输出
  * - `--no-input` 时若未提供 API Key 则报错
  * - 支持通过 `--profile` 指定凭据配置名称（默认 'default'）
  *
@@ -199,14 +202,15 @@ export function registerAuthCommands(
     // API Key 输入来源优先级判断
     let apiKey: string;
     if (options.apiKey !== undefined) {
-      // 方式一：命令行直接传入（不安全，显示警告）
-      context.stderr.write(
-        'Warning: --api-key may be visible in shell history and process listings. Prefer --api-key-stdin.\n',
-      );
+      // 方式一：兼容旧调用；根命令已输出一次统一弃用警告
       apiKey = options.apiKey;
     } else if (options.apiKeyStdin === true) {
       // 方式二：从标准输入读取（推荐，如 echo $KEY | hithink-finance auth login --api-key-stdin）
-      apiKey = await readStdin(process.stdin, { stripFinalNewlines: true });
+      apiKey = await readStdin(process.stdin, {
+        stripFinalNewlines: true,
+        signal: context.signal,
+        maxBytes: 16 * 1024,
+      });
     } else {
       // 方式四：交互式隐藏输入（密码风格）
       apiKey = await readHiddenApiKey(context);

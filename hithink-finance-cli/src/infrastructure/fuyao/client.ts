@@ -16,9 +16,15 @@
  */
 
 import type { AuthSession } from '../../application/ports/auth-provider.js';
-import { CliError, type CliErrorOptions } from '../../contracts/errors.js';
+import { cancelledError, CliError, type CliErrorOptions } from '../../contracts/errors.js';
 import { fuyaoEnvelopeSchema } from './envelope.js';
-import { defaultSleep, parseRetryAfter, RETRYABLE_BUSINESS_CODES, retryDelayMs } from './retry.js';
+import {
+  defaultSleep,
+  parseRetryAfter,
+  RETRYABLE_BUSINESS_CODES,
+  RETRYABLE_HTTP_STATUS_CODES,
+  retryDelayMs,
+} from './retry.js';
 import type { ZodType } from 'zod';
 
 /**
@@ -64,9 +70,11 @@ export interface FuyaoClientOptions {
   /** 可注入的 fetch 实现（默认 globalThis.fetch） */
   fetch?: typeof globalThis.fetch;
   /** 可注入的 sleep 实现（用于重试退避等待，默认 setTimeout 封装） */
-  sleep?: (milliseconds: number) => Promise<void>;
+  sleep?: (milliseconds: number, signal?: AbortSignal) => Promise<void>;
   /** 可注入的随机数生成器（用于退避抖动） */
   random?: () => number;
+  /** Optional caller cancellation signal shared by requests and retry waits. */
+  signal?: AbortSignal;
 }
 
 /**
@@ -139,6 +147,20 @@ function businessError(code: number, message: string, requestId?: string): CliEr
   );
 }
 
+function httpError(status: number, requestId?: string): CliError {
+  return cliError(
+    {
+      code: `UPSTREAM_HTTP_${status}`,
+      category: 'upstream',
+      message: `The Fuyao service returned HTTP ${status}.`,
+      hint: 'Retry later and retain the request ID when reporting a persistent failure.',
+      retryable: RETRYABLE_HTTP_STATUS_CODES.has(status),
+      exitCode: 4,
+    },
+    requestId,
+  );
+}
+
 /**
  * Fuyao API 客户端
  *
@@ -158,7 +180,7 @@ export class FuyaoClient {
   private readonly timeoutMs: number;
   private readonly maxAttempts: number;
   private readonly fetchImplementation: typeof globalThis.fetch;
-  private readonly sleep: (milliseconds: number) => Promise<void>;
+  private readonly sleep: (milliseconds: number, signal?: AbortSignal) => Promise<void>;
   private readonly random: () => number;
 
   /**
@@ -170,6 +192,23 @@ export class FuyaoClient {
     this.fetchImplementation = options.fetch ?? globalThis.fetch;
     this.sleep = options.sleep ?? defaultSleep;
     this.random = options.random ?? Math.random;
+  }
+
+  private requestSignal(): AbortSignal {
+    const timeout = AbortSignal.timeout(this.timeoutMs);
+    return this.options.signal === undefined
+      ? timeout
+      : AbortSignal.any([this.options.signal, timeout]);
+  }
+
+  private async waitBeforeRetry(response: Response | undefined, attempt: number): Promise<void> {
+    const retryAfter = parseRetryAfter(response?.headers.get('retry-after') ?? null);
+    try {
+      await this.sleep(retryAfter ?? retryDelayMs(attempt, this.random), this.options.signal);
+    } catch (error) {
+      if (this.options.signal?.aborted === true) throw cancelledError();
+      throw error;
+    }
   }
 
   /**
@@ -217,13 +256,14 @@ export class FuyaoClient {
         response = await this.fetchImplementation(url, {
           method: 'GET',
           headers: { 'X-api-key': this.options.auth.apiKey, accept: 'application/json' },
-          signal: AbortSignal.timeout(this.timeoutMs),
+          signal: this.requestSignal(),
         });
       } catch {
+        if (this.options.signal?.aborted === true) throw cancelledError();
         // 网络错误（连接失败、超时等）
         if (attempt < this.maxAttempts - 1) {
           // 还有重试次数：指数退避后重试
-          await this.sleep(retryDelayMs(attempt, this.random));
+          await this.waitBeforeRetry(undefined, attempt);
           continue;
         }
         // 所有重试耗尽：抛出网络失败错误
@@ -242,6 +282,11 @@ export class FuyaoClient {
       try {
         body = await response.json();
       } catch {
+        if (RETRYABLE_HTTP_STATUS_CODES.has(response.status) && attempt < this.maxAttempts - 1) {
+          await this.waitBeforeRetry(response, attempt);
+          continue;
+        }
+        if (!response.ok) throw httpError(response.status);
         throw cliError({
           code: 'UPSTREAM_INVALID_RESPONSE',
           category: 'upstream',
@@ -255,6 +300,11 @@ export class FuyaoClient {
       // 校验 Fuyao 标准信封格式（code / message / request_id / data）
       const parsedEnvelope = fuyaoEnvelopeSchema.safeParse(body);
       if (!parsedEnvelope.success) {
+        if (RETRYABLE_HTTP_STATUS_CODES.has(response.status) && attempt < this.maxAttempts - 1) {
+          await this.waitBeforeRetry(response, attempt);
+          continue;
+        }
+        if (!response.ok) throw httpError(response.status);
         throw cliError({
           code: 'UPSTREAM_INVALID_RESPONSE',
           category: 'upstream',
@@ -266,6 +316,15 @@ export class FuyaoClient {
       }
 
       const envelope = parsedEnvelope.data;
+
+      // HTTP transport status takes precedence over a syntactically valid business envelope.
+      if (!response.ok) {
+        if (RETRYABLE_HTTP_STATUS_CODES.has(response.status) && attempt < this.maxAttempts - 1) {
+          await this.waitBeforeRetry(response, attempt);
+          continue;
+        }
+        throw httpError(response.status, envelope.request_id);
+      }
 
       // code === 0 表示业务成功
       if (envelope.code === 0) {
@@ -294,9 +353,8 @@ export class FuyaoClient {
 
       // 可重试的业务错误且还有重试次数
       if (RETRYABLE_BUSINESS_CODES.has(envelope.code) && attempt < this.maxAttempts - 1) {
-        // 优先使用服务器端 Retry-After 头，否则使用客户端指数退避
-        const retryAfter = parseRetryAfter(response.headers.get('retry-after'));
-        await this.sleep(retryAfter ?? retryDelayMs(attempt, this.random));
+        // 优先使用有上限的服务器端 Retry-After，否则使用客户端指数退避
+        await this.waitBeforeRetry(response, attempt);
         continue;
       }
       throw error;

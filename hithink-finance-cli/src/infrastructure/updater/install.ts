@@ -21,6 +21,9 @@
  */
 
 import { spawn } from 'node:child_process';
+import { forwardChildDiagnostics, waitForChild } from '../process/child-diagnostics.js';
+
+const NPM_CHILD_TIMEOUT_MS = 15 * 60_000;
 
 /**
  * 通过 npm 安装指定版本的全局包
@@ -37,30 +40,35 @@ export async function installGlobalPackage(
   npmExecutable: string,
   packageName: string,
   version: string,
+  signal?: AbortSignal,
 ): Promise<number> {
-  return new Promise((resolve, reject) => {
-    // 构造 npm install 命令参数
-    const npmArgs = ['install', '-g', `${packageName}@${version}`];
+  // 构造 npm install 命令参数
+  const npmArgs = ['install', '-g', `${packageName}@${version}`];
 
-    // Windows .cmd/.bat 文件需要通过 cmd.exe 执行
-    // 原因：spawn 在 Windows 上不能直接执行批处理脚本
-    const isWindowsScript = process.platform === 'win32' && /\.(cmd|bat)$/iu.test(npmExecutable);
-    const command = isWindowsScript ? (process.env.ComSpec ?? 'cmd.exe') : npmExecutable;
-    const args = isWindowsScript
-      ? // /d: 禁用 AutoRun 命令（安全考虑）
-        // /s: 之后是单个命令字符串
-        // /c: 执行命令后退出
-        ['/d', '/s', '/c', npmExecutable, ...npmArgs]
-      : npmArgs;
+  // Windows .cmd/.bat 文件需要通过 cmd.exe 执行
+  // 原因：spawn 在 Windows 上不能直接执行批处理脚本
+  const isWindowsScript = process.platform === 'win32' && /\.(cmd|bat)$/iu.test(npmExecutable);
+  const command = isWindowsScript ? (process.env.ComSpec ?? 'cmd.exe') : npmExecutable;
+  const args = isWindowsScript
+    ? // /d: 禁用 AutoRun 命令（安全考虑）
+      // /s: 之后是单个命令字符串
+      // /c: 执行命令后退出
+      ['/d', '/s', '/c', npmExecutable, ...npmArgs]
+    : npmArgs;
 
-    const child = spawn(command, args, {
-      // inherit: 将子进程的 stdio 连接到父进程，安装日志直接显示在终端
-      stdio: 'inherit',
-      windowsHide: true,
-      env: process.env,
-    });
-    child.once('error', reject);
-    child.once('exit', (code) => resolve(code ?? 1));
+  const child = spawn(command, args, {
+    // 子进程日志统一转发到 stderr，避免破坏父 CLI 的结构化 stdout
+    stdio: ['inherit', 'pipe', 'pipe'],
+    windowsHide: true,
+    env: process.env,
+    detached: process.platform !== 'win32',
+  });
+  forwardChildDiagnostics(child);
+  return waitForChild(child, {
+    ...(signal === undefined ? {} : { signal }),
+    timeoutMs: NPM_CHILD_TIMEOUT_MS,
+    processGroup: process.platform !== 'win32',
+    operation: 'npm install',
   });
 }
 
@@ -73,22 +81,28 @@ export async function installGlobalPackage(
  * @param executableArgs - 命令行参数数组
  * @returns 子进程退出码
  */
-export async function runExecutable(executable: string, executableArgs: string[]): Promise<number> {
-  return new Promise((resolve, reject) => {
-    // Windows .cmd/.bat 脚本需通过 cmd.exe 间接执行
-    const isWindowsScript = process.platform === 'win32' && /\.(cmd|bat)$/iu.test(executable);
-    const command = isWindowsScript ? (process.env.ComSpec ?? 'cmd.exe') : executable;
-    const args = isWindowsScript
-      ? ['/d', '/s', '/c', executable, ...executableArgs]
-      : executableArgs;
+export async function runExecutable(
+  executable: string,
+  executableArgs: string[],
+  signal?: AbortSignal,
+): Promise<number> {
+  // Windows .cmd/.bat 脚本需通过 cmd.exe 间接执行
+  const isWindowsScript = process.platform === 'win32' && /\.(cmd|bat)$/iu.test(executable);
+  const command = isWindowsScript ? (process.env.ComSpec ?? 'cmd.exe') : executable;
+  const args = isWindowsScript ? ['/d', '/s', '/c', executable, ...executableArgs] : executableArgs;
 
-    const child = spawn(command, args, {
-      stdio: 'inherit',
-      windowsHide: true,
-      env: process.env,
-    });
-    child.once('error', reject);
-    child.once('exit', (code) => resolve(code ?? 1));
+  const child = spawn(command, args, {
+    stdio: ['inherit', 'pipe', 'pipe'],
+    windowsHide: true,
+    env: process.env,
+    detached: process.platform !== 'win32',
+  });
+  forwardChildDiagnostics(child);
+  return waitForChild(child, {
+    ...(signal === undefined ? {} : { signal }),
+    timeoutMs: NPM_CHILD_TIMEOUT_MS,
+    processGroup: process.platform !== 'win32',
+    operation: 'npm command',
   });
 }
 
@@ -105,6 +119,7 @@ export async function runExecutable(executable: string, executableArgs: string[]
 export async function uninstallGlobalPackage(
   npmExecutable: string,
   packageName: string,
+  signal?: AbortSignal,
 ): Promise<number> {
-  return runExecutable(npmExecutable, ['uninstall', '-g', packageName]);
+  return runExecutable(npmExecutable, ['uninstall', '-g', packageName], signal);
 }

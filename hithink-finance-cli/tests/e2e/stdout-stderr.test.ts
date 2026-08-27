@@ -22,3 +22,23 @@ test('writes invalid-command JSON only to stderr and exits with code 2', async (
     },
   });
 });
+
+test('keeps debug diagnostics inside the structured stderr envelope', async () => {
+  const result = await execa(
+    'node',
+    ['dist/cli/main.js', 'does-not-exist', '--debug', '--format', 'json'],
+    { reject: false },
+  );
+
+  expect(result.exitCode).toBe(2);
+  expect(result.stdout).toBe('');
+  expect(JSON.parse(result.stderr)).toMatchObject({
+    ok: false,
+    meta: {
+      diagnostics: {
+        request_id: expect.any(String),
+        stack: expect.stringContaining('CliError'),
+      },
+    },
+  });
+});

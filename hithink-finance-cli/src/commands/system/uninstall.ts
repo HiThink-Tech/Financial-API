@@ -93,7 +93,7 @@ export function registerUninstallCommand(
         });
 
       // ========== 步骤 2：移除 Agent Skills ==========
-      const skillResult = await removeSkills(dependencies.packageRoot);
+      const skillResult = await removeSkills(dependencies.packageRoot, context.signal);
       if (skillResult.code !== 0)
         throw new CliError({
           code: 'UNINSTALL_SKILLS_PARTIAL',
@@ -119,7 +119,7 @@ export function registerUninstallCommand(
       const npm =
         process.env.HITHINK_FINANCE_NPM_EXECUTABLE ??
         (process.platform === 'win32' ? 'npm.cmd' : 'npm');
-      const code = await uninstallGlobalPackage(npm, metadata.name);
+      const code = await uninstallGlobalPackage(npm, metadata.name, context.signal);
       if (code !== 0)
         throw new CliError({
           code: 'UNINSTALL_NPM_FAILED',

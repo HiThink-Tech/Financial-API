@@ -71,4 +71,7 @@ hithink-finance db <command> --help
 
 - SQL 必须只读；写入、DDL、删除或外部副作用不属于 `db query`。
 - 删除数据库或清除数据前先用 plan/状态输出让用户确认，真正删除需要显式 `--yes`。
+- `data init` / `data sync` 下载阶段可立即取消；数据库导入提交后会先完成复权、元数据和质量一致性收尾，再报告取消。
+- Dump 哈希在流式下载过程中计算；DuckDB 默认限制线程和内存，必要时使用 `HITHINK_FINANCE_DUCKDB_THREADS` / `HITHINK_FINANCE_DUCKDB_MEMORY_LIMIT` 做有界覆盖。
+- 数据锁仅在 `EEXIST` 时按锁拥有者处理；目录、权限或存储故障返回 `DATA_LOCK_OPEN_FAILED`，应先修复本地状态目录。
 - 查询结果很多时用 `db export --output <file>`，不要回显全表。

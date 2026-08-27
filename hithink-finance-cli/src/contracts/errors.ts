@@ -62,6 +62,8 @@ export interface CliErrorOptions {
   /** Optional correlation ID for tracing.
    *  可选的链路追踪关联 ID。 */
   requestId?: string;
+  /** Original stack retained for opt-in, redacted debug diagnostics. */
+  debugStack?: string;
 }
 
 /**
@@ -81,6 +83,7 @@ export class CliError extends Error {
   readonly retryable: boolean;
   readonly exitCode: Exclude<ExitCode, 0>;
   readonly requestId: string | undefined;
+  readonly debugStack: string | undefined;
 
   /**
    * @param options - Error classification and presentation details.
@@ -95,6 +98,7 @@ export class CliError extends Error {
     this.retryable = options.retryable;
     this.exitCode = options.exitCode;
     this.requestId = options.requestId;
+    this.debugStack = options.debugStack;
   }
 }
 
@@ -126,5 +130,21 @@ export function internalError(error: unknown): CliError {
     hint: 'Run the command again with --debug and report the request ID if the error persists.',
     retryable: false,
     exitCode: 1,
+    ...(error instanceof Error && error.stack !== undefined ? { debugStack: error.stack } : {}),
   });
+}
+
+export function cancelledError(): CliError {
+  return new CliError({
+    code: 'CLI_CANCELLED',
+    category: 'internal',
+    message: 'The operation was cancelled.',
+    hint: 'Run the command again when you are ready to continue.',
+    retryable: true,
+    exitCode: 1,
+  });
+}
+
+export function throwIfCancelled(signal?: AbortSignal): void {
+  if (signal?.aborted === true) throw cancelledError();
 }

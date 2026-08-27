@@ -85,8 +85,10 @@ export function registerUpdateCommand(
         !dependencies.resolvedConfig.updateCheck,
       );
       // 缓存过期时调度后台更新检查
-      if (decision === 'refresh')
-        scheduleUpdateCheck(dependencies.packageRoot, metadata.name, cacheFile);
+      const refreshScheduled =
+        decision === 'refresh'
+          ? await scheduleUpdateCheck(dependencies.packageRoot, metadata.name, cacheFile)
+          : false;
       await renderResult(
         successEnvelope(
           'update.check',
@@ -94,7 +96,7 @@ export function registerUpdateCommand(
             currentVersion: metadata.version,
             latestVersion: cached?.latestVersion,
             cacheStatus: decision,
-            refreshScheduled: decision === 'refresh',
+            refreshScheduled,
             networkUsed: false,
           },
           { requestId: context.requestId },
@@ -121,7 +123,7 @@ export function registerUpdateCommand(
     const npm =
       process.env.HITHINK_FINANCE_NPM_EXECUTABLE ??
       (process.platform === 'win32' ? 'npm.cmd' : 'npm');
-    const code = await installGlobalPackage(npm, metadata.name, version);
+    const code = await installGlobalPackage(npm, metadata.name, version, context.signal);
     if (code !== 0)
       throw new CliError({
         code: 'UPDATE_INSTALL_FAILED',
@@ -136,10 +138,14 @@ export function registerUpdateCommand(
     const cli =
       process.env.HITHINK_FINANCE_CLI_EXECUTABLE ??
       (process.platform === 'win32' ? 'hithink-finance.cmd' : 'hithink-finance');
-    const skillsCode = await runExecutable(cli, ['skills', 'sync', '--repair', '--yes']);
+    const skillsCode = await runExecutable(
+      cli,
+      ['skills', 'sync', '--repair', '--yes'],
+      context.signal,
+    );
 
     // ========== 步骤 4：Doctor 诊断 ==========
-    const doctorCode = await runExecutable(cli, ['doctor', '--format', 'json']);
+    const doctorCode = await runExecutable(cli, ['doctor', '--format', 'json'], context.signal);
     if (skillsCode !== 0 || doctorCode !== 0)
       throw new CliError({
         code: 'UPDATE_REPAIR_PARTIAL',

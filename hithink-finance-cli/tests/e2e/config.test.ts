@@ -23,3 +23,29 @@ test('config show exposes resolved non-secret precedence', async () => {
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test('returns a structured error when --config points to a missing file', async () => {
+  const root = await mkdtemp(path.join(tmpdir(), 'hithink-config-cli-'));
+  try {
+    const result = await execa(
+      'node',
+      [
+        'dist/cli/main.js',
+        '--config',
+        path.join(root, 'missing.json'),
+        'version',
+        '--format',
+        'json',
+      ],
+      { reject: false },
+    );
+    expect(result.exitCode).toBe(2);
+    expect(result.stdout).toBe('');
+    expect(JSON.parse(result.stderr)).toMatchObject({
+      ok: false,
+      error: { code: 'CONFIG_NOT_FOUND', category: 'validation' },
+    });
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

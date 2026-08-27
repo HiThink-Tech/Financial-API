@@ -15,7 +15,8 @@
  * @module updater/check
  */
 
-import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
+import { randomUUID } from 'node:crypto';
+import { link, mkdir, open, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
 import type { UpdateCacheState } from './cache.js';
 import { spawn } from 'node:child_process';
 import path from 'node:path';
@@ -40,9 +41,13 @@ export async function readUpdateCache(file: string): Promise<UpdateCacheState | 
 
 async function writeUpdateCache(file: string, state: UpdateCacheState): Promise<void> {
   await mkdir(path.dirname(file), { recursive: true });
-  const temporary = `${file}.${process.pid}.tmp`;
-  await writeFile(temporary, `${JSON.stringify(state)}\n`, { mode: 0o600 });
-  await rename(temporary, file);
+  const temporary = `${file}.${process.pid}.${randomUUID()}.tmp`;
+  try {
+    await writeFile(temporary, `${JSON.stringify(state)}\n`, { mode: 0o600 });
+    await rename(temporary, file);
+  } finally {
+    await rm(temporary, { force: true });
+  }
 }
 
 /**
@@ -58,18 +63,135 @@ async function writeUpdateCache(file: string, state: UpdateCacheState): Promise<
  * @param packageName - 要检查更新的 npm 包名
  * @param cacheFile - 更新缓存文件的路径
  */
-export function scheduleUpdateCheck(
+const UPDATE_CHECK_LEASE_TTL_MS = 5 * 60_000;
+
+export interface UpdateCheckLease {
+  path: string;
+  pid: number;
+  startedAt: number;
+  token: string;
+}
+
+function processAlive(pid: number): boolean {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function inspectUpdateCheckLease(
+  leasePath: string,
+  now: () => number,
+): Promise<{ lease?: UpdateCheckLease; stale: boolean }> {
+  try {
+    const lease = JSON.parse(await readFile(leasePath, 'utf8')) as UpdateCheckLease;
+    const valid =
+      typeof lease.pid === 'number' &&
+      typeof lease.startedAt === 'number' &&
+      typeof lease.token === 'string';
+    if (valid)
+      return {
+        lease,
+        stale: now() - lease.startedAt >= UPDATE_CHECK_LEASE_TTL_MS || !processAlive(lease.pid),
+      };
+  } catch {
+    // Inspect the age below. A publishing owner never exposes a partial lease.
+  }
+  try {
+    const leaseStats = await stat(leasePath);
+    return { stale: now() - leaseStats.mtimeMs >= UPDATE_CHECK_LEASE_TTL_MS };
+  } catch {
+    return { stale: false };
+  }
+}
+
+export async function releaseUpdateCheckLease(lease: UpdateCheckLease): Promise<void> {
+  try {
+    const current = JSON.parse(await readFile(lease.path, 'utf8')) as { token?: string };
+    if (current.token === lease.token) await rm(lease.path, { force: true });
+  } catch {
+    // Lease cleanup is advisory and must never affect the caller.
+  }
+}
+
+export async function acquireUpdateCheckLease(
+  cacheFile: string,
+  options: { now?: () => number; retry?: boolean } = {},
+): Promise<UpdateCheckLease | undefined> {
+  const leasePath = path.join(path.dirname(cacheFile), 'update-check.lock');
+  const now = options.now ?? Date.now;
+  await mkdir(path.dirname(leasePath), { recursive: true });
+  const lease: UpdateCheckLease = {
+    path: leasePath,
+    pid: process.pid,
+    startedAt: now(),
+    token: randomUUID(),
+  };
+  const candidatePath = `${leasePath}.${process.pid}.${lease.token}.candidate`;
+  let acquired = false;
+  try {
+    await writeFile(candidatePath, `${JSON.stringify(lease)}\n`, { flag: 'wx', mode: 0o600 });
+    await link(candidatePath, leasePath);
+    acquired = true;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'EEXIST') return undefined;
+  } finally {
+    await rm(candidatePath, { force: true });
+  }
+  if (acquired) return lease;
+
+  const observed = await inspectUpdateCheckLease(leasePath, now);
+  if (!observed.stale || options.retry === false) return undefined;
+
+  const reclaimPath = `${leasePath}.reclaim`;
+  let reclaimHandle;
+  try {
+    reclaimHandle = await open(reclaimPath, 'wx', 0o600);
+  } catch {
+    return undefined;
+  }
+  try {
+    const current = await inspectUpdateCheckLease(leasePath, now);
+    if (!current.stale) return undefined;
+    if (current.lease === undefined) await rm(leasePath, { force: true });
+    else await releaseUpdateCheckLease({ ...current.lease, path: leasePath });
+  } finally {
+    await reclaimHandle.close();
+    await rm(reclaimPath, { force: true });
+  }
+  return acquireUpdateCheckLease(cacheFile, { now, retry: false });
+}
+
+export async function scheduleUpdateCheck(
   packageRoot: string,
   packageName: string,
   cacheFile: string,
-): void {
-  const child = spawn(
-    process.execPath,
-    [path.join(packageRoot, 'scripts', 'update-check.mjs'), packageName, cacheFile],
-    { detached: true, stdio: 'ignore', windowsHide: true, env: process.env },
-  );
+): Promise<boolean> {
+  const lease = await acquireUpdateCheckLease(cacheFile);
+  if (lease === undefined) return false;
+  let child;
+  try {
+    child = spawn(
+      process.execPath,
+      [
+        path.join(packageRoot, 'scripts', 'update-check.mjs'),
+        packageName,
+        cacheFile,
+        lease.path,
+        lease.token,
+      ],
+      { detached: true, stdio: 'ignore', windowsHide: true, env: process.env },
+    );
+  } catch {
+    await releaseUpdateCheckLease(lease);
+    return false;
+  }
+  child.once('error', () => void releaseUpdateCheckLease(lease));
   // 解除父进程对子进程的引用，使父进程可以独立退出
   child.unref();
+  return true;
 }
 
 export interface UpdateNoticeOptions {
@@ -88,7 +210,7 @@ export async function maybeEmitCachedUpdateNotice(options: UpdateNoticeOptions):
     const disabled = options.disabled === true;
     const decision = updateCacheDecision(cached, now, disabled);
     if (decision === 'refresh') {
-      scheduleUpdateCheck(options.packageRoot, options.packageName, options.cacheFile);
+      await scheduleUpdateCheck(options.packageRoot, options.packageName, options.cacheFile);
     }
 
     if (

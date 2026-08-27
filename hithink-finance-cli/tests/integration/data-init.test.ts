@@ -2,8 +2,30 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { expect, test } from 'vitest';
+import type { DuckDBConnection } from '@duckdb/node-api';
 import { openDatabase } from '../../src/infrastructure/duckdb/connection.js';
 import { initializeData } from '../../src/application/use-cases/data-init.js';
+
+function abortAfterImportCommit(
+  connection: DuckDBConnection,
+  controller: AbortController,
+): DuckDBConnection {
+  let importCompleted = false;
+  return new Proxy(connection, {
+    get(target, property) {
+      if (property === 'run') {
+        return async (sql: string, parameters?: Record<string, unknown>) => {
+          const result = await target.run(sql, parameters);
+          if (sql.includes('UPDATE _import_batches SET completed_at=')) importCompleted = true;
+          if (importCompleted && sql === 'COMMIT') controller.abort();
+          return result;
+        };
+      }
+      const value = Reflect.get(target, property, target) as unknown;
+      return typeof value === 'function' ? value.bind(target) : value;
+    },
+  });
+}
 
 test('imports a three-file Parquet bundle transactionally', async () => {
   const root = await mkdtemp(path.join(tmpdir(), 'hithink-init-'));
@@ -65,6 +87,40 @@ test('imports the published Fuyao dump schemas and derives symbols', async () =>
       "SELECT ticker,exchange FROM dim_symbol WHERE thscode='000001.SZ'",
     );
     expect(symbols.getRowsJson()[0]).toEqual(['000001', 'SZ']);
+  } finally {
+    fixture.close();
+    target.close();
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('finishes adjustment factors when cancellation arrives after the import commit', async () => {
+  const root = await mkdtemp(path.join(tmpdir(), 'hithink-init-cancel-'));
+  const fixture = await openDatabase(path.join(root, 'fixture.duckdb'));
+  const target = await openDatabase(path.join(root, 'target.duckdb'));
+  const klinePath = path.join(root, 'kline.parquet');
+  const eventsPath = path.join(root, 'events.parquet');
+  const controller = new AbortController();
+  try {
+    await fixture.connection.run(
+      `COPY (SELECT * FROM (VALUES ('000001.SZ', DATE '2025-01-02', 10.0, 10.5, 9.5, 10.0, NULL::DOUBLE, 100.0, 1000.0), ('000001.SZ', DATE '2025-01-03', 9.5, 10.0, 9.0, 9.5, 10.0, 120.0, 1140.0)) AS t(thscode,date,open,high,low,"close",prev_close,volume,amount)) TO '${klinePath.replaceAll("'", "''")}' (FORMAT PARQUET)`,
+    );
+    await fixture.connection.run(
+      `COPY (SELECT '000001.SZ'::VARCHAR thscode, DATE '2025-01-03' ex_date, 0.5 dividend_per_share, 0.0 per_share_bonus, 0.0 rights_ratio, NULL::DOUBLE rights_price) TO '${eventsPath.replaceAll("'", "''")}' (FORMAT PARQUET)`,
+    );
+
+    await expect(
+      initializeData(
+        abortAfterImportCommit(target.connection, controller),
+        { klinePath, eventsPath, batchId: 'cancelled-init', source: 'fixture' },
+        controller.signal,
+      ),
+    ).rejects.toMatchObject({ code: 'CLI_CANCELLED' });
+
+    const counts = await target.connection.runAndReadAll(
+      'SELECT (SELECT count(*) FROM raw_kline_daily), (SELECT count(*) FROM calc_adjust_factor_daily)',
+    );
+    expect(counts.getRowsJson()[0]).toEqual(['2', '2']);
   } finally {
     fixture.close();
     target.close();

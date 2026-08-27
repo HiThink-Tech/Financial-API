@@ -88,7 +88,7 @@ def test_public_migration_guide_covers_old_checkout_upgrade() -> None:
 
 
 def test_public_snapshot_defaults_to_tracked_files_with_narrow_exclusions() -> None:
-    skill_root = MONOREPO_ROOT / "internal" / "skills" / "export-snapshot"
+    skill_root = MONOREPO_ROOT / ".agents" / "skills" / "public-release"
     if not skill_root.exists():
         pytest.skip("internal export policy is intentionally absent from public snapshots")
 
@@ -102,6 +102,8 @@ def test_public_snapshot_defaults_to_tracked_files_with_narrow_exclusions() -> N
     assert "PUBLIC_INCLUDE" not in sync_script
     assert "not matches_any(path, PUBLIC_EXCLUDE)" in sync_script
     assert '"sdd-docs/**"' in sync_script
+    assert '".agents/**"' in sync_script
     assert "source: git-tracked-files" in policy
     assert "default: include" in policy
     assert "- sdd-docs/**" in policy
+    assert "- .agents/**" in policy

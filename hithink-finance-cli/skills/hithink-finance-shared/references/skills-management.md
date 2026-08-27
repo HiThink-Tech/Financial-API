@@ -10,8 +10,8 @@ hithink-finance skills remove --format json
 
 ## 参数选择策略
 
-- `status` 检查已安装 Skills 是否与 CLI 包内 manifest 一致。
-- `sync` 修复缺失或漂移的受管文件；用户改过的受管文件会备份。
+- `status` 只检查 CLI 包内 manifest 和规范目录；`targets_verified: false` 表示尚未验证各 Agent 的发现目录，不能据此宣称已安装。
+- `sync` 与 `sync --repair` 都会覆盖同步缺失或漂移的官方文件；后者在结构化结果中返回 `mode: repair`，便于更新流程和自动化审计。
 - `remove` 只移除本 CLI manifest 拥有的 10 个 skill，不做全局清空。
 - 若某个 Agent 不在自动安装范围内，读取 `status --format json` 的 `canonical` 目录，并把其中 10 个 `hithink-finance-*` 目录复制到该 Agent 文档声明的 skills 发现目录。
 

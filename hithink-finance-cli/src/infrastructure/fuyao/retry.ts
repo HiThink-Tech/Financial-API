@@ -36,6 +36,8 @@
  * - 5001/5002/5003：内部服务器错误（可能自行恢复）
  */
 export const RETRYABLE_BUSINESS_CODES = new Set([4001, 5001, 5002, 5003]);
+export const RETRYABLE_HTTP_STATUS_CODES = new Set([429, 502, 503, 504]);
+export const MAX_RETRY_AFTER_MS = 30_000;
 
 /**
  * 解析 HTTP Retry-After 响应头
@@ -48,15 +50,20 @@ export const RETRYABLE_BUSINESS_CODES = new Set([4001, 5001, 5002, 5003]);
  * @param now - 当前时间戳（毫秒），用于计算日期格式的剩余等待时间
  * @returns 等待毫秒数，无法解析时返回 undefined
  */
-export function parseRetryAfter(value: string | null, now = Date.now()): number | undefined {
+export function parseRetryAfter(
+  value: string | null,
+  now = Date.now(),
+  maximumMs = MAX_RETRY_AFTER_MS,
+): number | undefined {
   if (value === null) return undefined;
   // 尝试解析为秒数
   const seconds = Number(value);
-  if (Number.isFinite(seconds) && seconds >= 0) return Math.round(seconds * 1000);
+  if (Number.isFinite(seconds) && seconds >= 0)
+    return Math.min(Math.round(seconds * 1000), maximumMs);
   // 尝试解析为 HTTP 日期格式
   const date = Date.parse(value);
   // 返回从现在到目标时间的毫秒数（最小为 0）
-  return Number.isNaN(date) ? undefined : Math.max(0, date - now);
+  return Number.isNaN(date) ? undefined : Math.min(Math.max(0, date - now), maximumMs);
 }
 
 /**
@@ -93,6 +100,7 @@ export function retryDelayMs(attempt: number, random: () => number): number {
  *
  * @param milliseconds - 等待的毫秒数
  */
-export async function defaultSleep(milliseconds: number): Promise<void> {
-  await new Promise<void>((resolve) => setTimeout(resolve, milliseconds));
+export async function defaultSleep(milliseconds: number, signal?: AbortSignal): Promise<void> {
+  await delay(milliseconds, undefined, signal === undefined ? undefined : { signal });
 }
+import { setTimeout as delay } from 'node:timers/promises';

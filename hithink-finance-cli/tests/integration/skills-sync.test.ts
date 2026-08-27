@@ -11,6 +11,7 @@ import {
   skillsCliArguments,
   skillsRemoveArguments,
 } from '../../src/infrastructure/skills/installer.js';
+import { readBundledSkillsStatus } from '../../src/infrastructure/skills/status.js';
 
 const roots: string[] = [];
 async function root(): Promise<string> {
@@ -42,6 +43,20 @@ test('removes only the ten package-owned skill names from every agent', () => {
   ).toHaveLength(10);
   expect(invocation.args).not.toContain('--agent');
   expect(invocation.args).not.toContain('--all');
+});
+
+test('reports bundled Skills without claiming Agent discovery targets were verified', async () => {
+  const packageRoot = path.resolve(import.meta.dirname, '../..');
+  const status = await readBundledSkillsStatus(packageRoot);
+
+  expect(status).toMatchObject({
+    cliVersion: '0.1.5',
+    skillCount: 10,
+    targetsVerified: false,
+    targetStatus: 'not-verified',
+  });
+  expect(status.fileCount).toBeGreaterThan(10);
+  expect(status.canonical.replaceAll('\\', '/')).toMatch(/\/skills$/);
 });
 
 test('backs up user-modified managed files and repairs canonical content', async () => {

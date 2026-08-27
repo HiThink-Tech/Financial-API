@@ -37,6 +37,7 @@ import path from 'node:path';
 import { createPlatformPaths } from '../infrastructure/filesystem/platform-paths.js';
 import { loadConfig } from '../application/config.js';
 import { maybeEmitCachedUpdateNotice } from '../infrastructure/updater/check.js';
+import { createProcessShutdown, shutdownExitCode } from '../infrastructure/process/shutdown.js';
 
 // 步骤 1: 加载 package.json 获取版本号等元数据
 const require = createRequire(import.meta.url);
@@ -56,7 +57,9 @@ let context = createCliContext(argv);
 if (argv.length === 1 && (argv[0] === '--version' || argv[0] === '-V')) {
   process.stdout.write(`${packageMetadata.version}\n`);
 } else
-  // 步骤 4-7: 完整启动流程
+// 步骤 4-7: 完整启动流程
+{
+  const shutdown = createProcessShutdown();
   try {
     // 步骤 4: 解析配置 —— 合并 CLI 参数、环境变量和配置文件
     const platformPaths = createPlatformPaths();
@@ -82,6 +85,7 @@ if (argv.length === 1 && (argv[0] === '--version' || argv[0] === '-V')) {
     context = createCliContext(argv, {
       format: resolvedConfig.format,
       ...(resolvedConfig.language === undefined ? {} : { language: resolvedConfig.language }),
+      signal: shutdown.signal,
     });
 
     // 步骤 5: 构建完整的 Commander 程序树
@@ -119,11 +123,20 @@ if (argv.length === 1 && (argv[0] === '--version' || argv[0] === '-V')) {
 
       // 渲染结构化的错误信封（JSON / CSV / table 等格式），供 AI Agent 解析
       await renderResult(
-        errorEnvelope(inferCommand(argv), cliError, packageMetadata.version),
+        errorEnvelope(inferCommand(argv), cliError, packageMetadata.version, {
+          debug: context.debug,
+          requestId: context.requestId,
+          ...(packageMetadata.bugs?.url === undefined
+            ? {}
+            : { bugReportBaseUrl: packageMetadata.bugs.url }),
+        }),
         context,
       );
 
       // 使用 CliError 中的退出码退出进程
-      process.exitCode = cliError.exitCode;
+      process.exitCode = shutdownExitCode(shutdown.signal.reason) ?? cliError.exitCode;
     }
+  } finally {
+    shutdown.dispose();
   }
+}

@@ -78,6 +78,8 @@ export interface ErrorBody {
   /** Optional correlation ID for tracing.
    *  可选的链路追踪关联 ID。 */
   requestId?: string;
+  /** Pre-populated issue URL for unexpected internal failures. */
+  reportUrl?: string;
 }
 
 /**
@@ -95,7 +97,38 @@ export interface ErrorEnvelope {
     /** Fixed schema version for forward compatibility.
      *  固定 schema 版本号，用于向前兼容。 */
     schemaVersion: '1';
+    diagnostics?: {
+      requestId: string;
+      stack: string;
+    };
   };
+}
+
+export interface ErrorEnvelopeOptions {
+  debug?: boolean;
+  requestId?: string;
+  bugReportBaseUrl?: string;
+}
+
+function bugReportUrl(
+  baseUrl: string,
+  command: string,
+  error: CliError,
+  cliVersion: string,
+  requestId: string,
+): string {
+  const url = new URL(baseUrl.endsWith('/new') ? baseUrl : `${baseUrl.replace(/\/$/u, '')}/new`);
+  url.searchParams.set('title', `[CLI ${cliVersion}] ${error.code}`);
+  url.searchParams.set(
+    'body',
+    [
+      `CLI version: ${cliVersion}`,
+      `Command: ${command}`,
+      `Error: ${error.code}`,
+      `Request ID: ${requestId}`,
+    ].join('\n'),
+  );
+  return url.toString();
 }
 
 /**
@@ -153,7 +186,12 @@ export function successEnvelope<T>(
  * @returns A well-formed error envelope with redacted messages.
  *          消息已脱敏的格式正确的错误信封。
  */
-export function errorEnvelope(command: string, error: CliError, cliVersion: string): ErrorEnvelope {
+export function errorEnvelope(
+  command: string,
+  error: CliError,
+  cliVersion: string,
+  options: ErrorEnvelopeOptions = {},
+): ErrorEnvelope {
   // 构建错误体，对 message 和 hint 进行脱敏处理，避免泄露凭据信息
   const body: ErrorBody = {
     code: error.code,
@@ -167,6 +205,19 @@ export function errorEnvelope(command: string, error: CliError, cliVersion: stri
   if (error.requestId !== undefined) {
     body.requestId = error.requestId;
   }
+  if (
+    error.code === 'CLI_INTERNAL_ERROR' &&
+    options.bugReportBaseUrl !== undefined &&
+    options.requestId !== undefined
+  ) {
+    body.reportUrl = bugReportUrl(
+      options.bugReportBaseUrl,
+      command,
+      error,
+      cliVersion,
+      options.requestId,
+    );
+  }
 
   return {
     ok: false,
@@ -175,6 +226,14 @@ export function errorEnvelope(command: string, error: CliError, cliVersion: stri
     meta: {
       cliVersion,
       schemaVersion: '1',
+      ...(options.debug === true && options.requestId !== undefined
+        ? {
+            diagnostics: {
+              requestId: options.requestId,
+              stack: redactText(error.debugStack ?? error.stack ?? error.message),
+            },
+          }
+        : {}),
     },
   };
 }

@@ -17,11 +17,12 @@
 
 import { createHash } from 'node:crypto';
 import { createWriteStream } from 'node:fs';
-import { mkdir, readFile, rename, rm } from 'node:fs/promises';
+import { mkdir, rename, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { Transform } from 'node:stream';
+import { cancelledError, throwIfCancelled } from '../../contracts/errors.js';
 
 /**
  * 支持的转储数据类型
@@ -58,6 +59,8 @@ export interface FetchFuyaoDumpOptions {
   sleep?: (milliseconds: number) => Promise<void>;
   /** 可选的下载进度回调；未提供时下载行为保持安静。 */
   onProgress?: (event: DumpDownloadProgressEvent) => void;
+  /** Optional caller cancellation signal. */
+  signal?: AbortSignal;
 }
 
 /**
@@ -97,6 +100,7 @@ export async function downloadDump(
   expectedSha256?: string,
   fetchImplementation: typeof globalThis.fetch = globalThis.fetch,
   onProgress?: (event: DownloadProgressEvent) => void,
+  signal?: AbortSignal,
 ): Promise<{ path: string; sha256: string }> {
   const absoluteTarget = path.resolve(targetPath);
   // 临时文件名 = 目标文件 + PID + .download 后缀，避免并发冲突
@@ -104,7 +108,7 @@ export async function downloadDump(
   // 确保目标目录存在
   await mkdir(path.dirname(absoluteTarget), { recursive: true });
 
-  const response = await fetchImplementation(url);
+  const response = await fetchImplementation(url, signal === undefined ? undefined : { signal });
   // HTTP 非 200 或无响应体 = 下载失败
   if (!response.ok || response.body === null)
     throw new Error(`Dump download failed: HTTP ${response.status}`);
@@ -113,6 +117,7 @@ export async function downloadDump(
   const totalBytes =
     Number.isSafeInteger(declaredLength) && declaredLength >= 0 ? declaredLength : undefined;
   let downloadedBytes = 0;
+  const hash = createHash('sha256');
   onProgress?.({
     phase: 'started',
     downloadedBytes,
@@ -122,6 +127,7 @@ export async function downloadDump(
   const progressStream = new Transform({
     transform(chunk: Buffer, _encoding, callback) {
       downloadedBytes += chunk.length;
+      hash.update(chunk);
       onProgress?.({
         phase: 'progress',
         downloadedBytes,
@@ -133,18 +139,14 @@ export async function downloadDump(
 
   try {
     // 流式下载：从 Web Stream 转换为 Node.js 可读流，通过 pipeline 写入文件
-    await pipeline(
-      Readable.fromWeb(
-        response.body as unknown as import('node:stream/web').ReadableStream<Uint8Array>,
-      ),
-      progressStream,
-      // 使用排他创建标志，防止并发写入
-      createWriteStream(temporary, { flags: 'wx' }),
+    const source = Readable.fromWeb(
+      response.body as unknown as import('node:stream/web').ReadableStream<Uint8Array>,
     );
-    // 计算已下载文件的 SHA-256 哈希
-    const sha256 = createHash('sha256')
-      .update(await readFile(temporary))
-      .digest('hex');
+    const target = createWriteStream(temporary, { flags: 'wx' });
+    if (signal === undefined) await pipeline(source, progressStream, target);
+    else await pipeline(source, progressStream, target, { signal });
+    // 哈希在下载管线中按 chunk 增量计算，避免把完整 dump 再次读入内存。
+    const sha256 = hash.digest('hex');
 
     // 校验和比对
     if (expectedSha256 !== undefined && sha256 !== expectedSha256)
@@ -161,6 +163,7 @@ export async function downloadDump(
   } catch (error) {
     // 清理临时文件（force 忽略文件不存在的错误）
     await rm(temporary, { force: true });
+    if (signal?.aborted === true) throw cancelledError();
     throw error;
   }
 }
@@ -199,7 +202,10 @@ async function signDump(
   const url = new URL(`/api/dump/market-dumps/${options.kind}/download-url`, options.baseUrl);
   const response = await fetchImplementation(url, {
     headers: { 'X-api-key': options.apiKey, accept: 'application/json' },
-    signal: AbortSignal.timeout(30_000),
+    signal:
+      options.signal === undefined
+        ? AbortSignal.timeout(30_000)
+        : AbortSignal.any([options.signal, AbortSignal.timeout(30_000)]),
   });
 
   if (!response.ok) throw new Error(`Dump signing failed: HTTP ${response.status}`);
@@ -237,6 +243,7 @@ export async function fetchFuyaoDump(options: FetchFuyaoDumpOptions): Promise<Fe
   // 最多尝试 2 次
   for (let attempt = 0; attempt < 2; attempt += 1) {
     try {
+      throwIfCancelled(options.signal);
       // 第一步：获取预签名下载 URL
       const signedUrl = await signDump(options, fetchImplementation);
       // 第二步：下载文件，保存为 {kind}.parquet
@@ -249,12 +256,17 @@ export async function fetchFuyaoDump(options: FetchFuyaoDumpOptions): Promise<Fe
         options.onProgress === undefined
           ? undefined
           : (event) => options.onProgress?.({ ...event, kind: options.kind }),
+        options.signal,
       );
       return { ...downloaded, releaseId: releaseId(signedUrl) };
     } catch (error) {
+      if (options.signal?.aborted === true) throw cancelledError();
       lastError = error;
       // 第一次失败后等待 250ms 再重试
-      if (attempt === 0) await sleep(250);
+      if (attempt === 0) {
+        await sleep(250);
+        throwIfCancelled(options.signal);
+      }
     }
   }
   throw lastError;

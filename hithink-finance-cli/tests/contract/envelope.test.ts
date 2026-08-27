@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { CliError } from '../../src/contracts/errors.js';
+import { CliError, internalError } from '../../src/contracts/errors.js';
 import { errorEnvelope, successEnvelope } from '../../src/contracts/envelope.js';
 
 describe('result envelopes', () => {
@@ -31,5 +31,20 @@ describe('result envelopes', () => {
     expect(result.ok).toBe(false);
     expect(JSON.stringify(result)).not.toContain('super-secret');
     expect(result.error.code).toBe('CLI_BAD_ARGUMENT');
+  });
+
+  test('adds redacted opt-in diagnostics and a pre-populated internal error report URL', () => {
+    const error = internalError(new Error('token=super-secret'));
+    const result = errorEnvelope('doctor', error, '0.1.5', {
+      debug: true,
+      requestId: 'req_debug',
+      bugReportBaseUrl: 'https://github.com/HiThink-Tech/Financial-API/issues',
+    });
+
+    expect(JSON.stringify(result)).not.toContain('super-secret');
+    expect(result.error.reportUrl).toContain('/issues/new?');
+    expect(result.error.reportUrl).toContain('req_debug');
+    expect(result.meta.diagnostics).toMatchObject({ requestId: 'req_debug' });
+    expect(result.meta.diagnostics?.stack).toContain('[REDACTED]');
   });
 });

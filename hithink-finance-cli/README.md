@@ -46,6 +46,8 @@ printf '%s' "$HITHINK_FINANCE_API_KEY" | \
   hithink-finance auth login --api-key-stdin --format json
 ```
 
+`--api-key <value>` 仅为兼容旧脚本保留，已从帮助中隐藏并会输出弃用警告；它可能把密钥暴露到 shell 历史和进程列表。新调用应使用隐藏输入、`--api-key-stdin` 或 `HITHINK_FINANCE_API_KEY`。
+
 统一 `hithink-finance` Skill 会先读取 `HITHINK_FINANCE_API_KEY` 或用户级凭据文件，再通过 stdin 将同一个 Key 安全同步到 CLI。已有 CLI 凭据需要更新时使用：
 
 ```bash
@@ -73,7 +75,7 @@ Agent 不应只凭 README 猜参数。先读取 `capabilities`，再对目标 ca
 
 | 命令组                          | 用途                                                 |
 | ------------------------------- | ---------------------------------------------------- |
-| `version`, `doctor`             | 版本和环境诊断                                       |
+| `version`, `doctor`             | 版本、认证、配置、DuckDB、数据锁和内置 Skills 诊断   |
 | `auth`, `config`                | API Key 与非敏感配置                                 |
 | `symbol`                        | 标的检索与代码表                                     |
 | `market`                        | 个股行情、集合竞价、交易日历、本地面板和复权因子     |
@@ -109,7 +111,7 @@ hithink-finance db query --sql "SELECT * FROM v_daily_qfq LIMIT 10" --format jso
 - 成功以进程退出码 0 和 JSON 信封 `ok=true` 为准。
 - 失败以非 0 退出码和 `ok=false` 为准，读取 `error.code`、`error.category`、`error.hint` 与请求标识。
 - 远端上游使用 `{code, message, request_id, data}`，但 CLI 会规范化为自己的信封；不要混用两套成功判断。
-- `--debug` 只向 stderr 输出诊断，不污染机器可读 stdout。
+- `--debug` 或 `DEBUG=hithink-finance*` 会在错误信封的 `meta.diagnostics` 中附加已脱敏的 request ID 与堆栈；错误信封仍只写 stderr，不污染机器可读 stdout。非预期内部错误还会返回预填版本、命令、错误码和 request ID 的 `error.report_url`。
 
 ## 大结果与数据源
 
@@ -141,6 +143,12 @@ hithink-finance db describe --format json
 
 远端初始化和同步下载数据包时，交互终端会在 stderr 动态刷新进度；stderr 被重定向时会输出开始、完成及节流后的进度日志（至少相隔 5 秒且新增 8 MiB）。无论何种模式，`--format json` 的结果信封都只写入 stdout。
 
+下载校验在流式写盘过程中增量计算 SHA-256，不会为了哈希再次把完整 dump 读入内存。DuckDB 默认最多使用 4 个线程，内存上限按系统内存的 25% 计算并限制在 256 MiB 至 1 GiB；可用 `HITHINK_FINANCE_DUCKDB_THREADS` 和 `HITHINK_FINANCE_DUCKDB_MEMORY_LIMIT`（例如 `512MiB`）覆盖。只读查询会响应终止信号；数据导入提交后仍先完成复权、元数据和质量一致性收尾。
+
+stdin 输入受大小保护：API Key 最多 16 KiB，批量证券代码最多 1 MiB。超限返回 `CLI_STDIN_TOO_LARGE`，不会继续缓存输入。
+
+Skills、更新和卸载的前台子进程均有执行时限。Windows 使用 `taskkill /t /f`，POSIX 使用独立进程组的 `SIGTERM`/`SIGKILL` 终止整棵前台进程树；超时返回 `CLI_CHILD_TIMEOUT`。普通命令的 detached 更新检查由跨进程租约保护，同一状态目录最多一个刷新任务。
+
 ## 配置优先级
 
 CLI 按以下顺序解析非敏感配置：
@@ -150,6 +158,8 @@ CLI 按以下顺序解析非敏感配置：
 3. 项目 `hithink-finance.config.json`
 4. 用户配置
 5. 默认值
+
+自动发现的项目配置可以不存在；通过 `--config` 或 `HITHINK_FINANCE_CONFIG` 显式指定文件时，该文件必须存在，否则返回 `CONFIG_NOT_FOUND`。
 
 使用 `hithink-finance config show --format json` 查看最终生效的非敏感配置。多套环境使用 `--profile <name>`。
 
@@ -161,7 +171,7 @@ CLI 按以下顺序解析非敏感配置：
 npx skills add HiThink-Tech/Financial-API --skill hithink-finance -g --yes
 ```
 
-CLI 包还可以通过 `hithink-finance skills status|sync|remove` 管理命令专用的领域 Skills。它们补充 CLI 参数路由，不替代统一 `hithink-finance` Skill，也不是上游 API 文档的事实源。
+CLI 包还可以通过 `hithink-finance skills status|sync|remove` 管理命令专用的领域 Skills。`status` 只陈述包内 manifest 和规范目录，不会把尚未检查的 Agent 发现目录误报为已安装；`sync --repair` 会执行覆盖同步并在结果中标记修复模式。它们补充 CLI 参数路由，不替代统一 `hithink-finance` Skill，也不是上游 API 文档的事实源。
 
 ## 开发与验证
 

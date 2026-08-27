@@ -71,6 +71,7 @@ import { importParquetBundle } from '../../infrastructure/duckdb/importer.js';
 import { applyMigrations } from '../../infrastructure/duckdb/migrations.js';
 import { rebuildAdjustmentFactors } from '../../infrastructure/duckdb/factors.js';
 import { validateDatabase } from '../../infrastructure/duckdb/quality.js';
+import { throwIfCancelled } from '../../contracts/errors.js';
 
 /** Fuyao 同步操作的配置选项 */
 export interface FuyaoSyncOptions {
@@ -84,6 +85,8 @@ export interface FuyaoSyncOptions {
   now?: Date;
   /** 下载转储时的可选进度回调。 */
   onProgress?: (event: DumpDownloadProgressEvent) => void;
+  /** Optional caller cancellation signal. */
+  signal?: AbortSignal;
 }
 
 /**
@@ -124,6 +127,7 @@ export async function syncDataFromFuyao(
   connection: DuckDBConnection,
   options: FuyaoSyncOptions,
 ): Promise<{ decision: SyncDecision; releaseId: string; factorRows: number; quality: unknown }> {
+  throwIfCancelled(options.signal);
   // 步骤 1：确保数据库 schema 是最新版本
   await applyMigrations(connection);
   // 步骤 2：查询本地最新数据日期
@@ -143,6 +147,7 @@ export async function syncDataFromFuyao(
   const kind: DumpKind = maxDate === null || lagDays > 14 ? 'daily-k' : 'daily-k-10d';
   // 步骤 4：拉取 kline 数据包
   const kline = await fetchFuyaoDump({ ...options, kind });
+  throwIfCancelled(options.signal);
   // releaseId 未变更 → 跳过同步
   if (previousRelease === kline.releaseId) {
     return {
@@ -154,17 +159,22 @@ export async function syncDataFromFuyao(
   }
   // 步骤 5：拉取复权因子数据包
   const events = await fetchFuyaoDump({ ...options, kind: 'adjustment-factors' });
+  throwIfCancelled(options.signal);
   // 步骤 6：确定同步模式并构造 batchId（时间戳，用于去重和追踪）
   const decision: SyncDecision = kind === 'daily-k' ? 'FULL' : 'INCREMENTAL';
   const batchId = `${decision.toLowerCase()}-${Date.now()}`;
   // 执行数据导入（包含去重、合并逻辑）
-  await importParquetBundle(connection, {
-    klinePath: kline.path,
-    eventsPath: events.path,
-    batchId,
-    source: `fuyao:${kline.releaseId}`,
-    mode: decision,
-  });
+  await importParquetBundle(
+    connection,
+    {
+      klinePath: kline.path,
+      eventsPath: events.path,
+      batchId,
+      source: `fuyao:${kline.releaseId}`,
+      mode: decision,
+    },
+    options.signal,
+  );
   // 步骤 7：重建复权因子派生表
   const factorRows = await rebuildAdjustmentFactors(connection);
   // 记录此次同步的元数据
@@ -172,11 +182,13 @@ export async function syncDataFromFuyao(
     "INSERT OR REPLACE INTO _meta VALUES ('last_kline_release_id',$kline),('last_adjustment_release_id',$events),('last_sync_mode',$mode)",
     { kline: kline.releaseId, events: events.releaseId, mode: decision },
   );
-  // 步骤 8：返回结果（含质量校验报告）
+  // 步骤 8：完成质量校验后再响应写入临界区内到达的取消信号。
+  const quality = await validateDatabase(connection);
+  throwIfCancelled(options.signal);
   return {
     decision,
     releaseId: kline.releaseId,
     factorRows,
-    quality: await validateDatabase(connection),
+    quality,
   };
 }

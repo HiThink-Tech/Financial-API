@@ -60,6 +60,7 @@ import { mkdir, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { withExclusiveDataLock } from '../../infrastructure/filesystem/process-lock.js';
 import { createDownloadProgressReporter } from '../../output/download-progress.js';
+import { readStdin } from '../../infrastructure/filesystem/stdin.js';
 
 /**
  * 解析数据库文件路径
@@ -113,11 +114,13 @@ async function withDataLock<T>(
  *
  * @returns 去除首尾空白后的 stdin 文本
  */
-async function stdinText(): Promise<string> {
-  const chunks: Buffer[] = [];
-  for await (const chunk of process.stdin)
-    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(String(chunk)));
-  return Buffer.concat(chunks).toString('utf8').trim();
+async function stdinText(signal: AbortSignal): Promise<string> {
+  return (
+    await readStdin(process.stdin, {
+      signal,
+      maxBytes: 16 * 1024,
+    })
+  ).trim();
 }
 
 /**
@@ -172,13 +175,17 @@ export function registerDataCommands(
           options.kline !== undefined && options.events !== undefined
             ? {
                 decision: 'FULL',
-                factorRows: await initializeData(db.connection, {
-                  klinePath: options.kline,
-                  eventsPath: options.events,
-                  ...(options.symbols === undefined ? {} : { symbolsPath: options.symbols }),
-                  batchId: `local-${Date.now()}`,
-                  source: 'local-files',
-                }),
+                factorRows: await initializeData(
+                  db.connection,
+                  {
+                    klinePath: options.kline,
+                    eventsPath: options.events,
+                    ...(options.symbols === undefined ? {} : { symbolsPath: options.symbols }),
+                    batchId: `local-${Date.now()}`,
+                    source: 'local-files',
+                  },
+                  context.signal,
+                ),
               }
             : await syncDataFromFuyao(db.connection, {
                 baseUrl: remote.baseUrl,
@@ -187,12 +194,13 @@ export function registerDataCommands(
                     init.optsWithGlobals<{ profile?: string }>().profile ?? 'default',
                     init.optsWithGlobals<{ apiKey?: string; apiKeyStdin?: boolean }>()
                       .apiKeyStdin === true
-                      ? await stdinText()
+                      ? await stdinText(context.signal)
                       : init.optsWithGlobals<{ apiKey?: string }>().apiKey,
                   )
                 ).apiKey,
                 cacheDir: paths.cacheDir,
                 onProgress: createDownloadProgressReporter(context),
+                signal: context.signal,
               });
         await renderResult(
           successEnvelope(
@@ -224,7 +232,7 @@ export function registerDataCommands(
         }>();
         const auth = await remote.authProvider.resolve(
           globals.profile ?? 'default',
-          globals.apiKeyStdin === true ? await stdinText() : globals.apiKey,
+          globals.apiKeyStdin === true ? await stdinText(context.signal) : globals.apiKey,
         );
         // 从 Fuyao API 增量同步数据
         const result = await syncDataFromFuyao(db.connection, {
@@ -232,6 +240,7 @@ export function registerDataCommands(
           apiKey: auth.apiKey,
           cacheDir: paths.cacheDir,
           onProgress: createDownloadProgressReporter(context),
+          signal: context.signal,
         });
         await renderResult(
           successEnvelope('data.sync', result, { requestId: context.requestId }),

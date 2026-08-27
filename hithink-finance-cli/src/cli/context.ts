@@ -46,6 +46,10 @@ export interface CliContext {
   /** Standard error stream (redirectable).
    *  标准错误流（可重定向）。 */
   stderr: NodeJS.WriteStream;
+  /** Shared cancellation signal triggered by process shutdown signals. */
+  signal: AbortSignal;
+  /** Whether redacted diagnostic details should be included in error output. */
+  debug: boolean;
 }
 
 /**
@@ -92,7 +96,7 @@ export function optionValue(argv: readonly string[], name: string): string | und
  */
 export function createCliContext(
   argv: readonly string[],
-  defaults: { format?: OutputFormat; language?: Language } = {},
+  defaults: { format?: OutputFormat; language?: Language; signal?: AbortSignal } = {},
 ): CliContext {
   const rawFormat = optionValue(argv, '--format');
   // 验证格式值的合法性，不合法则回退到默认值
@@ -111,11 +115,19 @@ export function createCliContext(
     format,
     language,
     // 仅在 TTY 终端且未设置 NO_COLOR 时启用颜色
-    color: process.stderr.isTTY === true && process.env.NO_COLOR === undefined,
+    color:
+      process.stderr.isTTY === true &&
+      process.env.NO_COLOR === undefined &&
+      !argv.includes('--no-color'),
     // requestId: CLI 传入 > 随机 UUID
     requestId: optionValue(argv, '--request-id') ?? randomUUID(),
     stdout: process.stdout,
     stderr: process.stderr,
+    signal: defaults.signal ?? new AbortController().signal,
+    debug:
+      argv.includes('--debug') ||
+      process.env.DEBUG?.split(',').some((value) => value.trim().startsWith('hithink-finance')) ===
+        true,
   };
 }
 

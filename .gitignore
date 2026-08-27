@@ -3,6 +3,7 @@ refer-to/
 feature/
 sdd-docs/*
 .workbuddy
+CODE_REVIEW_REPORT.md
 
 # ---- Secrets / local env ----
 .env

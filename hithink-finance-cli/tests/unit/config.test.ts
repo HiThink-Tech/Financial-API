@@ -85,4 +85,16 @@ describe('configuration', () => {
       loadConfig({ cwd: root, env: { HITHINK_FINANCE_CONFIG: configPath } }),
     ).rejects.toThrowError(/CONFIG_INVALID/);
   });
+
+  test('requires an explicitly configured file while allowing implicit discovery to be absent', async () => {
+    const root = await tempDirectory();
+    await expect(loadConfig({ cwd: root, env: {} })).resolves.toMatchObject({ profile: 'default' });
+
+    await expect(
+      loadConfig({ cwd: root, cli: { configPath: 'missing.json' }, env: {} }),
+    ).rejects.toMatchObject({ code: 'CONFIG_NOT_FOUND', exitCode: 2 });
+    await expect(
+      loadConfig({ cwd: root, env: { HITHINK_FINANCE_CONFIG: 'missing.json' } }),
+    ).rejects.toMatchObject({ code: 'CONFIG_NOT_FOUND', exitCode: 2 });
+  });
 });

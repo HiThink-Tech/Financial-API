@@ -63,6 +63,14 @@ function renderCsv(value: unknown): string {
   return `value\n${rows.map(csvEscape).join('\n')}\n`;
 }
 
+function red(value: string, enabled: boolean): string {
+  return enabled ? `\u001B[31m${value}\u001B[39m` : value;
+}
+
+function terminalLink(label: string, url: string, enabled: boolean): string {
+  return enabled ? `\u001B]8;;${url}\u0007${label}\u001B]8;;\u0007` : url;
+}
+
 /**
  * 将 Envelope 渲染到正确的输出流。
  *
@@ -96,9 +104,21 @@ export async function renderResult(result: Envelope, context: CliContext): Promi
 
   // 表格模式下的错误输出
   if (!result.ok) {
-    stream.write(
-      `hithink-finance v${result.meta.cliVersion} — Error (${result.error.code}): ${result.error.message}\n${result.error.hint}\n`,
-    );
+    const errorLabel = red(`Error (${result.error.code})`, context.color);
+    const lines = [
+      `hithink-finance v${result.meta.cliVersion} — ${errorLabel}: ${result.error.message}`,
+      result.error.hint,
+    ];
+    if (result.error.reportUrl !== undefined) {
+      lines.push(
+        `Report: ${terminalLink('open issue form', result.error.reportUrl, context.color)}`,
+      );
+    }
+    if (result.meta.diagnostics !== undefined) {
+      lines.push(`Request ID: ${result.meta.diagnostics.requestId}`);
+      lines.push(result.meta.diagnostics.stack);
+    }
+    stream.write(`${lines.join('\n')}\n`);
     return;
   }
 

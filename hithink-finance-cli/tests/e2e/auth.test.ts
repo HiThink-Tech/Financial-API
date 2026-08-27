@@ -42,3 +42,18 @@ test('rejects ambiguous API key input methods before reading stdin', async () =>
     error: { code: 'CLI_CONFLICTING_ARGUMENTS' },
   });
 });
+
+test('keeps deprecated --api-key compatible while emitting one redacted warning', async () => {
+  const secret = 'deprecated-secret';
+  const result = await execa(
+    'node',
+    ['dist/cli/main.js', 'version', '--api-key', secret, '--format', 'json'],
+    { reject: false },
+  );
+
+  expect(result.exitCode).toBe(0);
+  expect(JSON.parse(result.stdout)).toMatchObject({ ok: true, command: 'version' });
+  expect(result.stderr).toContain('Deprecated: --api-key');
+  expect(result.stderr.match(/Deprecated: --api-key/g)).toHaveLength(1);
+  expect(`${result.stdout}${result.stderr}`).not.toContain(secret);
+});

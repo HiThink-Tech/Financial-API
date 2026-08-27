@@ -3,6 +3,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 import { z } from 'zod';
 import { FuyaoClient } from '../../src/infrastructure/fuyao/client.js';
 import { paginate } from '../../src/infrastructure/fuyao/pagination.js';
+import { MAX_RETRY_AFTER_MS, parseRetryAfter } from '../../src/infrastructure/fuyao/retry.js';
 import { TEN_YEARS_MS, sliceTimeWindow } from '../../src/infrastructure/fuyao/windowing.js';
 
 const servers: Server[] = [];
@@ -93,9 +94,127 @@ describe('Fuyao HTTP client', () => {
       retryable: true,
     });
   });
+
+  test('retries transient HTTP failures without allowing unbounded Retry-After waits', async () => {
+    const delays: number[] = [];
+    const fetch = vi
+      .fn<typeof globalThis.fetch>()
+      .mockResolvedValueOnce(
+        new Response('temporarily unavailable', {
+          status: 503,
+          headers: { 'retry-after': '3600' },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({ code: 0, message: 'ok', request_id: 'req_http', data: { done: true } }),
+          { headers: { 'content-type': 'application/json' } },
+        ),
+      );
+    const client = new FuyaoClient({
+      baseUrl: 'https://fixture.invalid',
+      auth: { method: 'api-key', profile: 'default', apiKey: 'test-key', source: 'explicit' },
+      fetch,
+      sleep: async (milliseconds) => {
+        delays.push(milliseconds);
+      },
+    });
+
+    await expect(
+      client.request({ path: '/retry-http', schema: z.object({ done: z.boolean() }) }),
+    ).resolves.toMatchObject({ data: { done: true }, requestId: 'req_http' });
+    expect(delays).toEqual([MAX_RETRY_AFTER_MS]);
+  });
+
+  test('retries HTTP 503 before classifying a valid nonzero Fuyao envelope', async () => {
+    const fetch = vi
+      .fn<typeof globalThis.fetch>()
+      .mockResolvedValueOnce(
+        Response.json(
+          { code: 1001, message: 'busy', request_id: 'req_503', data: null },
+          { status: 503 },
+        ),
+      )
+      .mockResolvedValueOnce(
+        Response.json({ code: 0, message: 'ok', request_id: 'req_ok', data: { done: true } }),
+      );
+    const client = new FuyaoClient({
+      baseUrl: 'https://fixture.invalid',
+      auth: { method: 'api-key', profile: 'default', apiKey: 'test-key', source: 'explicit' },
+      fetch,
+      sleep: async () => undefined,
+    });
+
+    await expect(
+      client.request({ path: '/valid-503-envelope', schema: z.object({ done: z.boolean() }) }),
+    ).resolves.toMatchObject({ data: { done: true }, requestId: 'req_ok' });
+    expect(fetch).toHaveBeenCalledTimes(2);
+  });
+
+  test('honors Retry-After for valid HTTP 429 envelopes and returns stable HTTP error', async () => {
+    const delays: number[] = [];
+    const fetch = vi
+      .fn<typeof globalThis.fetch>()
+      .mockResolvedValue(
+        Response.json(
+          { code: 1001, message: 'limited', request_id: 'req_429', data: null },
+          { status: 429, headers: { 'retry-after': '2' } },
+        ),
+      );
+    const client = new FuyaoClient({
+      baseUrl: 'https://fixture.invalid',
+      auth: { method: 'api-key', profile: 'default', apiKey: 'test-key', source: 'explicit' },
+      fetch,
+      sleep: async (milliseconds) => {
+        delays.push(milliseconds);
+      },
+    });
+
+    await expect(
+      client.request({ path: '/valid-429-envelope', schema: z.unknown() }),
+    ).rejects.toMatchObject({
+      code: 'UPSTREAM_HTTP_429',
+      category: 'upstream',
+      retryable: true,
+      exitCode: 4,
+    });
+    expect(fetch).toHaveBeenCalledTimes(3);
+    expect(delays).toEqual([2_000, 2_000]);
+  });
+
+  test('cancels retry waits through the caller signal', async () => {
+    const controller = new AbortController();
+    const fetch = vi.fn<typeof globalThis.fetch>().mockResolvedValue(
+      new Response('temporarily unavailable', {
+        status: 503,
+        headers: { 'retry-after': '1' },
+      }),
+    );
+    const client = new FuyaoClient({
+      baseUrl: 'https://fixture.invalid',
+      auth: { method: 'api-key', profile: 'default', apiKey: 'test-key', source: 'explicit' },
+      fetch,
+      signal: controller.signal,
+      sleep: async (_milliseconds, signal) => {
+        controller.abort();
+        signal?.throwIfAborted();
+      },
+    });
+
+    await expect(
+      client.request({ path: '/cancel', schema: z.object({ done: z.boolean() }) }),
+    ).rejects.toMatchObject({ code: 'CLI_CANCELLED', exitCode: 1 });
+  });
 });
 
 describe('bounded helpers', () => {
+  test('caps numeric and date Retry-After values', () => {
+    expect(parseRetryAfter('3600')).toBe(MAX_RETRY_AFTER_MS);
+    expect(
+      parseRetryAfter('Thu, 01 Jan 2026 01:00:00 GMT', Date.parse('2026-01-01T00:00:00Z')),
+    ).toBe(MAX_RETRY_AFTER_MS);
+  });
+
   test('requires an explicit pagination bound unless output is streamed', async () => {
     await expect(paginate(async () => ({ items: [1], hasMore: false }), {})).rejects.toMatchObject({
       code: 'CLI_PAGINATION_BOUND_REQUIRED',

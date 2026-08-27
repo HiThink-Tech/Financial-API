@@ -245,6 +245,9 @@ const domainConfigs = {
     boundaries: [
       'SQL 必须只读；写入、DDL、删除或外部副作用不属于 `db query`。',
       '删除数据库或清除数据前先用 plan/状态输出让用户确认，真正删除需要显式 `--yes`。',
+      '`data init` / `data sync` 下载阶段可立即取消；数据库导入提交后会先完成复权、元数据和质量一致性收尾，再报告取消。',
+      'Dump 哈希在流式下载过程中计算；DuckDB 默认限制线程和内存，必要时使用 `HITHINK_FINANCE_DUCKDB_THREADS` / `HITHINK_FINANCE_DUCKDB_MEMORY_LIMIT` 做有界覆盖。',
+      '数据锁仅在 `EEXIST` 时按锁拥有者处理；目录、权限或存储故障返回 `DATA_LOCK_OPEN_FAILED`，应先修复本地状态目录。',
       '查询结果很多时用 `db export --output <file>`，不要回显全表。',
     ],
   },
@@ -381,6 +384,8 @@ const sharedReferenceFiles = {
 
 - 成功以进程退出码 0 和 \`ok: true\` 为准。
 - 错误以非 0 退出码和 \`ok: false\` 为准；读取 \`error.code\`、\`error.category\`、\`error.hint\`。
+- 需要诊断时使用 \`--debug\`；已脱敏的 request ID 与堆栈位于 \`meta.diagnostics\`，非预期内部错误的预填问题链接位于 \`error.report_url\`。
+- HTTP 429/502/503/504 优先于响应体中的业务错误信封进行有界重试；耗尽后返回 \`UPSTREAM_HTTP_<status>\`。
 - 不要按上游旧格式 \`code == 0\` 判断成功。
 
 ## 大结果纪律
@@ -414,6 +419,7 @@ hithink-finance config show --format json
 - 交互式终端可用 \`auth login\` 隐藏输入。
 - 如果 \`auth login\` 提示已登录，需要切换 API Key 时运行 \`auth login --replace\`；Agent/CI 使用 \`auth login --api-key-stdin --replace\`，无需先删除旧凭据。
 - Agent/CI 优先用 \`--api-key-stdin\` 或 \`HITHINK_FINANCE_API_KEY\`。
+- \`--api-key <value>\` 仅为旧脚本兼容保留，已从帮助中隐藏且会输出弃用警告；不要在新调用中使用。
 - 多套凭据使用全局 \`--profile <name>\`。
 - \`config show\` 只显示非敏感项；不要期待它返回 API Key。
 
@@ -422,6 +428,8 @@ hithink-finance config show --format json
 - \`AUTH_API_KEY_MISSING\`：运行 \`auth login\` 或设置 \`HITHINK_FINANCE_API_KEY\`。
 - \`CLI_MISSING_ARGUMENT\`：非交互场景使用 \`auth login --api-key-stdin\`，不要把 API Key 写入对话或日志。
 - \`CLI_CONFLICTING_ARGUMENTS\`：不要同时传 \`--api-key\` 和 \`--api-key-stdin\`。
+- \`CLI_STDIN_TOO_LARGE\`：缩小 stdin 输入；API Key 上限 16 KiB，批量代码上限 1 MiB。
+- \`CONFIG_NOT_FOUND\`：\`--config\` 或 \`HITHINK_FINANCE_CONFIG\` 指定的文件必须存在；修正路径或移除显式设置。
 `,
   'lifecycle.md': `# 生命周期命令
 
@@ -439,8 +447,10 @@ hithink-finance uninstall --plan --format json
 
 - 先 \`update --check\`，只有用户确认修复/升级时再 \`update --repair\`。
 - 卸载先 \`uninstall --plan\`，真实清理按计划和用户确认执行。
+- Skills、更新和卸载的前台子进程响应 SIGINT/SIGTERM 并具有执行时限；Windows 使用 taskkill，POSIX 使用独立进程组，都会终止前台进程树；超时返回 \`CLI_CHILD_TIMEOUT\`，CLI 保留 130/143 信号退出码。
+- 普通命令的 detached 更新检查由跨进程租约保护，同一状态目录最多一个刷新任务。
 - 直接 \`npm uninstall -g\` 不可靠清理 Agent Skill 目录；需要先运行 \`hithink-finance uninstall --yes\` 或 \`hithink-finance skills remove\`。
-- 诊断输出用于定位环境、路径、依赖和版本问题；不要把它当业务数据。
+- 诊断输出包括版本、配置路径、认证来源（不含密钥）、DuckDB、数据库文件、数据锁和包内 Skills manifest；不要把它当业务数据。
 
 ## 常见错误
 
@@ -459,8 +469,8 @@ hithink-finance skills remove --format json
 
 ## 参数选择策略
 
-- \`status\` 检查已安装 Skills 是否与 CLI 包内 manifest 一致。
-- \`sync\` 修复缺失或漂移的受管文件；用户改过的受管文件会备份。
+  - \`status\` 只检查 CLI 包内 manifest 和规范目录；\`targets_verified: false\` 表示尚未验证各 Agent 的发现目录，不能据此宣称已安装。
+  - \`sync\` 与 \`sync --repair\` 都会覆盖同步缺失或漂移的官方文件；后者在结构化结果中返回 \`mode: repair\`，便于更新流程和自动化审计。
 - \`remove\` 只移除本 CLI manifest 拥有的 10 个 skill，不做全局清空。
 - 若某个 Agent 不在自动安装范围内，读取 \`status --format json\` 的 \`canonical\` 目录，并把其中 10 个 \`hithink-finance-*\` 目录复制到该 Agent 文档声明的 skills 发现目录。
 

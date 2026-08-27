@@ -239,7 +239,10 @@ export function registerRemoteCapabilityGroup(
       const fileCodes =
         raw.codesFile === undefined ? undefined : await readFile(raw.codesFile, 'utf8');
       // 读取标准输入的代码
-      const stdinCodes = raw.codesStdin === true ? await readStdin() : undefined;
+      const stdinCodes =
+        raw.codesStdin === true
+          ? await readStdin(process.stdin, { signal: context.signal, maxBytes: 1024 * 1024 })
+          : undefined;
       const schemaInput: Record<string, unknown> = { ...raw };
       delete schemaInput.codesFile;
       delete schemaInput.codesStdin;
@@ -269,7 +272,14 @@ export function registerRemoteCapabilityGroup(
         db?: string;
       }>();
       const explicitApiKey =
-        globals.apiKeyStdin === true ? (await readStdin()).trim() : globals.apiKey;
+        globals.apiKeyStdin === true
+          ? (
+              await readStdin(process.stdin, {
+                signal: context.signal,
+                maxBytes: 16 * 1024,
+              })
+            ).trim()
+          : globals.apiKey;
       const requested = globals.source ?? 'auto';
 
       // ========== market.history 特有：本地优先回退逻辑 ==========
@@ -305,12 +315,16 @@ export function registerRemoteCapabilityGroup(
             );
             // 如果 source-policy 决定使用本地数据，直接从 DuckDB 查询并返回
             if (source === 'local') {
-              const rows = await getHistory(opened.connection, {
-                thscodes: [input.thscode],
-                start,
-                end,
-                adjust: input.adjust,
-              });
+              const rows = await getHistory(
+                opened.connection,
+                {
+                  thscodes: [input.thscode],
+                  start,
+                  end,
+                  adjust: input.adjust,
+                },
+                context.signal,
+              );
               const envelope = successEnvelope(capability.id, rows, {
                 source: 'local',
                 requestId: context.requestId,
@@ -373,7 +387,7 @@ export function registerRemoteCapabilityGroup(
       const result = await executeRemoteQuery(
         capability,
         parsed.data,
-        new FuyaoClient({ baseUrl: dependencies.baseUrl, auth }),
+        new FuyaoClient({ baseUrl: dependencies.baseUrl, auth, signal: context.signal }),
       );
       // 如果返回数据包含 item 数组字段，提取 count 元数据
       const count =

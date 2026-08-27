@@ -1,7 +1,7 @@
-import { mkdir, rename, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
-const [packageName, cacheFile] = process.argv.slice(2);
+const [packageName, cacheFile, leasePath, leaseToken] = process.argv.slice(2);
 if (packageName === undefined || cacheFile === undefined) process.exit(2);
 const state = { checkedAt: Date.now(), status: 'failure' };
 try {
@@ -17,7 +17,19 @@ try {
 } catch {
   // Update checks are advisory; failure is represented only in the cache.
 }
-await mkdir(path.dirname(cacheFile), { recursive: true });
 const temporary = `${cacheFile}.${process.pid}.tmp`;
-await writeFile(temporary, `${JSON.stringify(state)}\n`, { mode: 0o600 });
-await rename(temporary, cacheFile);
+try {
+  await mkdir(path.dirname(cacheFile), { recursive: true });
+  await writeFile(temporary, `${JSON.stringify(state)}\n`, { mode: 0o600 });
+  await rename(temporary, cacheFile);
+} finally {
+  await rm(temporary, { force: true }).catch(() => undefined);
+  if (leasePath !== undefined && leaseToken !== undefined) {
+    try {
+      const lease = JSON.parse(await readFile(leasePath, 'utf8'));
+      if (lease.token === leaseToken) await rm(leasePath, { force: true });
+    } catch {
+      // Lease cleanup is advisory.
+    }
+  }
+}

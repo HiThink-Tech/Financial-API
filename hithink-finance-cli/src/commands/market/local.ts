@@ -138,6 +138,7 @@ export function registerLocalMarketCommands(
         sql,
         options.output,
         options.fileFormat as 'ndjson' | 'csv' | 'parquet',
+        context.signal,
       );
       await renderResult(
         successEnvelope(
@@ -186,6 +187,7 @@ export function registerLocalMarketCommands(
       const rows = await queryReadOnly(
         opened.connection,
         `SELECT * FROM calc_adjust_factor_daily WHERE ${filters.join(' AND ')} ORDER BY date`,
+        context.signal,
       );
       await renderResult(
         successEnvelope('market.adjustment-factors', rows, {

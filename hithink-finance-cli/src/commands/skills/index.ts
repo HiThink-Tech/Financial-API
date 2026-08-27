@@ -18,6 +18,7 @@ import { localizeText } from '../../cli/i18n.js';
 import { successEnvelope } from '../../contracts/envelope.js';
 import { CliError } from '../../contracts/errors.js';
 import { removeSkills, syncSkills } from '../../infrastructure/skills/installer.js';
+import { readBundledSkillsStatus } from '../../infrastructure/skills/status.js';
 import { renderResult } from '../../output/renderer.js';
 
 /**
@@ -39,26 +40,22 @@ export function registerSkillsCommands(
     .description(localizeText(context.language, 'Manage Agent Skills'));
 
   // ========== skills status ==========
-  skills
-    .command('status')
-    .action(async () =>
-      renderResult(
-        successEnvelope(
-          'skills.status',
-          { canonical: `${packageRoot}/skills`, managed: true },
-          { requestId: context.requestId },
-        ),
-        context,
-      ),
-    );
+  skills.command('status').action(async () =>
+    renderResult(
+      successEnvelope('skills.status', await readBundledSkillsStatus(packageRoot), {
+        requestId: context.requestId,
+      }),
+      context,
+    ),
+  );
 
   // ========== skills sync ==========
   skills
     .command('sync')
     .option('--repair')
-    .action(async () => {
+    .action(async (options: { repair?: boolean }) => {
       // 同步 Skill 文件到各 Agent 的发现目录
-      const result = await syncSkills(packageRoot);
+      const result = await syncSkills(packageRoot, context.signal);
       // 如果部分 Agent 同步失败，抛出可重试的错误
       if (result.code !== 0)
         throw new CliError({
@@ -70,7 +67,15 @@ export function registerSkillsCommands(
           exitCode: 6,
         });
       await renderResult(
-        successEnvelope('skills.sync', { synchronized: true }, { requestId: context.requestId }),
+        successEnvelope(
+          'skills.sync',
+          {
+            synchronized: true,
+            mode: options.repair === true ? 'repair' : 'sync',
+            targetsVerified: false,
+          },
+          { requestId: context.requestId },
+        ),
         context,
       );
     });
@@ -78,7 +83,7 @@ export function registerSkillsCommands(
   // ========== skills remove ==========
   skills.command('remove').action(async () => {
     // 从各 Agent 的发现目录移除托管 Skill 文件
-    const result = await removeSkills(packageRoot);
+    const result = await removeSkills(packageRoot, context.signal);
     if (result.code !== 0)
       throw new CliError({
         code: 'SKILLS_REMOVE_PARTIAL',

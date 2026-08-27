@@ -34,6 +34,7 @@ export async function getHistory(
     end?: string;
     adjust?: 'none' | 'forward' | 'backward';
   },
+  signal?: AbortSignal,
 ): Promise<Record<string, unknown>[]> {
   // 选择复权视图
   const view =
@@ -52,5 +53,6 @@ export async function getHistory(
   return queryReadOnly(
     connection,
     `SELECT * FROM ${view} WHERE ${filters.join(' AND ')} ORDER BY thscode,date`,
+    signal,
   );
 }

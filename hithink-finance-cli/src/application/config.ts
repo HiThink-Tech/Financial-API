@@ -158,13 +158,20 @@ export function parseConfigFile(value: unknown, source: string): ConfigFile {
  * @param configPath - 配置文件的绝对路径
  * @returns 解析后的 ConfigFile，文件不存在时返回 undefined
  */
-async function readConfig(configPath: string): Promise<ConfigFile | undefined> {
+async function readConfig(configPath: string, required = false): Promise<ConfigFile | undefined> {
   let content: string;
   try {
     content = await readFile(configPath, 'utf8');
   } catch (error) {
     // 文件不存在是正常情况 — 配置文件是可选的
     if (typeof error === 'object' && error !== null && 'code' in error && error.code === 'ENOENT') {
+      if (required) {
+        throw configError(
+          'CONFIG_NOT_FOUND',
+          `The explicitly configured file does not exist: ${configPath}`,
+          'Create the file, correct --config/HITHINK_FINANCE_CONFIG, or remove the explicit setting.',
+        );
+      }
       return undefined;
     }
     throw error;
@@ -235,7 +242,7 @@ export async function loadConfig(input: LoadConfigInput = {}): Promise<ResolvedC
   // 并行读取用户级和项目级配置文件
   const [userConfig, projectConfig] = await Promise.all([
     readConfig(paths.userConfigFile),
-    readConfig(projectConfigPath),
+    readConfig(projectConfigPath, explicitConfigPath !== undefined),
   ]);
 
   // === dbPath 逐层覆盖：默认 → 用户配置 → 项目配置 → env → CLI ===

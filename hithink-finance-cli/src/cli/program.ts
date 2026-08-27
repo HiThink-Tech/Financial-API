@@ -51,6 +51,7 @@ export interface PackageMetadata {
   /** Semantic version string (e.g. `'1.2.3'`).
    *  语义化版本字符串（例如 `'1.2.3'`）。 */
   version: string;
+  bugs?: { url?: string };
 }
 
 /**
@@ -138,7 +139,12 @@ export function createProgram(
       dependencies.resolvedConfig.profile,
     )
     .option('--config <path>', localizeText(context.language, 'explicit JSON configuration file'))
-    .option('--api-key <value>', localizeText(context.language, 'API key for this process'))
+    .addOption(
+      new Option(
+        '--api-key <value>',
+        localizeText(context.language, 'API key for this process'),
+      ).hideHelp(),
+    )
     .option('--api-key-stdin', localizeText(context.language, 'read an API key from stdin'))
     .option('--no-input', localizeText(context.language, 'disable interactive input'))
     .option('--yes', localizeText(context.language, 'confirm non-interactive operations'))
@@ -172,6 +178,11 @@ export function createProgram(
         retryable: false,
         exitCode: 2,
       });
+    if (options.apiKey !== undefined) {
+      context.stderr.write(
+        'Deprecated: --api-key may expose credentials in shell history and process listings. Use --api-key-stdin or HITHINK_FINANCE_API_KEY.\n',
+      );
+    }
   });
 
   // ---- 注册 version 描述符 ----
@@ -221,7 +232,13 @@ export function createProgram(
   registerSkillsCommands(program, context, dependencies.packageRoot);
   registerUpdateCommand(program, context, metadata, dependencies);
   registerUninstallCommand(program, context, metadata, dependencies);
-  registerDoctorCommand(program, context);
+  registerDoctorCommand(program, context, {
+    metadata,
+    authProvider: dependencies.authProvider,
+    packageRoot: dependencies.packageRoot,
+    platformPaths: dependencies.platformPaths,
+    resolvedConfig: dependencies.resolvedConfig,
+  });
   registerDataCommands(program, context, dependencies.platformPaths, {
     ...remoteDependencies,
     cliVersion: metadata.version,

@@ -13,6 +13,66 @@
 import { DuckDBInstance, type DuckDBConnection } from '@duckdb/node-api';
 import path from 'node:path';
 import { mkdir } from 'node:fs/promises';
+import os from 'node:os';
+import { cancelledError, CliError, throwIfCancelled } from '../../contracts/errors.js';
+
+const MIB = 1024 ** 2;
+
+export function duckDbRuntimeOptions(
+  env: NodeJS.ProcessEnv = process.env,
+  totalMemory = os.totalmem(),
+  parallelism = os.availableParallelism(),
+): Record<string, string> {
+  const rawThreads = env.HITHINK_FINANCE_DUCKDB_THREADS;
+  const threads =
+    rawThreads === undefined ? Math.min(4, Math.max(1, parallelism)) : Number(rawThreads);
+  const rawMemoryLimit = env.HITHINK_FINANCE_DUCKDB_MEMORY_LIMIT;
+  const memoryLimit =
+    rawMemoryLimit ??
+    `${Math.floor(Math.min(1024 * MIB, Math.max(256 * MIB, totalMemory * 0.25)) / MIB)}MiB`;
+  if (!Number.isSafeInteger(threads) || threads < 1 || threads > 64) {
+    throw new CliError({
+      code: 'DUCKDB_CONFIG_INVALID',
+      category: 'validation',
+      message: 'HITHINK_FINANCE_DUCKDB_THREADS must be an integer from 1 to 64.',
+      hint: 'Remove the override or set it to a bounded positive integer.',
+      retryable: false,
+      exitCode: 2,
+    });
+  }
+  const memoryMatch = /^(\d+(?:\.\d+)?)(?:KiB|MiB|GiB|KB|MB|GB)$/u.exec(memoryLimit);
+  if (memoryMatch === null || Number(memoryMatch[1]) <= 0) {
+    throw new CliError({
+      code: 'DUCKDB_CONFIG_INVALID',
+      category: 'validation',
+      message: 'HITHINK_FINANCE_DUCKDB_MEMORY_LIMIT has an unsupported value.',
+      hint: 'Use a positive size such as 512MiB or 1GiB.',
+      retryable: false,
+      exitCode: 2,
+    });
+  }
+  return { memory_limit: memoryLimit, threads: String(threads) };
+}
+
+export async function withDuckDbInterrupt<T>(
+  connection: DuckDBConnection,
+  signal: AbortSignal | undefined,
+  action: () => Promise<T>,
+): Promise<T> {
+  throwIfCancelled(signal);
+  const onAbort = () => connection.interrupt();
+  signal?.addEventListener('abort', onAbort, { once: true });
+  try {
+    const result = await action();
+    throwIfCancelled(signal);
+    return result;
+  } catch (error) {
+    if (signal?.aborted === true) throw cancelledError();
+    throw error;
+  } finally {
+    signal?.removeEventListener('abort', onAbort);
+  }
+}
 
 /**
  * 打开的数据库描述对象
@@ -44,9 +104,15 @@ export async function openDatabase(databasePath: string): Promise<OpenDatabase> 
   // 自动创建数据库文件所在目录
   await mkdir(path.dirname(absolutePath), { recursive: true });
   // 创建 DuckDB 实例（进程内嵌入式数据库引擎）
-  const instance = await DuckDBInstance.create(absolutePath);
-  // 建立数据库连接
-  const connection = await instance.connect();
+  const instance = await DuckDBInstance.create(absolutePath, duckDbRuntimeOptions());
+  // 建立数据库连接；连接失败也要关闭已创建的 native 实例。
+  let connection: DuckDBConnection;
+  try {
+    connection = await instance.connect();
+  } catch (error) {
+    instance.closeSync();
+    throw error;
+  }
   return {
     path: absolutePath,
     connection,
