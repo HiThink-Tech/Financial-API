@@ -7,12 +7,14 @@ hithink-finance version --format json
 hithink-finance doctor --format json
 hithink-finance update --check --format json
 hithink-finance update --repair --format json
+hithink-finance update --repair --target-version <version> --format json
 hithink-finance uninstall --plan --format json
 ```
 
 ## 参数选择策略
 
-- 先 `update --check`，只有用户确认修复/升级时再 `update --repair`。
+- 先 `update --check` 确认当前版本与目标版本；`update --repair` 只修复当前安装，不会改变已安装的版本。
+- 跨版本升级或安装指定版本必须显式加 `--target-version <version>`，例如 `hithink-finance update --repair --target-version 0.1.8 --format json`；回滚同样传入目标旧版本。
 - 卸载先 `uninstall --plan`，真实清理按计划和用户确认执行。
 - Skills、更新和卸载的前台子进程响应 SIGINT/SIGTERM 并具有执行时限；Windows 使用 taskkill，POSIX 使用独立进程组，都会终止前台进程树；超时返回 `CLI_CHILD_TIMEOUT`，CLI 保留 130/143 信号退出码。
 - 普通命令的 detached 更新检查由跨进程租约保护，同一状态目录最多一个刷新任务。
@@ -22,4 +24,6 @@ hithink-finance uninstall --plan --format json
 ## 常见错误
 
 - 普通命令可能在完成后向 stderr 输出更新提示；不要把它混入业务数据。
-- 不要因为更新提示中断取数、翻页或导出流程；需要升级时先运行 `update --check`，获得用户确认后再 `update --repair`。
+- 不要因为更新提示中断取数、翻页或导出流程；需要升级时先运行 `update --check` 确认目标版本，获得用户确认后再运行 `update --repair --target-version <version>`。
+- 只说「升级」而不传 `--target-version` 时，`update --repair` 会返回成功但版本号不变；不要据此认为升级已完成，应先比对 `update --check` 的 `current_version` 与 `latest_version`。
+- `--target-version` 只接受合法 SemVer 版本号；执行后仍须用 `hithink-finance version --format json` 复核实际生效版本。

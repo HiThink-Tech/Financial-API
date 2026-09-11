@@ -28,7 +28,7 @@ description: '用于 Agent 通过 hithink-finance CLI 做安装后自检、API K
 | 查看非敏感配置          | `hithink-finance config show --format json`                                                                                                                                   |
 | 诊断运行环境            | `hithink-finance doctor --format json`                                                                                                                                        |
 | 同步/修复配套 Skills    | `hithink-finance skills status --format json` 或 `hithink-finance skills sync --format json`                                                                                  |
-| 更新 CLI                | `hithink-finance update --check --format json` 或 `hithink-finance update --repair --format json`                                                                             |
+| 更新 CLI                | `hithink-finance update --check --format json` 确认目标版本后，用 `hithink-finance update --repair --target-version <version> --format json` 升级                             |
 | 预览卸载                | `hithink-finance uninstall --plan --format json`                                                                                                                              |
 
 ## References
