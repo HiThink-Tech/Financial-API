@@ -192,6 +192,40 @@ CLI 包通过 `hithink-finance skills status|sync|remove` 管理 12 个命令专
 
 默认将内容发布到 CLI 用户级数据目录，再为每个目标的每个 Skill 建立目录链接（Windows 为 junction，其他平台为 symlink），因此多 Agent 只共享一份内容。`status --format json` 实际校验共享内容和逐目标文件；`ready` 不代表客户端已加载，新增后可能需要刷新或新建会话。
 
+### Fallback Agent Skills installation
+
+如果 npm 使用了 `--ignore-scripts`，优先在安装完成后执行：
+
+```bash
+hithink-finance skills sync --repair --format json
+```
+
+如果 CLI 自动同步仍不可用，可以通过 `skills` 工具直接从 GitHub 子目录安装 12 个 CLI 配套领域 Skills。只指定实际使用的 Agent，例如：
+
+```bash
+npx skills add https://github.com/HiThink-Tech/Financial-API/tree/main/hithink-finance-cli/skills --skill '*' --agent codex --global --yes --full-depth
+```
+
+将 `codex` 替换为目标 Agent 名称；多个目标可重复传入 `--agent`，例如 `--agent codex --agent claude-code`。不要使用 `--all`，它等价于同时选择所有 Skills 和所有 Agent，会创建不需要的 Agent 目录。`npx skills` 当前可直接处理 Codex、Claude Code、Cursor、Gemini CLI、OpenCode、GitHub Copilot、Trae 和 Trae CN；WorkBuddy 与 QClaw 请使用 CLI 自动同步或下面的手工复制方式。
+
+也可以 clone 仓库或下载 [GitHub 源码](https://github.com/HiThink-Tech/Financial-API)，找到 `hithink-finance-cli/skills/`，把其中每个 `hithink-finance-*` 完整目录直接复制到目标的 Skills 根目录：
+
+| Agent              | Skills 根目录                                                                    |
+| ------------------ | -------------------------------------------------------------------------------- |
+| Codex              | `~/.codex/skills/`                                                               |
+| Claude Code        | `~/.claude/skills/`                                                              |
+| Cursor             | `~/.cursor/skills/`                                                              |
+| Gemini CLI         | `~/.gemini/skills/`                                                              |
+| OpenCode           | Windows：`%APPDATA%/opencode/skills/`；macOS/Linux：`~/.config/opencode/skills/` |
+| GitHub Copilot CLI | `~/.copilot/skills/`                                                             |
+| Trae / Trae CN     | `~/.trae/skills/` / `~/.trae-cn/skills/`                                         |
+| WorkBuddy          | `~/.workbuddy/skills/`                                                           |
+| QClaw              | `~/.qclaw/skills/`                                                               |
+
+不要把外层 `skills/` 目录整体复制成目标目录下的下一层，也不要只复制 `SKILL.md`；每个 Skill 的 `references/` 必须完整保留。安装完成后刷新或新建 Agent 会话。通过 `npx skills` 安装时可用 `npx skills list --global --agent <name> --json` 核对；手工复制时应确认目标下 12 个 `hithink-finance-*` 目录均包含 `SKILL.md`。
+
+这两种兜底方式不写入 CLI 的 Skills 所有权记录，因此不受 `hithink-finance skills status|sync|remove` 管理。以后如需切回 CLI 管理，应先移除手工安装的同名目录，再运行 `hithink-finance skills sync --agent <name> --format json`；CLI 不会覆盖未知或用户占用的目录。
+
 ```bash
 # 追加目标，保留已有选择
 hithink-finance skills sync --agent claude-code --format json

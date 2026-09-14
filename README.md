@@ -184,6 +184,20 @@ hithink-finance skills status --format json
 
 详细的支持目标、自定义目录、复制兼容模式、修复与移除规则见 [CLI Skills 管理说明](hithink-finance-cli/README.md#agent-skill-lifecycle)。
 
+#### CLI 配套 Skills 兜底安装
+
+如果 npm 禁用了安装脚本，优先在 CLI 安装完成后运行 `hithink-finance skills sync --repair --format json`。如果 CLI 自动同步仍不可用，也可以只为实际使用的 Agent 安装 [`hithink-finance-cli/skills/`](hithink-finance-cli/skills/) 下的 12 个领域 Skills：
+
+```bash
+npx skills add https://github.com/HiThink-Tech/Financial-API/tree/main/hithink-finance-cli/skills --skill '*' --agent codex --global --yes --full-depth
+```
+
+将 `codex` 替换为目标 Agent 的名称；需要多个 Agent 时重复传入 `--agent`。不要使用 `--all`，它会把 Skills 安装到该工具支持的全部 Agent 目录。
+
+也可以 clone 仓库或下载 GitHub 源码压缩包，再把 `hithink-finance-cli/skills/` 下每个 `hithink-finance-*` 完整目录直接复制到目标 Agent 的 Skills 发现目录。不要把外层 `skills/` 整体嵌套进去，也不要只复制 `SKILL.md`；各 Skill 的 `references/` 必须一并保留。常用 Agent 的目录映射及手工安装边界见 [CLI 兜底安装说明](hithink-finance-cli/README.md#fallback-agent-skills-installation)。
+
+通过 `npx skills` 或手工复制的内容不属于 CLI 生命周期托管范围。以后如需改回 `hithink-finance skills sync` 管理，应先移除这些手工副本，否则 CLI 会将同名目录视为用户内容并保留、报告冲突。
+
 国内用户可使用 [npmmirror](https://npmmirror.com/) 镜像加速：
 
 ```bash
