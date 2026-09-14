@@ -1,6 +1,6 @@
 {
   "protocolVersion": "1",
-  "cliVersion": "0.1.10",
+  "cliVersion": "0.1.11",
   "files": {
     "hithink-finance-data/SKILL.md": "eb92eae9d6690fff2a6d8ef778ce08125b824725e04bec0c17c2dd21bee8b677",
     "hithink-finance-data/references/data-clean.md": "49422a4a8f1ea0ced02da7b1130f91ec273286205ead881b6beb5e93ba93b55b",
@@ -89,11 +89,11 @@
     "hithink-finance-options/references/options-varieties.md": "18dd73168876e74e7741eb5710191f16815f8e40c20d5fc874fc3d435013de54",
     "hithink-finance-research/SKILL.md": "7f4ded9d172a2bb2578ac81266ef869521c7d753f2a021c7aa79fc6d0f92541c",
     "hithink-finance-research/references/research-workflow.md": "3f73f179339b21403e7f8f6bfd7fcb2649f06ffc6b6bccb428b18cb19929dad5",
-    "hithink-finance-shared/SKILL.md": "8b02e5c2a07d79d818fb5e2b41f6d83afcc39cfc671aba0d4ac87068710c36ab",
+    "hithink-finance-shared/SKILL.md": "52479804ed87e6125a96dfb46a977245003b6527390f37517a27e840e7eff190",
     "hithink-finance-shared/references/auth-and-config.md": "200c37bae0ab696580055a29be6e39c6d9d003e418a425baafd3a07872bb4e11",
     "hithink-finance-shared/references/global-rules.md": "8beab5ddcb83c22165268989685c9e44c7489c934a380a388e77542a02dcedc7",
-    "hithink-finance-shared/references/lifecycle.md": "747049d179dcfb49fc9e9460f3bd794bfcf0b7fc5958e689b3a31fafde256c57",
-    "hithink-finance-shared/references/skills-management.md": "1872d129dd113922990e7b43c42e520bf1ff889d2b3cd06872935bd8e05f15c0",
+    "hithink-finance-shared/references/lifecycle.md": "a32f53879abcf0e3b1151af6254c1a66c7b376b14181ef24b424f2fd3c1426e8",
+    "hithink-finance-shared/references/skills-management.md": "cb007faeda905d321bbbe8fddc0ada5d91af6d52892ae85492b845ce48105b65",
     "hithink-finance-special-data/SKILL.md": "e949daf45eded1be23a0e4a2f6db9e10bc5a8ca6e8e188e89953140ca3d1e375",
     "hithink-finance-special-data/references/special-anomaly-list.md": "98f7bac44eb040ff80fd06185bd9ac811fdd7d46fa6c7695a32e808eda3bd2fd",
     "hithink-finance-special-data/references/special-anomaly-stock.md": "5bb7878964e76c6b37b46ffe6eb1f43c2df709b34a3f3be24bc0729ccf31188d",

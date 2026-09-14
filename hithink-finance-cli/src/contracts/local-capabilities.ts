@@ -77,6 +77,15 @@ export const localCapabilities: readonly LocalCapabilityDescriptor[] = [
     { flags: '--start <date>', required: false },
     { flags: '--end <date>', required: false },
   ]),
+  // ---- skills Agent 配套技能生命周期 ----
+  descriptor('skills.status', 'skills', 'status'),
+  descriptor('skills.sync', 'skills', 'sync', [
+    { flags: '--agent <name>', required: false },
+    { flags: '--directory <absolute-path>', required: false },
+    { flags: '--copy', required: false },
+    { flags: '--repair', required: false },
+  ]),
+  descriptor('skills.remove', 'skills', 'remove', [{ flags: '--agent <name>', required: false }]),
 ];
 
 function descriptor(

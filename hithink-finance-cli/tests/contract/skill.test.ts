@@ -30,14 +30,15 @@ test('ships exactly twelve valid Skills with shared dependency rules', async () 
   }
 });
 
-test('documents dedicated WorkBuddy and QClaw Skill synchronization', async () => {
+test('documents the persistent multi-Agent Skill lifecycle', async () => {
   const text = await readFile(
     path.resolve('skills', 'hithink-finance-shared', 'references', 'skills-management.md'),
     'utf8',
   );
 
-  expect(text).toContain('~/.workbuddy/skills');
-  expect(text).toContain('~/.qclaw/skills');
-  expect(text).toContain('客户端根目录已存在');
-  expect(text).toContain('不创建未安装客户端的根目录');
+  expect(text).toContain('WorkBuddy');
+  expect(text).toContain('QClaw');
+  expect(text).toContain('目录建立链接');
+  expect(text).toContain('仅存在历史 `skills` 目录不算客户端证据');
+  expect(text).toContain('sync --agent <name>');
 });

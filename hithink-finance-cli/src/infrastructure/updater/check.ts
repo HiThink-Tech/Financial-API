@@ -225,7 +225,7 @@ export async function maybeEmitCachedUpdateNotice(options: UpdateNoticeOptions):
       `[update] A newer hithink-finance CLI version is available: ${latestVersion} ` +
         `(current ${options.currentVersion}).\n` +
         'Run `hithink-finance update --check --format json` to inspect it; ' +
-        'run `hithink-finance update --repair` to update after confirmation.\n',
+        'run `hithink-finance update` to install the latest version after confirmation.\n',
     );
     await writeUpdateCache(options.cacheFile, {
       ...cached,

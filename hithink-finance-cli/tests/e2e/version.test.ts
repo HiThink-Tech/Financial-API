@@ -68,6 +68,7 @@ test('prints cached update notice to stderr after normal JSON command', async ()
   });
   expect(result.stderr).toContain('0.2.0');
   expect(result.stderr).toContain('hithink-finance update --check');
+  expect(result.stderr).toContain('hithink-finance update`');
   expect(JSON.parse(await readFile(cacheFile, 'utf8'))).toMatchObject({
     promptedAt: expect.any(Number),
     promptedCurrentVersion: '0.1.10',

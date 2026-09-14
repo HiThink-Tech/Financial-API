@@ -6,13 +6,17 @@
 hithink-finance version --format json
 hithink-finance doctor --format json
 hithink-finance update --check --format json
+hithink-finance update --format json
 hithink-finance update --repair --format json
+hithink-finance update --target-version <version> --format json
 hithink-finance uninstall --plan --format json
 ```
 
 ## 参数选择策略
 
-- 先 `update --check`，只有用户确认修复/升级时再 `update --repair`。
+- `update --check` 只检查版本；确认后直接运行 `update` 更新到 npm latest。
+- `update --target-version <version>` 安装指定版本，可用于升级或回滚；`update --repair` 仅重新安装当前版本。
+- `--check`、`--repair` 与 `--target-version` 互斥，不要组合使用。
 - 卸载先 `uninstall --plan`，真实清理按计划和用户确认执行。
 - Skills、更新和卸载的前台子进程响应 SIGINT/SIGTERM 并具有执行时限；Windows 使用 taskkill，POSIX 使用独立进程组，都会终止前台进程树；超时返回 `CLI_CHILD_TIMEOUT`，CLI 保留 130/143 信号退出码。
 - 普通命令的 detached 更新检查由跨进程租约保护，同一状态目录最多一个刷新任务。
@@ -22,4 +26,6 @@ hithink-finance uninstall --plan --format json
 ## 常见错误
 
 - 普通命令可能在完成后向 stderr 输出更新提示；不要把它混入业务数据。
-- 不要因为更新提示中断取数、翻页或导出流程；需要升级时先运行 `update --check`，获得用户确认后再 `update --repair`。
+- 不要因为更新提示中断取数、翻页或导出流程；需要升级时先运行 `update --check`，获得用户确认后再运行 `update`。
+- `update` 会同步查询 npm latest 并安装对应的精确版本；查询失败时可检查 npm registry，或改用 `--target-version <version>`。
+- `--target-version` 只接受合法 SemVer 版本号；更新、回滚或修复后仍须用 `hithink-finance version --format json` 复核实际生效版本。

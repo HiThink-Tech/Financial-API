@@ -167,6 +167,23 @@ CLI 将远端取数、本地数据库、认证、统一 JSON 输出和大结果�
 npm install -g @hithink-tech/hithink-finance-cli
 ```
 
+安装会无感地为本机已检测到的 Agent 同步 CLI 配套 Skills；后续 CLI 升级沿用已保存策略自动更新。默认各 Agent 通过目录链接共享一份内容，不会为未检测到的客户端创建目录。首次只指定部分目标时，在安装前设置环境变量：
+
+```powershell
+$previous = $env:HITHINK_FINANCE_SKILLS_AGENTS
+$env:HITHINK_FINANCE_SKILLS_AGENTS = 'codex,workbuddy'
+try { npm install -g @hithink-tech/hithink-finance-cli } finally { $env:HITHINK_FINANCE_SKILLS_AGENTS = $previous }
+```
+
+后来新增 Agent 时直接追加，不会移除已有目标：
+
+```bash
+hithink-finance skills sync --agent claude-code --format json
+hithink-finance skills status --format json
+```
+
+详细的支持目标、自定义目录、复制兼容模式、修复与移除规则见 [CLI Skills 管理说明](hithink-finance-cli/README.md#agent-skill-lifecycle)。
+
 国内用户可使用 [npmmirror](https://npmmirror.com/) 镜像加速：
 
 ```bash

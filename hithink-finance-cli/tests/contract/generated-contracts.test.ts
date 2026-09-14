@@ -13,7 +13,7 @@ test('publishes generated capability and envelope schemas', async () => {
   const capabilities = JSON.parse(await readFile('schemas/capabilities.json', 'utf8')) as {
     capabilities: unknown[];
   };
-  expect(capabilities.capabilities).toHaveLength(92);
+  expect(capabilities.capabilities).toHaveLength(95);
   await expect(access('schemas/command-envelope.schema.json')).resolves.toBeUndefined();
 });
 

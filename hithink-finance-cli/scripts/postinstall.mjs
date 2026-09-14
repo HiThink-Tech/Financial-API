@@ -24,6 +24,7 @@ if (globalInstall && existsSync(path.join(root, 'dist', 'cli', 'main.js'))) {
         ...process.env,
         DISABLE_TELEMETRY: '1',
         HITHINK_FINANCE_NO_UPDATE_CHECK: '1',
+        HITHINK_FINANCE_SKILLS_INSTALL: '1',
       },
       windowsHide: true,
     },

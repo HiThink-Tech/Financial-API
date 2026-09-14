@@ -126,8 +126,9 @@ CLI 高度封装远端取数、本地 DuckDB、结构化输出和大结果落盘
 - 用户直接提出金融任务、未指定接入方式且 CLI 不存在时，简短告知将安装官方 CLI 并继续；平台需要授权时遵循授权机制。安装失败时回退到已有 MCP、REST 或 Python 路径。
 - CLI 刚安装、统一凭据刚配置或更新、或 CLI 认证失效但统一凭据有效时，按 [CLI setup](references/cli/setup.md) 通过 `--api-key-stdin` 安全登录；已有 CLI 凭据需要同步时使用 `--replace`，不先 logout。
 - CLI 系统凭据是统一凭据的安全副本，使 CLI 可独立运行；普通调用不重复写入系统凭据。
-- 确定使用 CLI 后，先定位**当前 Agent 的 Skills 目录**，并核验其中有 12 个 CLI 配套 Skill（每个目录都必须含 `SKILL.md`）。`hithink-finance skills status --format json` 只提供包内 `canonical` 来源，不能证明当前 Agent 已发现或加载这些 Skills。
-- 当前 Agent 缺少配套 Skill 时，先运行 `hithink-finance skills sync --format json` 并对同一目录复查。该命令可能不认识所有 Agent 工具；仍缺失且已知当前 Agent 的可写 Skills 目录时，Agent 必须从 `canonical` 主动复制缺失的完整 Skill 目录，再复查并在需要时新建会话重新发现。只复制官方的缺失目录，不覆盖无关 Skills，不把包内来源复制到项目目录或未知 Agent 目录；路径未知或无写入权限时，报告该唯一阻塞项。
+- 确定使用 CLI 后，运行 `hithink-finance skills status --format json`，读取保存策略、当前 Agent 的逐目标状态和共享内容。`ready` 仅表示文件、链接或复制内容通过验证；客户端可能仍需刷新或新建会话才能发现新增 Skill。
+- 当前 Agent 缺少配套 Skill 时，先识别当前 Agent 的名称；能确定时运行 `hithink-finance skills sync --agent <名称> --format json`，该操作追加目标且不移除已有目标。用户新安装其他 Agent 时同样使用该命令，例如 `hithink-finance skills sync --agent claude-code --format json`，随后用 `status` 核验目标。无法确定名称时读取 `hithink-finance skills sync --help` 或做必要确认，不扩展同步到所有客户端。
+- 默认链接共享一份 CLI 用户级内容。只有 `status` 明确目标链接冲突或客户端确认不兼容时，才为该单一目标使用 `sync --agent <名称> --directory <绝对路径> --copy`；不要手工复制或覆盖未知目录。`remove --agent <名称>` 只移除该目标的 CLI 托管内容并阻止自动检测重新添加；无 `--agent` 的 remove 会禁用后续自动重装。
 - `data init` 的远端全量下载、导入和复权重建是长任务，必须以前台、可等待全部子进程的方式执行，并把执行宿主超时设为不少于 15 分钟。只有退出码为 0 且结构化信封 `ok=true` 才能开始下一条同库命令；超时或非 0 退出不等于已完成。先检查是否仍有存活 PID 持有该 DB；存在时等待它退出，不得在该 DB 上继续执行，也不得删除仍被存活 PID 持有的锁。用户明确要求中止时，才先说明影响并终止对应进程。
 - 安装、升级、卸载和数据清理仍属于环境变更。用户直接要求金融任务且未选择其他接入方式时，前述“告知后安装并继续”构成本次 CLI 安装授权；其他环境变更仍需明确授权。
 

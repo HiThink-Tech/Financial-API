@@ -7,13 +7,15 @@
  * 1. **缓存检查** — 读取上次更新的缓存记录，决定是否需要刷新更新信息
  *    - `stale` 状态：缓存有效，直接显示结果
  *    - `refresh` 状态：缓存过期，触发后台更新检查
- * 2. **npm 安装** — 调用 `npm install -g <package>@<version>` 安装指定或最新版本
- * 3. **Skills 同步** — 安装完成后自动执行 `hithink-finance skills sync --repair --yes` 修复 Skill 文件
- * 4. **Doctor 诊断** — 安装完成后自动执行 `hithink-finance doctor --format json` 验证运行环境正常
+ * 2. **版本选择** — 默认查询 npm latest，`--target-version` 指定版本，`--repair` 使用当前版本
+ * 3. **npm 安装** — 调用 `npm install -g <package>@<version>` 安装精确版本
+ * 4. **Skills 同步** — 安装完成后自动执行 `hithink-finance skills sync --repair --yes` 修复 Skill 文件
+ * 5. **Doctor 诊断** — 安装完成后自动执行 `hithink-finance doctor --format json` 验证运行环境正常
  *
  * ### 选项
  * - `--check`：仅检查新版本（不安装），读取更新缓存
- * - `--repair`：修复模式标记
+ * - 无选项：更新到 npm latest
+ * - `--repair`：重新安装当前版本
  * - `--target-version <version>`：指定安装的目标版本（SemVer 格式）
  *
  * 可通过环境变量自定义执行路径：
@@ -28,7 +30,11 @@ import type { PackageMetadata } from '../../cli/program.js';
 import type { ResolvedConfig } from '../../application/config.js';
 import { successEnvelope } from '../../contracts/envelope.js';
 import { CliError } from '../../contracts/errors.js';
-import { installGlobalPackage, runExecutable } from '../../infrastructure/updater/install.js';
+import {
+  installGlobalPackage,
+  resolveLatestPackageVersion,
+  runExecutable,
+} from '../../infrastructure/updater/install.js';
 import { renderResult } from '../../output/renderer.js';
 import { readUpdateCache, scheduleUpdateCheck } from '../../infrastructure/updater/check.js';
 import { updateCacheDecision } from '../../infrastructure/updater/cache.js';
@@ -57,12 +63,12 @@ export function registerUpdateCommand(
 ): void {
   const command = program
     .command('update')
-    .description(localizeText(context.language, 'Check or repair the installed CLI version'))
+    .description(localizeText(context.language, 'Update, inspect, or repair the installed CLI'))
     .option(
       '--check',
       localizeText(context.language, 'Check for a newer version without installing'),
     )
-    .option('--repair', localizeText(context.language, 'Repair the current or target installation'))
+    .option('--repair', localizeText(context.language, 'Reinstall the current version'))
     .option(
       '--target-version <version>',
       localizeText(context.language, 'Install a specific SemVer version'),
@@ -73,6 +79,22 @@ export function registerUpdateCommand(
       repair?: boolean;
       targetVersion?: string;
     }>();
+
+    const selectedModes = [
+      options.check === true,
+      options.repair === true,
+      options.targetVersion !== undefined,
+    ].filter(Boolean).length;
+    if (selectedModes > 1) {
+      throw new CliError({
+        code: 'CLI_BAD_ARGUMENT',
+        category: 'validation',
+        message: '--check, --repair, and --target-version cannot be used together.',
+        hint: 'Use update for latest, --repair for the current version, or --target-version <version>.',
+        retryable: false,
+        exitCode: 2,
+      });
+    }
 
     // ========== 步骤 1：缓存检查（--check 模式） ==========
     if (options.check === true) {
@@ -106,8 +128,31 @@ export function registerUpdateCommand(
       return;
     }
 
-    // ========== 步骤 2：版本号校验 ==========
-    const version = options.targetVersion ?? metadata.version;
+    const npm =
+      process.env.HITHINK_FINANCE_NPM_EXECUTABLE ??
+      (process.platform === 'win32' ? 'npm.cmd' : 'npm');
+
+    // ========== 步骤 2：确定并校验目标版本 ==========
+    let version: string;
+    if (options.repair === true) version = metadata.version;
+    else if (options.targetVersion !== undefined) version = options.targetVersion;
+    else {
+      try {
+        version = await resolveLatestPackageVersion(npm, metadata.name, context.signal);
+      } catch (error) {
+        throw new CliError({
+          code: 'UPDATE_CHECK_FAILED',
+          category: 'upstream',
+          message: 'Unable to determine the latest CLI version from npm.',
+          hint: 'Check npm registry connectivity or use --target-version <version>.',
+          retryable: true,
+          exitCode: 4,
+          ...(error instanceof Error && error.stack !== undefined
+            ? { debugStack: error.stack }
+            : {}),
+        });
+      }
+    }
     if (!/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/u.test(version)) {
       throw new CliError({
         code: 'CLI_BAD_ARGUMENT',
@@ -119,10 +164,7 @@ export function registerUpdateCommand(
       });
     }
 
-    // ========== 步骤 2：npm 安装 ==========
-    const npm =
-      process.env.HITHINK_FINANCE_NPM_EXECUTABLE ??
-      (process.platform === 'win32' ? 'npm.cmd' : 'npm');
+    // ========== 步骤 3：npm 安装 ==========
     const code = await installGlobalPackage(npm, metadata.name, version, context.signal);
     if (code !== 0)
       throw new CliError({
@@ -134,7 +176,7 @@ export function registerUpdateCommand(
         exitCode: 1,
       });
 
-    // ========== 步骤 3：Skills 同步修复 ==========
+    // ========== 步骤 4：Skills 同步修复 ==========
     const cli =
       process.env.HITHINK_FINANCE_CLI_EXECUTABLE ??
       (process.platform === 'win32' ? 'hithink-finance.cmd' : 'hithink-finance');
@@ -142,9 +184,10 @@ export function registerUpdateCommand(
       cli,
       ['skills', 'sync', '--repair', '--yes'],
       context.signal,
+      { ...process.env, HITHINK_FINANCE_SKILLS_INSTALL: '1' },
     );
 
-    // ========== 步骤 4：Doctor 诊断 ==========
+    // ========== 步骤 5：Doctor 诊断 ==========
     const doctorCode = await runExecutable(cli, ['doctor', '--format', 'json'], context.signal);
     if (skillsCode !== 0 || doctorCode !== 0)
       throw new CliError({

@@ -24,7 +24,7 @@ hithink-finance update --check --format json
 npm view @hithink-tech/hithink-finance-cli version
 ```
 
-`update --check` 用于比较当前安装和可用版本，不执行升级。版本正常时不要重装。需要修复或升级时先向用户说明将修改全局 npm 安装，得到授权后再使用 `hithink-finance update --repair` 或指定 `--target-version`。
+`update --check` 用于比较当前安装和可用版本，不执行升级。需要升级时先向用户说明将修改全局 npm 安装，得到授权后运行 `hithink-finance update` 更新到 npm latest；指定版本或回滚使用 `update --target-version <version>`；仅修复当前安装时使用 `update --repair`。`--check`、`--target-version` 与 `--repair` 互斥。
 
 统一 Skill 的例行自检通过 `hithink-finance version --format json` 进入 CLI 自带检查链路，不额外调用本节命令。CLI 成功检查后缓存 24 小时，失败后冷却 6 小时，并用 5 分钟租约合并并发刷新；例行自检不等待后台结果。无新版本、刷新中、检查失败或用户禁用检查时保持静默，只有 CLI 输出 `[update]` 时才在当前任务结束后提示一次。不要用 `npm view` 绕过缓存做例行检查。
 
@@ -121,15 +121,15 @@ hithink-finance auth login
 hithink-finance skills status --format json
 ```
 
-输出中的 `canonical` 是随 CLI 发布的官方 Skills 来源；它不能证明当前 Agent 已发现 12 个 CLI 配套 Skill。确定使用 CLI 后，Agent 必须先从自身运行时配置定位**当前 Agent 的 Skills 目录**，并检查下列每个目录都存在且含有 `SKILL.md`：`hithink-finance-shared`、`hithink-finance-symbol`、`hithink-finance-market`、`hithink-finance-financials`、`hithink-finance-valuation`、`hithink-finance-index`、`hithink-finance-special-data`、`hithink-finance-fund`、`hithink-finance-futures`、`hithink-finance-options`、`hithink-finance-data`、`hithink-finance-research`。
+输出中的 `canonical` 是随 CLI 发布的官方 Skills 来源；同时读取 `strategy`、`content` 和 `targets` 判断已保存目标、共享内容及逐目标文件状态。`ready` 表示链接或复制内容通过文件校验，不代表客户端会话已经加载；新增后按客户端需要刷新或新建会话。
 
 任何目录缺失时，先执行：
 
 ```bash
-hithink-finance skills sync --format json
+hithink-finance skills sync --agent <当前 Agent> --format json
 ```
 
-随后必须对同一个当前 Agent 的 Skills 目录复查，而不是把同步命令的退出码当成安装证明。`skills sync` 可能没有当前 Agent 的发现目录或无法覆盖该工具；若 `canonical/<skill-name>/SKILL.md` 存在、当前 Agent 的 Skills 目录已知且可写，Agent 必须主动复制每个缺失 Skill 的完整目录（含 `references/`）到当前 Agent 的目录。只复制缺失的官方目录，不覆盖无关 Skills，也不向项目目录、其他 Agent 目录或未知路径写入。已存在但被用户修改的同名目录不做手工覆盖；先用 `hithink-finance skills sync --repair --format json`，仍无法确认时报告冲突和路径。复制后再次逐目录核验，并在 Agent 需要时新建会话以重新发现。
+随后运行 `hithink-finance skills status --format json` 复查该目标，而不是把同步命令退出码当成客户端加载证明。`sync --agent <名称>` 是追加操作；用户后来安装另一个 Agent 时使用同一命令追加，例如 `sync --agent claude-code`。未知或用户占用的同名目录不会被覆盖；先检查 `status`。仅在该客户端不兼容目录链接且路径已确认时，使用 `sync --agent <名称> --directory <绝对路径> --copy` 保存复制模式。不要手工复制、改名或覆盖官方目录。
 
 完整领域路由见 [内置 Skills 路由](builtin-skills.md)。
 
@@ -152,7 +152,7 @@ hithink-finance symbol search --q 600519 --limit 1 --format json
 
 ## 8. 安装后建议
 
-1. 运行 `hithink-finance skills status --format json`；核验当前 Agent 的 Skills 目录，必要时同步并主动复制缺失 Skills。
+1. 运行 `hithink-finance skills status --format json`；核验当前 Agent 的目标状态，必要时用 `sync --agent <名称>` 追加或修复。
 2. 新建 Agent 会话，让新安装的内置 Skills 被重新发现。
 3. 在新会话直接描述需求，或快速开始：
 

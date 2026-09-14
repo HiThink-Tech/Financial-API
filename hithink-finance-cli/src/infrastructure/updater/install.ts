@@ -24,6 +24,62 @@ import { spawn } from 'node:child_process';
 import { forwardChildDiagnostics, waitForChild } from '../process/child-diagnostics.js';
 
 const NPM_CHILD_TIMEOUT_MS = 15 * 60_000;
+const NPM_QUERY_TIMEOUT_MS = 30_000;
+const MAX_NPM_QUERY_OUTPUT_BYTES = 64 * 1024;
+
+function executableInvocation(
+  executable: string,
+  executableArgs: string[],
+): { command: string; args: string[] } {
+  const isWindowsScript = process.platform === 'win32' && /\.(cmd|bat)$/iu.test(executable);
+  return {
+    command: isWindowsScript ? (process.env.ComSpec ?? 'cmd.exe') : executable,
+    args: isWindowsScript ? ['/d', '/s', '/c', executable, ...executableArgs] : executableArgs,
+  };
+}
+
+/** Resolve the exact version behind the npm `latest` dist-tag. */
+export async function resolveLatestPackageVersion(
+  npmExecutable: string,
+  packageName: string,
+  signal?: AbortSignal,
+): Promise<string> {
+  const invocation = executableInvocation(npmExecutable, [
+    'view',
+    packageName,
+    'version',
+    '--json',
+  ]);
+  const child = spawn(invocation.command, invocation.args, {
+    stdio: ['ignore', 'pipe', 'ignore'],
+    windowsHide: true,
+    env: process.env,
+    detached: process.platform !== 'win32',
+  });
+  let stdout = '';
+  let outputTooLarge = false;
+  child.stdout.on('data', (chunk: Buffer) => {
+    if (Buffer.byteLength(stdout) + chunk.byteLength > MAX_NPM_QUERY_OUTPUT_BYTES) {
+      outputTooLarge = true;
+      return;
+    }
+    stdout += chunk.toString();
+  });
+  const code = await waitForChild(child, {
+    ...(signal === undefined ? {} : { signal }),
+    timeoutMs: NPM_QUERY_TIMEOUT_MS,
+    processGroup: process.platform !== 'win32',
+    operation: 'npm view',
+  });
+  if (code !== 0 || outputTooLarge) throw new Error('Unable to query the latest npm version.');
+  try {
+    const version = JSON.parse(stdout) as unknown;
+    if (typeof version === 'string') return version;
+  } catch {
+    // Normalize malformed npm output to the same stable caller-facing error.
+  }
+  throw new Error('The npm registry returned an invalid latest version.');
+}
 
 /**
  * 通过 npm 安装指定版本的全局包
@@ -47,16 +103,9 @@ export async function installGlobalPackage(
 
   // Windows .cmd/.bat 文件需要通过 cmd.exe 执行
   // 原因：spawn 在 Windows 上不能直接执行批处理脚本
-  const isWindowsScript = process.platform === 'win32' && /\.(cmd|bat)$/iu.test(npmExecutable);
-  const command = isWindowsScript ? (process.env.ComSpec ?? 'cmd.exe') : npmExecutable;
-  const args = isWindowsScript
-    ? // /d: 禁用 AutoRun 命令（安全考虑）
-      // /s: 之后是单个命令字符串
-      // /c: 执行命令后退出
-      ['/d', '/s', '/c', npmExecutable, ...npmArgs]
-    : npmArgs;
+  const invocation = executableInvocation(npmExecutable, npmArgs);
 
-  const child = spawn(command, args, {
+  const child = spawn(invocation.command, invocation.args, {
     // 子进程日志统一转发到 stderr，避免破坏父 CLI 的结构化 stdout
     stdio: ['inherit', 'pipe', 'pipe'],
     windowsHide: true,
@@ -85,16 +134,15 @@ export async function runExecutable(
   executable: string,
   executableArgs: string[],
   signal?: AbortSignal,
+  env: NodeJS.ProcessEnv = process.env,
 ): Promise<number> {
   // Windows .cmd/.bat 脚本需通过 cmd.exe 间接执行
-  const isWindowsScript = process.platform === 'win32' && /\.(cmd|bat)$/iu.test(executable);
-  const command = isWindowsScript ? (process.env.ComSpec ?? 'cmd.exe') : executable;
-  const args = isWindowsScript ? ['/d', '/s', '/c', executable, ...executableArgs] : executableArgs;
+  const invocation = executableInvocation(executable, executableArgs);
 
-  const child = spawn(command, args, {
+  const child = spawn(invocation.command, invocation.args, {
     stdio: ['inherit', 'pipe', 'pipe'],
     windowsHide: true,
-    env: process.env,
+    env,
     detached: process.platform !== 'win32',
   });
   forwardChildDiagnostics(child);

@@ -22,20 +22,25 @@
  * @module skills/installer
  */
 
-import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { lstat, readFile, rename, rm, rmdir, stat } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { writeJsonAtomic } from '../filesystem/atomic-file.js';
-import { forwardChildDiagnostics, waitForChild } from '../process/child-diagnostics.js';
+import { createPlatformPaths } from '../filesystem/platform-paths.js';
 import {
   reconcileManagedSkills,
   removeManagedSkills,
   type ManagedSkillManifest,
 } from './manifest.js';
+import {
+  supportedSkillAgents,
+  removeLifecycleSkills,
+  syncLifecycleSkills,
+  type LifecycleSyncOptions,
+  type SkillAgent,
+} from './lifecycle.js';
 
-const SKILLS_CHILD_TIMEOUT_MS = 10 * 60_000;
 const DEDICATED_MANIFEST = '.hithink-finance-cli-skills-manifest.json';
 
 export interface DedicatedSkillTarget {
@@ -268,23 +273,29 @@ export async function removeDedicatedSkills(
 export async function syncSkills(
   packageRoot: string,
   signal?: AbortSignal,
-): Promise<{ code: number; dedicatedTargets: string[]; backupCount: number }> {
-  const invocation = skillsCliArguments(packageRoot);
-  const standard = await run(invocation, signal);
+  options: Omit<LifecycleSyncOptions, 'homeDir' | 'replace'> = {},
+): Promise<{ code: number; targets: string[]; backupCount: number }> {
+  if (signal?.aborted) return { code: 1, targets: [], backupCount: 0 };
   try {
-    const dedicated = await syncDedicatedSkills(packageRoot);
+    const lifecycle = await syncLifecycleSkills(packageRoot, createPlatformPaths(), {
+      ...environmentSkillSelection(process.env),
+      ...options,
+      ...(options.reactivate === undefined && process.env.HITHINK_FINANCE_SKILLS_INSTALL === '1'
+        ? { reactivate: false }
+        : {}),
+    });
     return {
-      code: standard.code,
-      dedicatedTargets: dedicated.targets.map((target) => target.name),
-      backupCount: dedicated.backups.length,
+      code: lifecycle.failures.length === 0 ? 0 : 1,
+      targets: lifecycle.targets.map((target) => target.name),
+      backupCount: 0,
     };
   } catch (error) {
     process.stderr.write(
-      `hithink-finance: dedicated WorkBuddy/QClaw Skill synchronization failed: ${error instanceof Error ? error.message : String(error)}\n`,
+      `hithink-finance: Skill synchronization failed: ${error instanceof Error ? error.message : String(error)}\n`,
     );
     return {
-      code: standard.code === 0 ? 1 : standard.code,
-      dedicatedTargets: [],
+      code: 1,
+      targets: [],
       backupCount: 0,
     };
   }
@@ -301,19 +312,22 @@ export async function syncSkills(
 export async function removeSkills(
   packageRoot: string,
   signal?: AbortSignal,
-): Promise<{ code: number; dedicatedTargets: string[] }> {
-  const standard = await run(skillsRemoveArguments(packageRoot), signal);
+  agents?: SkillAgent[],
+): Promise<{ code: number; targets: string[] }> {
+  if (signal?.aborted) return { code: 1, targets: [] };
   try {
-    const dedicated = await removeDedicatedSkills();
+    const lifecycle = await removeLifecycleSkills(packageRoot, createPlatformPaths(), {
+      ...(agents === undefined ? {} : { agents }),
+    });
     return {
-      code: standard.code,
-      dedicatedTargets: dedicated.targets.map((target) => target.name),
+      code: lifecycle.failures.length === 0 ? 0 : 1,
+      targets: lifecycle.removed,
     };
   } catch (error) {
     process.stderr.write(
-      `hithink-finance: dedicated WorkBuddy/QClaw Skill removal failed: ${error instanceof Error ? error.message : String(error)}\n`,
+      `hithink-finance: Skill removal failed: ${error instanceof Error ? error.message : String(error)}\n`,
     );
-    return { code: standard.code === 0 ? 1 : standard.code, dedicatedTargets: [] };
+    return { code: 1, targets: [] };
   }
 }
 
@@ -328,26 +342,29 @@ export async function removeSkills(
  * @param invocation - CLI 调用参数
  * @returns Promise 包装的子进程退出码
  */
-async function run(
-  invocation: ReturnType<typeof skillsCliArguments>,
-  signal?: AbortSignal,
-): Promise<{ code: number }> {
-  // spawn 创建子进程，不会创建 shell 中间层，安全性更高
-  const child = spawn(invocation.command, invocation.args, {
-    stdio: ['ignore', 'pipe', 'pipe'],
-    env: invocation.env,
-    windowsHide: true,
-    detached: process.platform !== 'win32',
-  });
-  forwardChildDiagnostics(child);
-  return {
-    code: await waitForChild(child, {
-      ...(signal === undefined ? {} : { signal }),
-      timeoutMs: SKILLS_CHILD_TIMEOUT_MS,
-      processGroup: process.platform !== 'win32',
-      operation: 'Skills synchronization',
-    }),
-  };
+export function environmentSkillSelection(
+  env: NodeJS.ProcessEnv,
+): Pick<LifecycleSyncOptions, 'agents' | 'auto' | 'replace'> {
+  const raw = env.HITHINK_FINANCE_SKILLS_AGENTS;
+  if (raw === undefined) return {};
+  const values = raw.split(',').map((value) => value.trim());
+  if (values.length === 0 || values.some((value) => value === ''))
+    throw new Error(
+      'HITHINK_FINANCE_SKILLS_AGENTS must be auto or a non-empty comma-separated Agent list.',
+    );
+  if (values.includes('auto')) {
+    if (values.length !== 1)
+      throw new Error('HITHINK_FINANCE_SKILLS_AGENTS=auto cannot be combined with named Agents.');
+    return { auto: true, replace: true };
+  }
+  const unknown = values.filter(
+    (value) => !(supportedSkillAgents as readonly string[]).includes(value),
+  );
+  if (unknown.length > 0)
+    throw new Error(
+      `Unknown HITHINK_FINANCE_SKILLS_AGENTS value: ${unknown.join(', ')}. Available: ${supportedSkillAgents.join(', ')}.`,
+    );
+  return { agents: values as SkillAgent[], replace: true };
 }
 
 /**

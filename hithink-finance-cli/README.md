@@ -28,6 +28,17 @@ hithink-finance doctor --format json
 
 如果 `npm install` 返回 `E404`，说明包尚未发布或当前 registry 无法访问。报告实际状态，不要在终端指引中把源码安装伪装成正式发布安装。
 
+### 更新与修复
+
+```bash
+hithink-finance update --check --format json
+hithink-finance update --format json
+hithink-finance update --target-version <version> --format json
+hithink-finance update --repair --format json
+```
+
+`update --check` 只检查版本；直接运行 `update` 会查询 npm latest 并更新到对应的精确版本。`--target-version` 用于安装指定版本或回滚，`--repair` 仅重新安装当前版本；这三个选项互斥。
+
 ## API Key 与认证
 
 远端命令使用统一 API Key，获取地址：<https://fuyao.aicubes.cn/admin>。
@@ -167,7 +178,7 @@ CLI 按以下顺序解析非敏感配置：
 
 使用 `hithink-finance config show --format json` 查看最终生效的非敏感配置。多套环境使用 `--profile <name>`。
 
-## Agent Skill
+## Agent Skill lifecycle
 
 跨 REST API、MCP、CLI 和 Python SDK 的统一入口是仓库根 [`skills/hithink-finance`](../skills/hithink-finance/SKILL.md)：
 
@@ -175,7 +186,32 @@ CLI 按以下顺序解析非敏感配置：
 npx skills add HiThink-Tech/Financial-API --skill hithink-finance -g --yes
 ```
 
-CLI 包还可以通过 `hithink-finance skills status|sync|remove` 管理命令专用的领域 Skills。`status` 只陈述包内 manifest 和规范目录，不会把尚未检查的 Agent 发现目录误报为已安装；`sync --repair` 会执行覆盖同步并在结果中标记修复模式。检测到已安装的 WorkBuddy 或 QClaw 时，同一同步链路还会校验并更新 `~/.workbuddy/skills` 或 `~/.qclaw/skills`，但不会创建未安装客户端的根目录。它们补充 CLI 参数路由，不替代统一 `hithink-finance` Skill，也不是上游 API 文档的事实源。
+CLI 包通过 `hithink-finance skills status|sync|remove` 管理 12 个命令专用领域 Skills。它们补充统一 `hithink-finance` 总 Skill 的路由，不替代总 Skill 或上游 API 契约。
+
+首次全局安装采用保存的 `auto` 策略：检测已安装的 Codex、Claude Code、Cursor、Gemini CLI、OpenCode、GitHub Copilot CLI、Trae、WorkBuddy 和 QClaw，并只向检测到的客户端同步。仅存在旧 `skills` 目录不算安装证据；未检测到任何客户端时不会创建一批 Agent 根目录。CLI 升级和 `update` 会复用同一策略自动更新。
+
+默认将内容发布到 CLI 用户级数据目录，再为每个目标的每个 Skill 建立目录链接（Windows 为 junction，其他平台为 symlink），因此多 Agent 只共享一份内容。`status --format json` 实际校验共享内容和逐目标文件；`ready` 不代表客户端已加载，新增后可能需要刷新或新建会话。
+
+```bash
+# 追加目标，保留已有选择
+hithink-finance skills sync --agent claude-code --format json
+hithink-finance skills sync --agent workbuddy --agent qclaw --format json
+
+# 回到自动检测；已显式添加的目标仍保留
+hithink-finance skills sync --agent auto --format json
+
+# 为一个已知客户端使用的目录设置持久化覆盖；仅在不兼容链接时使用复制模式
+hithink-finance skills sync --agent cursor --directory <absolute-path> --copy --format json
+
+# 查看、修复、移除
+hithink-finance skills status --format json
+hithink-finance skills sync --repair --format json
+hithink-finance skills remove --agent codex --format json
+```
+
+安装时可设置 `HITHINK_FINANCE_SKILLS_AGENTS=auto` 或以逗号分隔的目标名称来替换保存策略；值必须非空且全部合法，`auto` 不能与名称混用。显式指定的目标即使尚未检测到客户端也会创建对应 Skills 根目录。`sync --agent <name>` 会解除该目标此前的排除状态。`remove --agent <name>` 只删除 CLI 托管内容并阻止自动模式再次添加；无 `--agent` 时移除全部托管内容并禁用后续自动重装，直到再次同步。
+
+同步由互斥锁保护，先验证新共享内容再发布；单个目标失败不会把其他成功目标误报为失败。CLI 不覆盖未知或用户占用的同名目录。哈希未变的历史托管副本会在首次同步时自动迁移为共享链接，修改过的副本则保留并报告冲突；确认客户端不支持目录链接后，可为该目标显式使用 `--copy`。npm 使用 `--ignore-scripts` 时，安装后执行 `hithink-finance skills sync --repair --format json`。直接 `npm uninstall -g` 不保证生命周期清理，先执行 `hithink-finance skills remove`。
 
 ## 开发与验证
 

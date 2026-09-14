@@ -665,6 +665,24 @@
       "source": "remote"
     },
     {
+      "id": "skills.remove",
+      "command": ["skills", "remove"],
+      "description": "Local capability skills.remove",
+      "source": "local"
+    },
+    {
+      "id": "skills.status",
+      "command": ["skills", "status"],
+      "description": "Local capability skills.status",
+      "source": "local"
+    },
+    {
+      "id": "skills.sync",
+      "command": ["skills", "sync"],
+      "description": "Local capability skills.sync",
+      "source": "local"
+    },
+    {
       "id": "special.anomaly-list",
       "command": ["special", "anomaly-list"],
       "endpoint": "/api/a-share/special-data/anomaly-analysis-list",
