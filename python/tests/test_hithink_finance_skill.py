@@ -132,7 +132,7 @@ def test_cli_entry_covers_setup_lifecycle_and_routes_to_builtin_skills() -> None
         "hithink-finance-valuation",
     ):
         assert skill_name in builtin
-    assert "已安装" in cli and "内置 Skill" in cli
+    assert "包内官方来源" in cli and "内置 Skill" in cli
 
 
 def test_cli_skill_contract_verifies_the_active_agent_and_handles_long_data_init() -> None:
@@ -148,10 +148,10 @@ def test_cli_skill_contract_verifies_the_active_agent_and_handles_long_data_init
 
     for required in (
         "当前 Agent 的 Skills 目录",
-        "12 个 CLI 配套 Skill",
+        "下列 Skills",
         "不能证明当前 Agent 已发现",
-        "主动复制",
-        "不覆盖无关 Skills",
+        "不要手工复制",
+        "用户占用",
         "data init",
         "不少于 15 分钟",
         "存活 PID",

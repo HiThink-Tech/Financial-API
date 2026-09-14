@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.12 - 2026-09-14
+
+- 修正发布验证中的 CLI 版本断言。
+
 ## 0.1.11 - 2026-09-14
 
 - 统一 CLI 更新语义：`update` 更新到 npm latest，`--target-version` 安装指定版本，`--repair` 仅重新安装当前版本，并补齐冲突参数校验、运行时提示和 Agent Skill 指引。
