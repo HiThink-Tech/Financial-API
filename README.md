@@ -271,9 +271,9 @@ curl 'https://fuyao.aicubes.cn/api/a-share/prices/snapshot?thscodes=600519.SH' \
 仓库内 REST API 契约入口：
 
 - [REST API 文档](docs/api/README.md)
-- 上游完整机器可读契约：<https://fuyao.aicubes.cn/llms-full.txt>
+- 文档全文聚合：<https://fuyao.aicubes.cn/llms-full.txt>
 
-`docs/api/` 是仓库内唯一的上游 REST API 契约来源，其他文档不重复维护字段定义。
+`docs/api/` 按业务域提供原子接口文档；正文从文档源同步，业务域首页帮助选择接口。端内能力在详情页标记并链接统一使用说明。
 
 ---
 
@@ -619,7 +619,7 @@ Python 项目已迁入 `python/`。
 ## 项目结构
 
 ```text
-docs/                    公共文档中心；docs/api 是上游 REST 契约唯一来源
+docs/                    公共文档中心；按业务域组织 REST/MCP 原子文档
 skills/hithink-finance/  可独立安装的统一 Agent Skill；包含契约镜像
 hithink-finance-cli/     Node.js CLI 子项目，运行时不依赖 Python
 python/                  唯一 Python 项目根
@@ -640,7 +640,7 @@ scripts/                 仓库级维护脚本
 
 - 根 README 负责产品介绍、接入导航和完整能力总览。
 - 详细参数下沉到对应子目录 README 或 `docs/`。
-- `docs/api/` 是仓库内上游 REST API 契约的唯一来源。
+- `docs/api/` 与 `docs/mcp/` 的原子正文从文档源确定性同步；本项目维护业务分类与访问引导。
 - `skills/hithink-finance/references/api.md`、`references/api/`、`references/mcp.md` 与 `references/mcp/` 由 `python scripts/sync_skill_contracts.py` 生成，确保 Skill 独立发布时仍然自包含。
 - Python 和 CLI 文档只维护各自的运行方式、命令和适配语义，不重复维护上游字段契约。
 - 旧版迁移以 [Monorepo 版本升级指南](docs/monorepo-migration.md) 为准。

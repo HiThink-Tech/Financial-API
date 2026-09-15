@@ -10,7 +10,15 @@ def _skill_text() -> str:
 
 
 def _api_capability_text() -> str:
-    return (SKILL_ROOT / "references" / "api" / "capability-map.md").read_text(
+    return "\n".join(
+        p.read_text(encoding="utf-8")
+        for p in (SKILL_ROOT / "references/api").glob("*/README.md")
+    )
+
+
+def _mcp_domain_text(domain: str) -> str:
+    entry = (SKILL_ROOT / "references/mcp.md").read_text(encoding="utf-8")
+    return entry + (SKILL_ROOT / "references/mcp" / domain / "README.md").read_text(
         encoding="utf-8"
     )
 
@@ -76,20 +84,18 @@ def test_hithink_finance_skill_probes_all_managed_mcp_services() -> None:
 
 def test_hithink_finance_skill_routes_confirmed_client_only_capabilities() -> None:
     skill = _skill_text()
-    client_only = (
-        SKILL_ROOT / "references" / "client-only-capabilities.md"
-    ).read_text(encoding="utf-8")
+    client_only = (SKILL_ROOT / "references" / "client-only-capabilities.md").read_text(
+        encoding="utf-8"
+    )
 
     assert "references/client-only-capabilities.md" in skill
     assert "先按公开能力完成当前任务" in skill
     for required in (
         "A 股资金流向",
-        "A 股高频动向",
-        "期货期权专业数据",
-        "暂不通过公开 API、MCP、CLI 或 Python SDK 提供",
-        "https://lumi.10jqka.com.cn/?channel=Hithink-API",
-        "客户端当前尚未发布接入本项目数据源的版本",
-        "计划接入数据范围",
+        "高频历史行情",
+        "期货品种板块",
+        "api/README.md#端内能力说明",
+        "使用范围",
     ):
         assert required in client_only
     assert "这项进一步数据能力已内置" not in skill
@@ -99,9 +105,7 @@ def test_hithink_finance_skill_routes_confirmed_client_only_capabilities() -> No
 
 def test_cli_entry_covers_setup_lifecycle_and_routes_to_builtin_skills() -> None:
     cli = (SKILL_ROOT / "references" / "cli.md").read_text(encoding="utf-8")
-    setup = (SKILL_ROOT / "references" / "cli" / "setup.md").read_text(
-        encoding="utf-8"
-    )
+    setup = (SKILL_ROOT / "references" / "cli" / "setup.md").read_text(encoding="utf-8")
     builtin = (SKILL_ROOT / "references" / "cli" / "builtin-skills.md").read_text(
         encoding="utf-8"
     )
@@ -135,12 +139,12 @@ def test_cli_entry_covers_setup_lifecycle_and_routes_to_builtin_skills() -> None
     assert "包内官方来源" in cli and "内置 Skill" in cli
 
 
-def test_cli_skill_contract_verifies_the_active_agent_and_handles_long_data_init() -> None:
+def test_cli_skill_contract_verifies_the_active_agent_and_handles_long_data_init() -> (
+    None
+):
     skill = _skill_text()
     cli = (SKILL_ROOT / "references" / "cli.md").read_text(encoding="utf-8")
-    setup = (SKILL_ROOT / "references" / "cli" / "setup.md").read_text(
-        encoding="utf-8"
-    )
+    setup = (SKILL_ROOT / "references" / "cli" / "setup.md").read_text(encoding="utf-8")
     builtin = (SKILL_ROOT / "references" / "cli" / "builtin-skills.md").read_text(
         encoding="utf-8"
     )
@@ -162,9 +166,7 @@ def test_cli_skill_contract_verifies_the_active_agent_and_handles_long_data_init
 
 def test_skill_unifies_credentials_and_bootstraps_cli_without_reprompting() -> None:
     skill = _skill_text()
-    setup = (SKILL_ROOT / "references" / "cli" / "setup.md").read_text(
-        encoding="utf-8"
-    )
+    setup = (SKILL_ROOT / "references" / "cli" / "setup.md").read_text(encoding="utf-8")
     combined = skill + setup
 
     for required in (
@@ -186,9 +188,7 @@ def test_skill_unifies_credentials_and_bootstraps_cli_without_reprompting() -> N
 def test_skill_routes_fund_tasks_across_all_access_modes() -> None:
     skill = _skill_text()
     api = _api_capability_text()
-    mcp = (SKILL_ROOT / "references" / "mcp" / "hithink-finance-fund.md").read_text(
-        encoding="utf-8"
-    )
+    mcp = _mcp_domain_text("fund")
     python_sdk = (SKILL_ROOT / "references" / "python-sdk.md").read_text(
         encoding="utf-8"
     )
@@ -204,12 +204,8 @@ def test_skill_routes_fund_tasks_across_all_access_modes() -> None:
 
 def test_skill_routes_auction_and_extended_fund_tasks() -> None:
     skill = _skill_text()
-    mcp_a_share = (
-        SKILL_ROOT / "references" / "mcp" / "hithink-finance-a-share.md"
-    ).read_text(encoding="utf-8")
-    mcp_fund = (
-        SKILL_ROOT / "references" / "mcp" / "hithink-finance-fund.md"
-    ).read_text(encoding="utf-8")
+    mcp_a_share = _mcp_domain_text("a-share")
+    mcp_fund = _mcp_domain_text("fund")
 
     for phrase in (
         "集合竞价",
@@ -235,12 +231,10 @@ def test_skill_routes_auction_and_extended_fund_tasks() -> None:
 def test_skill_routes_valuation_tasks_across_all_access_modes() -> None:
     skill = _skill_text()
     api = _api_capability_text()
-    mcp = (
-        SKILL_ROOT / "references" / "mcp" / "hithink-finance-a-share.md"
-    ).read_text(encoding="utf-8")
-    builtin = (
-        SKILL_ROOT / "references" / "cli" / "builtin-skills.md"
-    ).read_text(encoding="utf-8")
+    mcp = _mcp_domain_text("a-share")
+    builtin = (SKILL_ROOT / "references" / "cli" / "builtin-skills.md").read_text(
+        encoding="utf-8"
+    )
     python_sdk = (SKILL_ROOT / "references" / "python-sdk.md").read_text(
         encoding="utf-8"
     )

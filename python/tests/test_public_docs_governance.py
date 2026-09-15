@@ -41,9 +41,9 @@ def test_root_readme_has_current_brand_positioning_and_quick_start() -> None:
     for access_mode in ("CLI", "REST API", "MCP", "Python SDK"):
         assert access_mode in readme
     assert "一站式" in readme and "AI Agent" in readme
-    assert readme.index("npm install -g @hithink-tech/hithink-finance-cli") < readme.index(
-        "cd hithink-finance-cli"
-    )
+    assert readme.index(
+        "npm install -g @hithink-tech/hithink-finance-cli"
+    ) < readme.index("cd hithink-finance-cli")
     for server_name in (
         "hithink-finance-a-share",
         "hithink-finance-a-share-index",
@@ -61,7 +61,13 @@ def test_root_changelog_preserves_history_and_documents_this_release() -> None:
     changelog = read("CHANGELOG.md")
 
     assert changelog.startswith("# 更新日志")
-    for release_date in ("2026-07-10", "2026-07-06", "2026-07-02", "2026-07-01", "2026-06-23"):
+    for release_date in (
+        "2026-07-10",
+        "2026-07-06",
+        "2026-07-02",
+        "2026-07-01",
+        "2026-06-23",
+    ):
         assert release_date in changelog
     for change in ("monorepo", "hithink-finance", "CLI", "MCP"):
         assert change in changelog
@@ -102,27 +108,19 @@ def test_upstream_api_contract_has_one_canonical_source_and_skill_mirror() -> No
     canonical_root = REPO_ROOT / "docs" / "api"
     mirror_root = REPO_ROOT / "skills" / "hithink-finance" / "references" / "api"
     contract_files = {
-        "capability-map.md",
-        "endpoints-auction.md",
-        "endpoints-calendar.md",
-        "endpoints-derivatives.md",
-        "endpoints-financials.md",
-        "endpoints-fund.md",
-        "endpoints-index.md",
-        "endpoints-market-dumps.md",
-        "endpoints-meta.md",
-        "endpoints-prices.md",
-        "endpoints-special-data.md",
-        "endpoints-valuations.md",
+        path.relative_to(canonical_root).as_posix()
+        for path in canonical_root.rglob("*.md")
     }
-
-    assert {path.name for path in canonical_root.glob("*.md")} == contract_files | {
-        "README.md"
-    }
-    assert {path.name for path in mirror_root.glob("*.md")} == contract_files
+    assert {
+        path.relative_to(mirror_root).as_posix() for path in mirror_root.rglob("*.md")
+    } == contract_files
     for filename in contract_files:
-        assert (canonical_root / filename).read_bytes() == (mirror_root / filename).read_bytes()
-    assert read("skills/hithink-finance/references/api.md").startswith("# REST API 契约")
+        assert (canonical_root / filename).read_bytes() == (
+            mirror_root / filename
+        ).read_bytes()
+    assert read("skills/hithink-finance/references/api.md").startswith(
+        "# REST API 契约"
+    )
 
     result = subprocess.run(
         [sys.executable, "scripts/sync_skill_contracts.py", "--check"],

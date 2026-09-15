@@ -2,18 +2,18 @@
 
 同花顺金融数据服务提供 6 个托管 MCP 端点，适合 Claude Desktop、Cursor、Windsurf 等支持 HTTP MCP 的 Chat/Agent 客户端。六个端点共用在 <https://fuyao.aicubes.cn/admin> 获取的 API Key，无需在本地运行 MCP Server。
 
-本页既是项目中的 MCP 主入口，也是 `hithink-finance` Skill 的内置入口契约。详细能力快照位于 [`docs/mcp/`](mcp/capability-map.md)，由脚本完整镜像到 Skill，Agent 不需要为了理解能力而加载官网长文档。
+本页既是项目中的 MCP 主入口，也是 `hithink-finance` Skill 的内置入口契约。详细能力快照位于 [`docs/mcp/`](mcp/README.md)，由脚本完整镜像到 Skill，Agent 不需要为了理解能力而加载官网长文档。
 
 ## 六个服务
 
-| 客户端服务名 | 地址 | 职责 | 工具数 |
-| --- | --- | --- | ---: |
-| `hithink-finance-a-share` | `https://fuyao.aicubes.cn/mcp/a-share` | A 股行情、公司行为、财务、估值、集合竞价、日历和特色数据 | 21 |
-| `hithink-finance-a-share-index` | `https://fuyao.aicubes.cn/mcp/a-share-index` | 指数/板块目录、成分和行情 | 4 |
-| `hithink-finance-meta` | `https://fuyao.aicubes.cn/mcp/meta` | 标的搜索、名称消歧和代码表 | 2 |
-| `hithink-finance-fund` | `https://fuyao.aicubes.cn/mcp/fund` | 基金资料、经理、披露、财务、回测、指标、QDII 额度、净值、收益、资讯和场内行情 | 34 |
-| `hithink-finance-futures` | `https://fuyao.aicubes.cn/mcp/futures` | 期货品种、合约、持仓、仓单、基差、日程和行情 | 13 |
-| `hithink-finance-options` | `https://fuyao.aicubes.cn/mcp/options` | 期权品种、合约和行情 | 4 |
+| 客户端服务名 | 地址 | 职责 |
+| --- | --- | --- |
+| `hithink-finance-a-share` | `https://fuyao.aicubes.cn/mcp/a-share` | A 股行情、公司行为、财务、估值、集合竞价、日历和特色数据 |
+| `hithink-finance-a-share-index` | `https://fuyao.aicubes.cn/mcp/a-share-index` | 指数/板块目录、成分和行情 |
+| `hithink-finance-meta` | `https://fuyao.aicubes.cn/mcp/meta` | 标的搜索、名称消歧和代码表 |
+| `hithink-finance-fund` | `https://fuyao.aicubes.cn/mcp/fund` | 基金资料、经理、披露、财务、回测、指标、QDII 额度、净值、收益、资讯和场内行情 |
+| `hithink-finance-futures` | `https://fuyao.aicubes.cn/mcp/futures` | 期货品种、合约、持仓、仓单、基差、日程和行情 |
+| `hithink-finance-options` | `https://fuyao.aicubes.cn/mcp/options` | 期权品种、合约和行情 |
 
 `hithink-finance-*` 是推荐写入客户端配置的本地服务名；URL 路径保持不变。
 
@@ -62,15 +62,15 @@
 
 ## Agent 决策流程
 
-1. **先理解意图**：用 [能力与意图总览](mcp/capability-map.md) 选择服务和工具，不要先把六个服务全部探测一遍。
+1. **先理解意图**：用 [业务域路由](mcp/README.md) 选择业务域和工具。
 2. **先消歧再取数**：用户只给名称、ticker 或不完整代码时，先调用 `hithink-finance-meta` 的搜索工具确认唯一 `thscode`。
-3. **只读取相关快照**：确定服务后，只加载对应的一份详细契约：
-   - [A 股工具](mcp/hithink-finance-a-share.md)
-   - [指数与板块工具](mcp/hithink-finance-a-share-index.md)
-   - [标的元数据工具](mcp/hithink-finance-meta.md)
-   - [基金工具](mcp/hithink-finance-fund.md)
-   - [期货工具](mcp/hithink-finance-futures.md)
-   - [期权工具](mcp/hithink-finance-options.md)
+3. **只读取相关工具**：确定业务域后，在业务域首页的分组中读取目标工具文档；返回字段通过文档中的 REST 链接按需读取：
+   - [A 股工具](mcp/a-share/README.md)
+   - [指数与板块工具](mcp/index/README.md)
+   - [标的元数据工具](mcp/meta/README.md)
+   - [基金工具](mcp/fund/README.md)
+   - [期货工具](mcp/futures/README.md)
+   - [期权工具](mcp/options/README.md)
 4. **按需检查连接**：只有准备使用某个服务，或用户明确要求诊断连接时，才检查该服务是否连接并读取当前 `tools/list`。
 5. **执行最小调用**：认证检查也使用目标任务所需的最小有界请求，禁止用省略标的的全市场快照做探针。
 6. **控制结果规模**：分页全集、全市场、长时间序列或大量成分股必须落盘，只返回路径、行数和必要摘要。
@@ -87,7 +87,7 @@ Skill 中的能力快照用于意图识别、工具选择和参数避错；当�
 
 ## 能力边界
 
-- 当前固化快照共 78 个 MCP 工具：A 股 21 个、指数 4 个、元数据 2 个、基金 34 个、期货 13 个、期权 4 个。
+- 工具清单按[业务域](mcp/README.md)维护，待上线工具单独标记，当前不可调用。
 - MCP 适合 Chat 场景和自然语言调用；终端自动化、本地 DuckDB 与大结果工作流优先考虑 `hithink-finance` CLI。
 - 当前快照不覆盖分钟 K、tick、Level-2、港股、美股、基金申赎交易、研报或自建回测引擎；基金资讯仅提供已公开文章的元数据列表。
 - 文档或静态快照不能证明当前会话已经连接，也不能证明账号具有相应权限；只有实际授权请求才能完成线上验证。

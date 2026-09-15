@@ -6,13 +6,13 @@
 
 1. 旧 checkout、旧 Prompt 或旧根级 Python 路径：先读 [`docs/monorepo-migration.md`](docs/monorepo-migration.md)。
 2. 所有金融数据任务：先读 [`skills/hithink-finance/SKILL.md`](skills/hithink-finance/SKILL.md)。
-3. 只加载 Skill 选择的一个接入方式或端点组，不要递归读取全部契约。
+3. 只加载 Skill 选择的接入入口、业务域首页和目标原子文档，不要递归读取全部契约。
 
 ## Monorepo 边界
 
 - `hithink-finance-cli/`：Node.js CLI 子项目，面向人类、Agent 和自动化；运行时不依赖 Python。
 - `python/`：唯一 Python 项目根，包含远端取数 toolkit、本地 `marketdb`、示例和测试。
-- `docs/`：公共文档中心；`docs/api/` 是仓库内唯一上游 REST API 契约源。
+- `docs/`：公共文档中心；`docs/api/` 按业务域提供从文档源同步的原子 REST 文档，`docs/mcp/` 提供原子工具文档。
 - `skills/hithink-finance/`：可独立发布的统一 Skill；API/MCP 契约由脚本从 `docs/` 镜像。
 - `examples/`：monorepo 级示例导航与静态灵感。
 
@@ -31,7 +31,7 @@ CLI 已安装时先运行 `hithink-finance capabilities --format json`，再按�
 
 所有远端接入方式使用在 <https://fuyao.aicubes.cn/admin> 获取的统一 API Key。推荐统一来源是用户级 `HITHINK_FINANCE_API_KEY`，其次是 `hithink-finance/credentials.env` 用户级凭据文件。
 
-- 每次使用 Skill 时先检查统一凭据来源；找到后直接复用，不得因切换接入方式再次索要。
+- 准备远端取数或诊断认证时检查统一凭据来源；找到后直接复用，不得因切换接入方式再次索要。仅查询接口文档时直接读取本地契约。
 - 不得强制用户把 Key 粘贴到对话；用户主动提供或选择 Agent 代配时，不得复述，并应安全写入用户级统一凭据来源。
 - 不得把 Key 写入代码、Prompt、日志、公开配置、产物或 Git。
 - CLI 安装、统一凭据新增或更新后，通过 stdin 登录；已有 CLI 凭据用 `auth login --api-key-stdin --replace` 原子替换。CLI 系统凭据库保留独立副本。
@@ -52,7 +52,7 @@ CLI 优先使用具体命令的 `--output`、`db export` 或 `market panel --out
 ## 文档治理
 
 - 根 README 做项目总览；子目录 README 详细解释当前目录，不把细节继续拆散到不必要的多层文档。
-- 上游 REST API 契约只在 `docs/api/` 维护；修改后运行：
+- REST/MCP 原子文档按业务域组织，业务域 README 提供索引，API 根 README 集中通用协议与端内说明。接口字段以源接口正文为准；MCP 只收录明确工具定义。Market Dumps 的 API Key 契约由本项目维护。契约更新后运行：
 
   ```bash
   python scripts/sync_skill_contracts.py

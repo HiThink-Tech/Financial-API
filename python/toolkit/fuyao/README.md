@@ -122,7 +122,7 @@ python python/toolkit/fuyao/scripts/fuyao.py dragon-tiger-list --board-type all
 
 ## Python 函数
 
-基金远端函数还包括 `fund_backtest_result`、`fund_backtest_indicators`、`fund_indicators_line`、`fund_indicators_table`、`fund_quota_summary` 和 `fund_quota_list`。复杂对象与数组使用 JSON 字符串，并在 HTTP 前校验结构；完整字段契约见 [`docs/api/endpoints-fund.md`](../../../docs/api/endpoints-fund.md)。
+基金远端函数还包括 `fund_backtest_result`、`fund_backtest_indicators`、`fund_indicators_line`、`fund_indicators_table`、`fund_quota_summary` 和 `fund_quota_list`。复杂对象与数组使用 JSON 字符串，并在 HTTP 前校验结构；完整字段契约见 [`docs/api/routing/fund/README.md`](../../../docs/api/fund/README.md)。
 
 `fuyao_client.py` 是轻量适配模块。在仓库内可显式加入脚本目录：
 
