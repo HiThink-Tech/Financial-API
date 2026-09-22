@@ -1,14 +1,14 @@
-# 期权分时行情
+# 期权分时
 
 [业务导航](README.md)
 
-期权行情提供合约当前或最近交易日的分时行情和历史日 K 数据。
+期权行情提供合约分时和 K 线数据；端外访问分时仅支持当前交易日、K 线仅支持日 K，AI 客户端内可使用历史交易日和全部周期。
 
 - 期权合约使用完整 `thscode`；接口返回统一 `ApiResponse` 信封。
 - Unix 时间戳均为毫秒；日期按 `Asia/Shanghai` 解释。金融数值与日期来源缺失时可为 `null`，列表无数据时返回 `[]`。
 
 <a id="prices-intraday"></a>
-## 期权分时行情
+## 期权分时
 
 ```text
 GET /api/options/prices/intraday
@@ -20,6 +20,7 @@ GET /api/options/prices/intraday
 |---|---|---|---|---|
 | `thscode` | string | 是 | — | 期权合约完整同花顺代码。 |
 | `session` | enum | 否 | — | 行情阶段：`pre_market`-盘前、`intraday`-盘中、`post_market`-盘后；省略时使用 `intraday`。 |
+| `trade_date` | string | 否 | — | 端外仅允许 `0`；AI 客户端内可传 `0` 或合法历史交易日 `yyyyMMdd`。 |
 
 ### 请求示例
 

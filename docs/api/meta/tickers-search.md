@@ -22,7 +22,7 @@ GET /api/meta/tickers/search
 | `limit` | query | integer | 否 | 返回上限，最大 `50`。 | `10` |
 
 `asset_type` 可选值：`a-share`、`a-share-index`、`fund-otc`、`fund-etf`、
-`fund-lof`、`fund-reits`、`forex`、`futures`、`options`。传入任一非法值返回 `code=1003`。
+`fund-lof`、`fund-reits`、`forex`、`futures`、`futures-commodity-index`、`options`。传入任一非法值返回 `code=1003`。
 
 | `asset_type` | 含义 |
 |---|---|
@@ -34,6 +34,7 @@ GET /api/meta/tickers/search
 | `fund-reits` | 公募 REITs |
 | `forex` | 外汇 |
 | `futures` | 期货 |
+| `futures-commodity-index` | 期货商品指数合约 |
 | `options` | 期权 |
 
 ## 请求示例

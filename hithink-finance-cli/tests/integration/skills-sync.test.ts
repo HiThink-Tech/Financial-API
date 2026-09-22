@@ -53,7 +53,7 @@ test('reports bundled Skills without claiming Agent discovery targets were verif
   const status = await readBundledSkillsStatus(packageRoot);
 
   expect(status).toMatchObject({
-    cliVersion: '0.1.12',
+    cliVersion: '0.1.13',
     skillCount: 12,
     targetsVerified: false,
     targetStatus: 'not-verified',

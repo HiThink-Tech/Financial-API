@@ -2,16 +2,19 @@
 
 ## 前置条件
 
-- 先读取本 skill 的 `SKILL.md` 和 `../hithink-finance-shared/SKILL.md`。
-- 执行前用 `hithink-finance schema fund.quota-list --format json` 确认当前参数契约。
-- 远端命令需要 API Key；认证失败时回到 shared skill。
+- 按需读取[本域入口](../SKILL.md)与[共享规则](../../hithink-finance-shared/SKILL.md)，同会话已加载内容可复用。
+- 首次执行或版本变化时用 `hithink-finance schema fund.quota-list --format json` 确认参数，未说明的组合规则再看命令 `--help`。
+- 远端调用需要 API Key，先按共享规则复用已有凭据。
+- tab 为类别字符串数组；示例类别来自现有契约，其他类别须有已知取值依据。
 
 ## 命令
 
 ```bash
 hithink-finance schema fund.quota-list --format json
-hithink-finance fund quota-list --tab <json> --format json
+hithink-finance fund quota-list --tab '["nazhi100"]' --buy true --output fund-quota.json --format json
 ```
+
+JSON 参数作为单个字符串传给 CLI，CLI 负责 URL 编码。示例适用于 POSIX shell 和 PowerShell 7.3+ 的标准原生参数传递；其他执行器用参数数组或其原生引用方式。
 
 ## 参数选择策略
 

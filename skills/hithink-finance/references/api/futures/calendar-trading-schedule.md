@@ -22,7 +22,7 @@ GET /api/futures/calendar/trading-schedule
 ## 请求示例
 
 ```bash
-curl 'https://fuyao.aicubes.cn/api/futures/calendar/trading-schedule?thscode=CU2601.SHF&start_date=2026-09-01&end_date=2026-09-10' \
+curl 'https://fuyao.aicubes.cn/api/futures/calendar/trading-schedule?thscode=CU2601.SHF&start_date=2026-01-09&end_date=2026-01-09' \
   -H 'X-api-key: <your-api-key>'
 ```
 
@@ -34,10 +34,10 @@ curl 'https://fuyao.aicubes.cn/api/futures/calendar/trading-schedule?thscode=CU2
   "message": "success",
   "request_id": "request-id",
   "data": {
-    "timestamp": 1789036800000,
+    "timestamp": 1767888000000,
     "thscode": "CU2601.SHF",
     "trade_dates": [
-      "2026-09-10"
+      "2026-01-09"
     ],
     "regular_schedules": [],
     "special_schedules": [],

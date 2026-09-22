@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { remoteCapabilities } from '../../src/contracts/remote-capabilities.js';
 
-const EXPECTED_79_IDS = [
+const EXPECTED_BASE_IDS = [
   'symbol.search',
   'symbol.list',
   'market.snapshot',
@@ -83,24 +83,53 @@ const EXPECTED_79_IDS = [
   'special.dragon-tiger',
 ];
 
-test('registers exactly the frozen 79 remote capabilities with unique command paths', () => {
+test('registers exactly the frozen 88 remote capabilities with unique command paths', () => {
   expect(remoteCapabilities.map((capability) => capability.id).sort()).toEqual(
-    EXPECTED_79_IDS.sort(),
+    [
+      ...EXPECTED_BASE_IDS,
+      'futures.variety-plates',
+      'futures.contracts',
+      'futures.main-continuous',
+      'futures.main',
+      'futures.secondary-main',
+      'futures.commodity-indexes',
+      'futures.session-timeline',
+      'options.contracts',
+      'options.session-timeline',
+    ].sort(),
   );
   expect(new Set(remoteCapabilities.map((capability) => capability.command.join(' '))).size).toBe(
-    79,
+    88,
   );
   expect(remoteCapabilities.every((capability) => capability.method === 'GET')).toBe(true);
 });
 
-test('maps all 17 public futures and options commands to their REST endpoints', () => {
+test('maps all 26 public futures and options commands to their REST endpoints', () => {
   const derivatives = remoteCapabilities.filter((capability) =>
     ['futures', 'options'].includes(capability.command[0]),
   );
   expect(derivatives.map(({ id, command, endpoint }) => [id, command.join(' '), endpoint])).toEqual(
     [
       ['futures.varieties', 'futures varieties', '/api/futures/varieties/list'],
+      ['futures.variety-plates', 'futures variety-plates', '/api/futures/variety-plates/list'],
       ['futures.contract-detail', 'futures contract-detail', '/api/futures/contracts/detail'],
+      ['futures.contracts', 'futures contracts', '/api/futures/contracts/list'],
+      [
+        'futures.main-continuous',
+        'futures main-continuous',
+        '/api/futures/contracts/main-continuous-list',
+      ],
+      ['futures.main', 'futures main', '/api/futures/contracts/main-list'],
+      [
+        'futures.secondary-main',
+        'futures secondary-main',
+        '/api/futures/contracts/secondary-main-list',
+      ],
+      [
+        'futures.commodity-indexes',
+        'futures commodity-indexes',
+        '/api/futures/contracts/commodity-index-list',
+      ],
       [
         'futures.variety-positions',
         'futures variety-positions',
@@ -138,10 +167,21 @@ test('maps all 17 public futures and options commands to their REST endpoints', 
         'futures trading-schedule',
         '/api/futures/calendar/trading-schedule',
       ],
+      [
+        'futures.session-timeline',
+        'futures session-timeline',
+        '/api/futures/calendar/session-timeline',
+      ],
       ['futures.intraday', 'futures intraday', '/api/futures/prices/intraday'],
       ['futures.daily', 'futures daily', '/api/futures/prices/daily'],
       ['options.varieties', 'options varieties', '/api/options/varieties/list'],
       ['options.contract-detail', 'options contract-detail', '/api/options/contracts/detail'],
+      ['options.contracts', 'options contracts', '/api/options/contracts/list'],
+      [
+        'options.session-timeline',
+        'options session-timeline',
+        '/api/options/calendar/session-timeline',
+      ],
       ['options.intraday', 'options intraday', '/api/options/prices/intraday'],
       ['options.daily', 'options daily', '/api/options/prices/daily'],
     ],

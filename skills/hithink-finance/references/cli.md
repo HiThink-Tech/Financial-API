@@ -4,7 +4,7 @@ CLI 是人类终端、Agent 执行与自动化的推荐路径，统一远端数�
 
 ## 先判断处于哪种状态
 
-1. 检查 PATH 中是否存在 `hithink-finance`，存在时读取 `hithink-finance --version`。
+1. 检查 PATH 中是否存在 `hithink-finance`，存在时读取 `hithink-finance version --format json`。
 2. 未安装、版本异常、需要配置认证、检查内置 Skills、诊断、升级或卸载时，读取 [安装、配置与生命周期](cli/setup.md)。
 3. **已经安装且确定使用 CLI 完成金融任务时，不要把本入口当成功能契约。**先运行：
 
@@ -13,9 +13,9 @@ CLI 是人类终端、Agent 执行与自动化的推荐路径，统一远端数�
    hithink-finance capabilities --format json
    ```
 
-   `skills status` 同时报告包内官方来源、保存策略、共享内容和逐目标文件验证。`ready` 不代表客户端已加载，必要时新建会话；通过后再读取 [CLI 内置 Skills 路由](cli/builtin-skills.md)，按用户意图打开对应 Skill。内置 Skill 与当前 CLI 版本同步，具有更准确的命令、参数、输出和本地数据指引。
+   `skills status` 同时报告包内官方来源 `canonical`、保存策略、共享内容和逐目标文件验证。读取 [CLI 内置 Skills 路由](cli/builtin-skills.md)，从 `canonical` 打开对应版本的 Skill 及 references；`ready` 只表示文件验证通过，不能证明当前 Agent 已发现或加载这些目录。
 
-4. 当前 Agent 缺少任一配套 Skill 时，先按 setup 契约运行 `hithink-finance skills sync --agent <当前 Agent> --format json`，再用 `status` 复查。该命令追加目标；用户后来安装 Claude Code 等新客户端时同样追加，不移除已有目标。路径未知时读取 `skills sync --help` 或做必要确认，不要扩大到全部客户端，也不要把 `capabilities`、`schema <command-id>` 或 `<command> --help` 当成 Skill 已加载的替代证明。
+4. 当前 Agent 的 Skills 目录缺少配套内容且保存策略允许同步时，按 setup 契约运行 `hithink-finance skills sync --agent <当前 Agent> --format json`，再用 `status` 复查。只追加当前目标，不扩展到全部客户端。未知 Agent、目录冲突或会话不能刷新时，直接读取可用的 `canonical` 内容完成当前任务，保留原目录与用户保存策略；仅在官方内容也无法读取时回退到 MCP 或 REST。`capabilities`、`schema <command-id>` 和 `<command> --help` 用于核对命令，不作为客户端发现 Skill 的证明。
 
 ## 长时间本地初始化
 
@@ -32,6 +32,7 @@ CLI 是人类终端、Agent 执行与自动化的推荐路径，统一远端数�
 - `financials`：三张财务报表与财务指标。
 - `valuation`：A 股最新估值快照。
 - `index`：指数/板块目录、成分和行情。
+- `fund`：基金资料、净值、持仓、ETF/LOF 快照与 ETF 历史日线。
 - `special`：涨停、异动、热榜与龙虎榜。
 - `futures`：期货品种、合约、持仓、仓单、基差、交易日程和行情。
 - `options`：期权品种、合约和行情。
@@ -39,3 +40,5 @@ CLI 是人类终端、Agent 执行与自动化的推荐路径，统一远端数�
 - `auth` / `skills` / `doctor` / `update` / `uninstall`：安装后配置和生命周期。
 
 机器读取显式使用 `--format json`。成功条件是进程退出码 0 且信封 `ok=true`；不要按上游 `code=0` 解析 CLI 输出。只有具体命令声明的 `--output` 才能落盘，它不是全局选项。
+
+`data validate` 的外层成功表示检查已执行，质量通过还要求 `data.ok=true`；样本和时间覆盖需独立核验。严格只读研究按配套 research Skill 的前置流程先确认文件存在和迁移计划为空，再执行质量检查。`data status` 可创建缺失数据库，`data validate` 和 `db describe` 会应用普通迁移。

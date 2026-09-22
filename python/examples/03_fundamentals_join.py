@@ -7,7 +7,7 @@
 
 跑这个脚本前确保：
 - `python python/bootstrap.py` 已经跑过
-- `export HITHINK_FINANCE_API_KEY=<token>`（在 https://fuyao.aicubes.cn/admin 签发）
+- `export HITHINK_FINANCE_API_KEY=<token>`（在 https://fuyao.aicubes.cn/admin/ 签发）
 
 如果没 token，脚本会跳过远端 API 部分，仍打印行情走势。
 """

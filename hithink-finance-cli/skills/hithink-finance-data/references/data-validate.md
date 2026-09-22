@@ -2,10 +2,9 @@
 
 ## 前置条件
 
-- 先读取本 skill 的 `SKILL.md` 和 `../hithink-finance-shared/SKILL.md`。
-- 执行前用 `hithink-finance schema data.validate --format json` 确认当前参数契约。
-- 本地命令通常需要可用 DuckDB 或本地数据目录。
-- 用于同步、迁移、研究导出前的质量门禁。
+- 按需读取[本域入口](../SKILL.md)与[共享规则](../../hithink-finance-shared/SKILL.md)，同会话已加载内容可复用。
+- 首次执行或版本变化时用 `hithink-finance schema data.validate --format json` 确认参数，未说明的组合规则再看命令 `--help`。
+- 质量检查会先应用普通迁移。严格只读研究须先确认目标文件存在，并用 data migrate 的默认计划确认 versions 为空。
 
 ## 命令
 
@@ -20,14 +19,14 @@ hithink-finance data validate --format json
 
 ## 窗口与分页
 
-- 本地命令无远端分页；只有声明 `--output` 的命令可直接落盘；其他大结果改用导出命令。
+- 本地命令按目标库执行；查询大结果使用 `db export` 或 `market panel --output`。
 
 ## 常见错误
 
-- 本地库不存在或 schema 不兼容时先运行 `data status` / `data migrate`。
-- 报告数据质量问题时给出 check 名称和 count，不要展开全量行。
+- 退出码 0 且外层 ok=true 表示检查执行成功；质量通过还要求 data.ok=true。data.issues 非空时按 code/count 报告问题。
+- 空库也可能质量通过；研究前另核对目标窗口、样本和行数。
 
 ## 批量操作说明
 
-- 批量或全量请求必须落盘，最终只报告路径、行数和窗口。
-- 如果需要多标的循环，逐批执行并记录每批参数；不要把完整结果塞进上下文。
+- 维护操作按目标库逐项执行，并检查每个结果。
+- 确认目标路径与影响；不要从只读查询意图推断清理、迁移或修复授权。

@@ -12,11 +12,11 @@
 | 为聊天客户端配置托管 MCP | [MCP 接入说明](mcp.md) |
 | 安装并使用 Node.js CLI | [CLI README](../hithink-finance-cli/README.md) |
 | 使用 Python toolkit、SDK 和本地 marketdb | [Python README](../python/README.md) |
-| 安装跨 API/MCP/CLI/Python 的 Agent Skill | [`hithink-finance` Skill](../skills/hithink-finance/SKILL.md) |
-| 关注后续客户端接入进展 | [了解并下载同花顺AI客户端](https://lumi.10jqka.com.cn/?channel=Hithink-API) |
+| 安装跨 API/MCP/CLI 的 Agent Skill | [`hithink-finance` Skill](../skills/hithink-finance/SKILL.md) |
+| 免配置使用金融数据或端内专用能力 | [下载并体验同花顺AI客户端](https://lumi.10jqka.com.cn/?channel=Hithink-API) |
 | 浏览代码样例和金融看板灵感 | [示例入口](../examples/README.md) |
 
-当前可通过 API、MCP、CLI、Python SDK 和 Agent Skill 接入金融数据。同花顺AI客户端尚未发布接入本项目数据源的版本，后续版本计划接入，敬请期待。
+API、MCP、CLI、Python SDK 和 Agent Skill 适合自主接入；同花顺AI客户端已接入当前数据源，内置金融数据与分析能力，适合免配置直接使用。标记为“端内专用”的能力仅在客户端提供。
 
 ## 文档边界
 

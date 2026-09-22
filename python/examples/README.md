@@ -17,7 +17,7 @@ python python/bootstrap.py
 marketdb status --db data/market.duckdb
 
 # 3.（可选，仅 example 03 需要）配置同花顺金融数据服务 API Key
-export HITHINK_FINANCE_API_KEY=<token>  # 在 https://fuyao.aicubes.cn/admin 签发
+export HITHINK_FINANCE_API_KEY=<token>  # 在 https://fuyao.aicubes.cn/admin/ 签发
 ```
 
 跑脚本时**当前目录要在 monorepo 根**（即 `python/` 的上一级）：

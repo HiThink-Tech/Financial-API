@@ -1,8 +1,8 @@
 # MCP 接入与 Agent 路由契约
 
-同花顺金融数据服务提供 6 个托管 MCP 端点，适合 Claude Desktop、Cursor、Windsurf 等支持 HTTP MCP 的 Chat/Agent 客户端。六个端点共用在 <https://fuyao.aicubes.cn/admin> 获取的 API Key，无需在本地运行 MCP Server。
+同花顺金融数据服务提供 6 个托管 MCP 端点，适合 Claude Desktop、Cursor、Windsurf 等支持 HTTP MCP 的 Chat/Agent 客户端。六个端点共用在 <https://fuyao.aicubes.cn/admin/> 获取的 API Key，无需在本地运行 MCP Server。
 
-本页既是项目中的 MCP 主入口，也是 `hithink-finance` Skill 的内置入口契约。详细能力快照位于 [`docs/mcp/`](mcp/README.md)，由脚本完整镜像到 Skill，Agent 不需要为了理解能力而加载官网长文档。
+按[业务域路由](mcp/README.md)读取目标工具的本地能力快照，再以当前连接的工具名和 schema 核对调用参数。
 
 ## 六个服务
 
@@ -58,7 +58,7 @@
 }
 ```
 
-`HITHINK_FINANCE_API_KEY` 是 REST、MCP、CLI 和 Python 共用的推荐变量。若客户端不继承用户级环境变量，由 Agent 从已经配置的统一凭据来源写入客户端 Secret，不要求用户重新提供；若客户端不支持环境变量插值，应使用它提供的 Secret/凭据功能。不得把真实 Key 写入仓库、Prompt、Issue、日志或可共享配置。
+`HITHINK_FINANCE_API_KEY` 是各接入方式共用的推荐变量。若客户端不继承用户级环境变量，由 Agent 从已经配置的统一凭据来源写入客户端 Secret，不要求用户重新提供；用户也可以直接把 Key 提供给 Agent 上下文完成代配。Agent 不复述，并提示聊天平台可能保留消息记录。不得把真实 Key 写入仓库、Issue、日志或可共享配置。
 
 ## Agent 决策流程
 
@@ -82,7 +82,7 @@ Skill 中的能力快照用于意图识别、工具选择和参数避错；当�
 - 所有服务使用请求头 `X-api-key`。
 - 业务成功条件是响应信封 `code=0`，不能只看 HTTP 200。
 - `code=2003`、`Invalid or revoked API key`、401 或 403 通常表示 Key 缺失、无效、已撤销或客户端没有正确传递请求头。
-- 认证失败时，先重新检查 `HITHINK_FINANCE_API_KEY` 和 Skill 的用户级凭据文件。仍未配置时，引导用户前往 <https://fuyao.aicubes.cn/admin> 创建 Key，并说明既可以按平台命令配置，也可以交给 Agent 代为安全配置；不得强制用户在对话中粘贴，也不得复述收到的 Key。
+- 认证失败时，先重新检查 `HITHINK_FINANCE_API_KEY` 和 Skill 的用户级凭据文件。仍未配置时，引导用户前往 <https://fuyao.aicubes.cn/admin/> 创建 Key，并说明既可以按平台命令配置，也可以交给 Agent 代为安全配置；不得强制用户在对话中粘贴，也不得复述收到的 Key。
 - 更新配置后通常需要重启或重连 MCP 客户端，再对目标服务执行一次最小验证。
 
 ## 能力边界

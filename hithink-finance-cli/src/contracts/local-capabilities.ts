@@ -49,14 +49,28 @@ export interface LocalCapabilityOption {
  */
 export const localCapabilities: readonly LocalCapabilityDescriptor[] = [
   // ---- data 数据管理命令 ----
-  descriptor('data.init', 'data', 'init'),
+  descriptor('data.init', 'data', 'init', [
+    { flags: '--kline <path>', description: 'local daily Parquet; provide together with --events' },
+    {
+      flags: '--events <path>',
+      description: 'local adjustment events Parquet; provide together with --kline',
+    },
+    { flags: '--symbols <path>', description: 'optional local symbols Parquet' },
+  ]),
   descriptor('data.sync', 'data', 'sync'),
   descriptor('data.status', 'data', 'status'),
   descriptor('data.validate', 'data', 'validate'),
   descriptor('data.repair', 'data', 'repair'),
-  descriptor('data.migrate', 'data', 'migrate'),
-  descriptor('data.clean', 'data', 'clean'),
-  descriptor('data.remove', 'data', 'remove'),
+  descriptor('data.migrate', 'data', 'migrate', [
+    { flags: '--apply', description: 'apply the migration plan' },
+    { flags: '--allow-heavy', description: 'allow heavy migrations with --apply' },
+  ]),
+  descriptor('data.clean', 'data', 'clean', [
+    { flags: '--cache', description: 'clean managed download caches' },
+  ]),
+  descriptor('data.remove', 'data', 'remove', [
+    { flags: '--plan', description: 'preview database removal; deletion requires global --yes' },
+  ]),
   // ---- db 数据库查询命令 ----
   descriptor('db.describe', 'db', 'describe'),
   descriptor('db.query', 'db', 'query', [{ flags: '--sql <sql>', required: true }]),

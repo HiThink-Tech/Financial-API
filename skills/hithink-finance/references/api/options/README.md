@@ -13,6 +13,7 @@
 | --- | --- | --- |
 | [期权品种资料](varieties-list.md) | `GET /api/options/varieties/list` | 公开 |
 | [期权合约详情](contracts-detail.md) | `GET /api/options/contracts/detail` | 公开 |
+| [期权合约基础信息列表](contracts-list.md) | `GET /api/options/contracts/list` | 公开 |
 
 ## 行情
 
@@ -20,8 +21,8 @@
 
 | 需求 / 文档 | 接口或工具 | 使用范围 |
 | --- | --- | --- |
-| [期权分时行情](prices-intraday.md) | `GET /api/options/prices/intraday` | 公开 |
-| [期权日K](prices-daily.md) | `GET /api/options/prices/daily` | 公开 |
+| [期权分时](prices-intraday.md) | `GET /api/options/prices/intraday` | 公开 |
+| [期权K线](prices-daily.md) | `GET /api/options/prices/daily` | 公开 |
 
 ## 交易日程
 
@@ -29,4 +30,4 @@
 
 | 需求 / 文档 | 接口或工具 | 使用范围 |
 | --- | --- | --- |
-| [期权交易时间轴](calendar-session-timeline.md) | `GET /api/options/calendar/session-timeline` | 端内专用，待上线 |
+| [期权交易时间轴](calendar-session-timeline.md) | `GET /api/options/calendar/session-timeline` | 公开 |

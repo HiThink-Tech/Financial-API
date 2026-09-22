@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_options_varieties_list`
 >
-> 对应 REST 端点：[`GET /api/options/varieties/list`](../../api/options/varieties-list.md#varieties-list)
+> 对应 REST 端点：[`GET /api/options/varieties/list`](../../api/options/varieties-list.md)
 
 
 ## 工具描述
@@ -28,4 +28,4 @@
 
 ## 返回
 
-返回统一数据对象；字段、空值和数组语义见 [期权品种资料](../../api/options/varieties-list.md#varieties-list)。
+返回统一数据对象；字段、空值和数组语义见 [期权品种资料](../../api/options/varieties-list.md)。

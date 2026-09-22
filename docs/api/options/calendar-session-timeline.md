@@ -1,6 +1,6 @@
 # 期权交易时间轴
 
-[业务导航](README.md) · **端内专用** · [使用说明](../README.md#端内能力说明) · **待上线，当前不可调用**
+[业务导航](README.md)
 
 期权交易时间轴提供合约最近交易日的交易阶段、交易所阶段与跨日时间范围。
 
@@ -18,10 +18,9 @@ GET /api/options/calendar/session-timeline
 
 ## 请求示例
 
-以下命令仅展示接口路径与参数格式，当前不可用于外部调用。
-
 ```bash
-curl 'https://fuyao.aicubes.cn/api/options/calendar/session-timeline?thscode=IO2601-C-4000.CFE'
+curl 'https://fuyao.aicubes.cn/api/options/calendar/session-timeline?thscode=IO2601-C-4000.CFE' \
+  -H 'X-api-key: <your-api-key>'
 ```
 
 ## 响应示例

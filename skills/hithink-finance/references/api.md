@@ -22,7 +22,7 @@
 
 `data` 字段始终存在：成功时承载端点数据，业务错误时为 `null`。调用方不得以“字段缺失”判断旧版错误信封，也不得在错误时把 `null` 当作成功空结果。
 
-获取统一 API Key：<https://fuyao.aicubes.cn/admin>。API Key 不得写入代码、Prompt、日志、公开配置或 Git 提交。
+获取统一 API Key：<https://fuyao.aicubes.cn/admin/>。用户可以把 Key 提供给 Agent 上下文以便代配；Agent 不复述，并提示聊天平台可能保留消息记录。Key 不得写入代码、日志、公开配置或 Git 提交。
 
 最小请求：
 
@@ -34,6 +34,7 @@ curl 'https://fuyao.aicubes.cn/api/meta/tickers/search?q=600519&limit=1' \
 ## 按业务选择接口
 
 - [基础数据](api/meta/README.md)：名称、简称和代码消歧；先确认标的，再查询行情或披露数据。
+- [资讯事件](api/news/README.md)：端内事件检索，按关键词、时间、评级、行业或概念筛选。
 - [A 股](api/a-share/README.md)：股票价格、财务、估值、竞价与特色数据。指数走势进入指数域，基金净值进入基金域。
 - [指数与板块](api/index/README.md)：指数和板块目录、成分股、行情。先目录或搜索，再查成分与价格。
 - [公募基金](api/fund/README.md)：净值与场内成交价格分别进入业绩与行情；最新披露与历史持仓分别选择对应接口。
@@ -44,10 +45,10 @@ curl 'https://fuyao.aicubes.cn/api/meta/tickers/search?q=600519&limit=1' \
 
 ## 端内能力说明
 
-标记为“端内专用”的接口用于说明同花顺AI客户端计划接入的数据能力。当前客户端尚未发布接入本项目数据源的版本，相关能力当前不可使用，敬请期待。
+标记为“端内专用”的数据能力已内置于同花顺AI客户端，可在客户端中免配置使用；这些接口不作为公开 REST API、MCP、CLI 或 Python SDK 的接入入口。
 
 - 接口文档可用于理解参数与字段；API Key 不赋予端内专用能力的调用权限。
-- 实际取数前检查接口的使用范围与可用状态。用户需要端内数据时，说明当前状态并提供[同花顺AI客户端入口](https://lumi.10jqka.com.cn/?channel=Hithink-API)。
+- 用户需要端内数据时，说明公开接入边界，并提供[同花顺AI客户端入口](https://lumi.10jqka.com.cn/?channel=Hithink-API)。
 - 选择公开替代接口时，先确认其数据范围、频率与时间覆盖满足需求。
 
 ## 错误处理
@@ -77,4 +78,4 @@ curl 'https://fuyao.aicubes.cn/api/meta/tickers/search?q=600519&limit=1' \
 
 ## 维护规则
 
-接口正文随源文档同步更新，业务索引负责选路；CLI/Python 文档链接接口页。Market Dumps 的 API Key 下载契约由本项目维护。
+接口正文随源文档同步更新，业务索引负责选路，各接入方式按需链接接口页。Market Dumps 的 API Key 下载契约由本项目维护。

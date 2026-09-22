@@ -35,7 +35,7 @@ interface AuthOptions {
 }
 
 const apiKeyHint =
-  'Get an API key at https://fuyao.aicubes.cn/admin, then run `hithink-finance auth login` and paste it into the hidden prompt. In non-interactive shells, use `hithink-finance auth login --api-key-stdin`.';
+  'Get an API key at https://fuyao.aicubes.cn/admin/, then run `hithink-finance auth login` and paste it into the hidden prompt. In non-interactive shells, use `hithink-finance auth login --api-key-stdin`.';
 
 /**
  * 交互式隐藏 API Key 输入
@@ -86,7 +86,7 @@ export async function readHiddenApiKey(
           '',
           '请前往同花顺金融数据服务官网，登录同花顺账号，创建您的 API Key，复制到当前终端后按 Enter 完成登录。',
           '',
-          '官网 API Key 获取地址：https://fuyao.aicubes.cn/admin',
+          '官网 API Key 获取地址：https://fuyao.aicubes.cn/admin/',
           '',
           '下方为隐藏输入模式，粘贴或输入时不会显示在终端中；输入完成后按 Enter。',
           '',
@@ -97,7 +97,7 @@ export async function readHiddenApiKey(
           '',
           'Visit the HiThink Finance Data Service website, sign in with your HiThink account, create an API key, paste it into this terminal, then press Enter to finish login.',
           '',
-          'API key page: https://fuyao.aicubes.cn/admin',
+          'API key page: https://fuyao.aicubes.cn/admin/',
           '',
           'The prompt below uses hidden input mode. Typed or pasted characters will not be shown; press Enter when done.',
           '',

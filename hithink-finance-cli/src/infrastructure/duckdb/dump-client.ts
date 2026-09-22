@@ -201,7 +201,11 @@ async function signDump(
   // 构造签名 API 请求 URL
   const url = new URL(`/api/dump/market-dumps/${options.kind}/download-url`, options.baseUrl);
   const response = await fetchImplementation(url, {
-    headers: { 'X-api-key': options.apiKey, accept: 'application/json' },
+    headers: {
+      'X-api-key': options.apiKey,
+      'X-THS-Skill-Id': 'Hithink-Finance-CLI',
+      accept: 'application/json',
+    },
     signal:
       options.signal === undefined
         ? AbortSignal.timeout(30_000)

@@ -1,19 +1,17 @@
 # 期货品种板块
 
-[业务导航](README.md) · **端内专用** · [使用说明](../README.md#端内能力说明) · **待上线，当前不可调用**
+[业务导航](README.md)
 
-期货合约扩展资料提供品种板块、主连、主力、次主力和商品指数等客户端内能力
+期货品种板块提供品种与板块层级的对应关系。
 
-- 期货合约使用完整 `thscode`，品种列表每次最多 5 项；金融数值与日期可为 `null`，合法无数据返回空数组。
-
-<a id="futures-variety-plates"></a>
-## 期货品种板块
+- 接口返回统一 `ApiResponse` 信封；Unix 时间戳为毫秒。
+- 金融数值来源缺失时可为 `null`，合法无数据返回空数组。
 
 ```text
 GET /api/futures/variety-plates/list
 ```
 
-### 请求参数
+## 请求参数
 
 无业务参数。
 
@@ -21,15 +19,14 @@ GET /api/futures/variety-plates/list
 |---|---|---|---|---|
 | — | — | — | — | 无业务参数。 |
 
-### 请求示例
-
-以下命令仅展示接口路径与参数格式，当前不可用于外部调用。
+## 请求示例
 
 ```bash
-curl 'https://fuyao.aicubes.cn/api/futures/variety-plates/list'
+curl 'https://fuyao.aicubes.cn/api/futures/variety-plates/list' \
+  -H 'X-api-key: <your-api-key>'
 ```
 
-### 响应示例
+## 响应示例
 
 ```json
 {
@@ -50,7 +47,7 @@ curl 'https://fuyao.aicubes.cn/api/futures/variety-plates/list'
 }
 ```
 
-### 返回字段
+## 返回字段
 
 | 字段 | 类型 | 说明 |
 |---|---|---|

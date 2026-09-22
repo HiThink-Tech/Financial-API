@@ -255,7 +255,11 @@ export class FuyaoClient {
         // 发送 GET 请求，带 API Key 认证头和超时控制
         response = await this.fetchImplementation(url, {
           method: 'GET',
-          headers: { 'X-api-key': this.options.auth.apiKey, accept: 'application/json' },
+          headers: {
+            'X-api-key': this.options.auth.apiKey,
+            'X-THS-Skill-Id': 'Hithink-Finance-CLI',
+            accept: 'application/json',
+          },
           signal: this.requestSignal(),
         });
       } catch {

@@ -4,7 +4,7 @@
 
 - `tab` 以 URL 编码的 JSON 数组字符串传递；分类值由上游判定，未知分类按正常空结果返回。
 - 本页接口不使用时间查询参数；返回字段 `year` 是上游提供的近一年收益率字符串，不作单位换算。
-- 基金列表使用含市场后缀的完整 `thscode`；额度 `quota` 为 `null` 时表示无限额。
+- 基金列表使用含市场后缀的完整 `thscode`；额度 `quota` 为 `null` 时表示无限额；`classify` 为共享基金额度类别列表，可为空。
 - 分类、子分类和基金列表中的合法 `null` 占位保持原义。
 - 示例参数已通过真实上游调用验证；额度和收益数据会随上游更新。
 
@@ -43,10 +43,15 @@ curl 'https://fuyao.aicubes.cn/api/fund/quota/list?tab=%5B%22remen%22%5D&buy=tru
           "name": "all",
           "fund_list": [
             {
-              "thscode": "012752.OF",
-              "fund_name": "建信纳斯达克100指数(QDII)C人民币",
+              "thscode": "539001.OF",
+              "fund_name": "建信纳斯达克100指数(QDII)A人民币",
               "quota": "10.00",
-              "year": "15.86"
+              "year": "16.21",
+              "classify": [
+                "A",
+                "C",
+                "I"
+              ]
             }
           ]
         }
@@ -80,3 +85,4 @@ curl 'https://fuyao.aicubes.cn/api/fund/quota/list?tab=%5B%22remen%22%5D&buy=tru
 | `fund_name` | string | 基金名称。 |
 | `quota` | string \| null | 基金额度；`null` 表示无限额。 |
 | `year` | string \| null | 近一年收益率。 |
+| `classify` | string[] \| null | 共享基金额度类别列表。 |

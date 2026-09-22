@@ -1,8 +1,8 @@
 # 期货主力合约
 
-[业务导航](README.md) · **端内专用** · [使用说明](../README.md#端内能力说明) · **待上线，当前不可调用**
+[业务导航](README.md)
 
-期货合约扩展资料提供品种板块、主连、主力、次主力和商品指数等客户端内能力
+期货主力与指数合约提供主连、主力、次主力和商品指数能力。
 
 - 期货合约使用完整 `thscode`，品种列表每次最多 5 项；金融数值与日期可为 `null`，合法无数据返回空数组。
 
@@ -23,10 +23,9 @@ GET /api/futures/contracts/main-list
 
 ### 请求示例
 
-以下命令仅展示接口路径与参数格式，当前不可用于外部调用。
-
 ```bash
-curl 'https://fuyao.aicubes.cn/api/futures/contracts/main-list'
+curl 'https://fuyao.aicubes.cn/api/futures/contracts/main-list' \
+  -H 'X-api-key: <your-api-key>'
 ```
 
 ### 响应示例

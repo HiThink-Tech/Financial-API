@@ -43,7 +43,7 @@ python -m pip install -e ./python
 
 ### 远端取数
 
-先从 <https://fuyao.aicubes.cn/admin> 获取统一 API Key，并设置推荐的用户级环境变量 `HITHINK_FINANCE_API_KEY`。Python 也会读取 `hithink-finance/credentials.env` 用户级凭据文件；`FUYAO_TOKEN` 和 `API_KEY` 仅保留为旧版本兼容来源：
+先从 <https://fuyao.aicubes.cn/admin/> 获取统一 API Key，并设置推荐的用户级环境变量 `HITHINK_FINANCE_API_KEY`。Python 也会读取 `hithink-finance/credentials.env` 用户级凭据文件；`FUYAO_TOKEN` 和 `API_KEY` 仅保留为旧版本兼容来源：
 
 ```bash
 python python/toolkit/fuyao/scripts/fuyao.py tickers-search --q "贵州茅台"
@@ -95,6 +95,6 @@ python -m pytest python/tests/
 
 ## 安全
 
-- API Key 只通过环境变量、Secret 或安全输入传入，不写入代码、Prompt、日志或 Git。
+- API Key 可以由用户提供给 Agent 上下文代配，也可通过环境变量、Secret 或隐藏输入传入；Agent 不复述，并提示聊天平台可能保留消息记录。Key 不写入代码、日志或 Git。
 - 本地 DuckDB 不存储 API Key。
 - 数据分析应标注来源、时间、复权口径和“非投资建议”。

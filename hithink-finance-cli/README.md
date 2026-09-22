@@ -41,7 +41,7 @@ hithink-finance update --repair --format json
 
 ## API Key 与认证
 
-远端命令使用统一 API Key，获取地址：<https://fuyao.aicubes.cn/admin>。
+远端命令使用统一 API Key，获取地址：<https://fuyao.aicubes.cn/admin/>。
 
 交互式终端：
 
@@ -81,6 +81,8 @@ hithink-finance market snapshot --help
 ```
 
 Agent 不应只凭 README 猜参数。先读取 `capabilities`，再对目标 capability 读取 `schema`。
+
+同会话同版本的发现结果可复用。`schema` 列出命令选项；参数组合和复杂 JSON 的有效实例见配套 Skill 的对应 reference。表格指标的 `paging=json` 表示分页参数位于 `--page-info` JSON 中，实际是否推进需核对返回代码与总量。
 
 ## 命令导航
 
@@ -124,6 +126,7 @@ hithink-finance db query --sql "SELECT * FROM v_daily_qfq LIMIT 10" --format jso
 
 - 机器读取显式使用 `--format json`；人类交互可选择 `table`。
 - 成功以进程退出码 0 和 JSON 信封 `ok=true` 为准。
+- `data validate` 的外层成功仅表示检查执行完成；质量通过还要求 `data.ok=true`。研究任务另行核对目标标的、窗口及行数，空库质量通过不能代替样本验收。
 - 失败以非 0 退出码和 `ok=false` 为准，读取 `error.code`、`error.category`、`error.hint` 与请求标识。
 - 远端上游使用 `{code, message, request_id, data}`，但 CLI 会规范化为自己的信封；不要混用两套成功判断。
 - `--debug` 或 `DEBUG=hithink-finance*` 会在错误信封的 `meta.diagnostics` 中附加已脱敏的 request ID 与堆栈；错误信封仍只写 stderr，不污染机器可读 stdout。非预期内部错误还会返回预填版本、命令、错误码和 request ID 的 `error.report_url`。
@@ -155,6 +158,10 @@ hithink-finance db describe --format json
 ```
 
 初始化和同步需要远端 API Key；已有本地库的只读查询通常不需要。迁移、修复、清理和卸载等有副作用操作先查看计划或帮助，并在命令要求时获得用户明确确认。
+
+`auth status` 只检查所选 profile 的系统凭据库。环境变量或 stdin 已提供 Key 时可直接复用；`configured=false` 不代表这些来源缺失，`configured=true` 也不代表线上认证已经验证。
+
+严格只读研究先用文件系统确认目标数据库存在并固定 `--db` 路径，再查看 `data status` 和 `data migrate` 的默认迁移计划。仅在计划的 `data.versions` 为空时运行 `data validate`；有待执行迁移时先报告维护需求。`data status` 可创建缺失数据库，`data validate` 和 `db describe` 会应用普通迁移，因此不用于直接探测未知目标。表结构可用 `db query` 查询 `information_schema`。
 
 远端初始化和同步下载数据包时，交互终端会在 stderr 动态刷新进度；stderr 被重定向时会输出开始、完成及节流后的进度日志（至少相隔 5 秒且新增 8 MiB）。无论何种模式，`--format json` 的结果信封都只写入 stdout。
 

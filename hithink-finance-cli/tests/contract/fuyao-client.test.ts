@@ -32,6 +32,7 @@ describe('Fuyao HTTP client', () => {
   test('validates a successful response and sends the API key header', async () => {
     const { baseUrl } = await fixtureServer((request, response) => {
       expect(request.headers['x-api-key']).toBe('test-key');
+      expect(request.headers['x-ths-skill-id']).toBe('Hithink-Finance-CLI');
       response.setHeader('content-type', 'application/json');
       response.end(JSON.stringify({ code: 0, message: 'ok', request_id: 'req_1', data: { n: 1 } }));
     });

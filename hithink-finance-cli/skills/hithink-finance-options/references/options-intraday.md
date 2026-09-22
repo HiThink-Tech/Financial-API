@@ -2,9 +2,9 @@
 
 ## 前置条件
 
-- 先读取本 skill 的 `SKILL.md` 和 `../hithink-finance-shared/SKILL.md`。
-- 执行前用 `hithink-finance schema options.intraday --format json` 确认当前参数契约。
-- 远端命令需要 API Key；认证失败时回到 shared skill。
+- 按需读取[本域入口](../SKILL.md)与[共享规则](../../hithink-finance-shared/SKILL.md)，同会话已加载内容可复用。
+- 首次执行或版本变化时用 `hithink-finance schema options.intraday --format json` 确认参数，未说明的组合规则再看命令 `--help`。
+- 远端调用需要 API Key，先按共享规则复用已有凭据。
 
 ## 命令
 

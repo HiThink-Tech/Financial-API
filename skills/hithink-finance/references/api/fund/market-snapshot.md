@@ -2,7 +2,7 @@
 
 [业务导航](README.md)
 
-- 行情接口使用带市场后缀的单只 ETF `thscode` 唯一定位标的；价格字段按原始货币计价。
+- 行情接口使用带市场后缀的单只基金 `thscode` 唯一定位标的；快照支持 ETF/LOF，历史日线仅支持 ETF。价格字段按原始货币计价。
 
 ## 场内基金行情快照
 
@@ -10,13 +10,13 @@
 GET /api/fund/market/snapshot
 ```
 
-仅支持 ETF。LOF、场外基金、REITs 或尚未开放的基金叶子类型返回 `code=3004`。
+支持 ETF 和 LOF。场外基金、REITs 或尚未开放的基金叶子类型返回 `code=3004`；支持的标的尚无可用快照时返回 `code=3002`。
 
 ### 请求参数
 
 | 参数 | 类型 | 必需 | 默认值 | 说明 |
 |---|---|---|---|---|
-| `thscode` | string | 是 | — | 单只 ETF 的完整 thscode，必须保留市场后缀，如 `510300.SH`；不接受逗号分隔的多个值。 |
+| `thscode` | string | 是 | — | 单只 ETF 或 LOF 的完整 thscode，必须保留市场后缀，如 `510300.SH`、`161725.SZ`；不接受逗号分隔的多个值。 |
 
 系统会根据 `thscode` 识别标的类型。
 
@@ -65,8 +65,8 @@ curl 'https://fuyao.aicubes.cn/api/fund/market/snapshot?thscode=510300.SH' \
 
 | 字段 | 类型 | 说明 |
 |---|---|---|
-| `thscode` | string | ETF 的完整 thscode。 |
-| `ticker` | string | ETF 的纯基金代码，仅用于展示。 |
+| `thscode` | string | ETF 或 LOF 的完整 thscode。 |
+| `ticker` | string | ETF 或 LOF 的纯基金代码，仅用于展示。 |
 | `last_price` | number | 最新价。 |
 | `open_price` | number | 开盘价。 |
 | `high_price` | number | 最高价。 |

@@ -2,13 +2,13 @@
 
 ## 前置条件
 
-- 优先运行 `hithink-finance capabilities --format json` 获取当前 CLI 事实。
+- 同会话首次使用或版本变化时运行 `hithink-finance version --format json`、`hithink-finance capabilities --format json`；同版本已读取的 shared 和目标 schema 可复用。
 - 机器读取必须显式使用 `--format json`；需要表格给人看时才用 `table`。
 - `--output <path>` 只在声明该参数的具体命令上使用；远端能力命令会把完整 JSON envelope 写入文件，本地 `db export` / `market panel` 会写数据文件。它不是全局参数。
 
 ## 输出契约
 
-- 成功以进程退出码 0 和 `ok: true` 为准。
+- 命令执行成功以进程退出码 0 和 `ok: true` 为准；业务验收还应检查命令结果，例如质量检查的 `data.ok`、目标窗口、样本和行数。
 - 错误以非 0 退出码和 `ok: false` 为准；读取 `error.code`、`error.category`、`error.hint`。
 - 需要诊断时使用 `--debug`；已脱敏的 request ID 与堆栈位于 `meta.diagnostics`，非预期内部错误的预填问题链接位于 `error.report_url`。
 - HTTP 429/502/503/504 优先于响应体中的业务错误信封进行有界重试；耗尽后返回 `UPSTREAM_HTTP_<status>`。

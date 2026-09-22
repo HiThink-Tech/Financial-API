@@ -80,6 +80,13 @@ test('re-signs once after a transient dump failure and downloads atomically', as
     expect(result.sha256).toBe(createHash('sha256').update('parquet-bytes').digest('hex'));
     expect(await readFile(result.path, 'utf8')).toBe('parquet-bytes');
     expect(fetch).toHaveBeenCalledTimes(3);
+    expect(fetch.mock.calls[0]?.[1]?.headers).toMatchObject({
+      'X-THS-Skill-Id': 'Hithink-Finance-CLI',
+    });
+    expect(fetch.mock.calls[1]?.[1]?.headers).toMatchObject({
+      'X-THS-Skill-Id': 'Hithink-Finance-CLI',
+    });
+    expect(fetch.mock.calls[2]?.[1]).toBeUndefined();
     expect(String(fetch.mock.calls[1]?.[0])).not.toContain('secret');
   } finally {
     await rm(root, { recursive: true, force: true });

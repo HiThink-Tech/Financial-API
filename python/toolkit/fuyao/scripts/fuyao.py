@@ -67,6 +67,10 @@ from fuyao_client import (  # noqa: E402
     futures_basis_history,
     futures_company_variety_positions,
     futures_contract_detail,
+    futures_contracts,
+    futures_commodity_indexes,
+    futures_main,
+    futures_main_continuous,
     futures_contract_position_history,
     futures_contract_positions,
     futures_daily,
@@ -74,7 +78,10 @@ from fuyao_client import (  # noqa: E402
     futures_latest_basis,
     futures_position_companies,
     futures_trading_schedule,
+    futures_session_timeline,
     futures_varieties,
+    futures_variety_plates,
+    futures_secondary_main,
     futures_variety_positions,
     futures_warehouse_receipts,
     index_catalog_ths_index_list,
@@ -84,8 +91,10 @@ from fuyao_client import (  # noqa: E402
     prices_historical,
     prices_snapshot,
     options_contract_detail,
+    options_contracts,
     options_daily,
     options_intraday,
+    options_session_timeline,
     options_varieties,
     special_data_limit_up_ladder,
     special_data_limit_up_pool,
@@ -771,7 +780,13 @@ def build_parser() -> argparse.ArgumentParser:
 
     derivative_commands = (
         ("futures-varieties", futures_varieties, ()),
+        ("futures-variety-plates", futures_variety_plates, ()),
         ("futures-contract-detail", futures_contract_detail, (("thscode", str, True, None),)),
+        ("futures-contracts", futures_contracts, (("limit", int, False, None), ("offset", int, False, None))),
+        ("futures-main-continuous", futures_main_continuous, ()),
+        ("futures-main", futures_main, ()),
+        ("futures-secondary-main", futures_secondary_main, ()),
+        ("futures-commodity-indexes", futures_commodity_indexes, ()),
         ("futures-variety-positions", futures_variety_positions, (("date", str, True, None),)),
         ("futures-company-variety-positions", futures_company_variety_positions, (("date", str, True, None), ("varieties", str, True, None))),
         ("futures-contract-positions", futures_contract_positions, (("thscode", str, True, None), ("variety", str, True, None), ("date", str, True, None))),
@@ -781,13 +796,20 @@ def build_parser() -> argparse.ArgumentParser:
         ("futures-latest-basis", futures_latest_basis, ()),
         ("futures-basis-history", futures_basis_history, (("thscode", str, True, None), ("spot_indicator_id", str, False, None))),
         ("futures-trading-schedule", futures_trading_schedule, (("thscode", str, True, None), ("start_date", str, True, None), ("end_date", str, True, None))),
+        ("futures-session-timeline", futures_session_timeline, (("thscode", str, True, None),)),
         ("futures-intraday", futures_intraday, (("thscode", str, True, None), ("session", str, False, ("pre_market", "intraday", "post_market")))),
         ("futures-daily", futures_daily, (("thscode", str, True, None), ("start", int, False, None), ("end", int, False, None))),
         ("options-varieties", options_varieties, ()),
         ("options-contract-detail", options_contract_detail, (("thscode", str, True, None),)),
+        ("options-contracts", options_contracts, (("limit", int, False, None), ("offset", int, False, None))),
+        ("options-session-timeline", options_session_timeline, (("thscode", str, True, None),)),
         ("options-intraday", options_intraday, (("thscode", str, True, None), ("session", str, False, ("pre_market", "intraday", "post_market")))),
         ("options-daily", options_daily, (("thscode", str, True, None), ("start", int, False, None), ("end", int, False, None))),
     )
+    derivative_paging_defaults = {
+        "futures-contracts": {"limit": 100, "offset": 0},
+        "options-contracts": {"limit": 100, "offset": 0},
+    }
     for name, handler, arguments in derivative_commands:
         p = sub.add_parser(name, help=f"query {name.replace('-', ' ')}")
         argument_names = []
@@ -797,6 +819,8 @@ def build_parser() -> argparse.ArgumentParser:
             if choices is not None:
                 kwargs["choices"] = choices
                 kwargs["default"] = "intraday"
+            if argument in derivative_paging_defaults.get(name, {}):
+                kwargs["default"] = derivative_paging_defaults[name][argument]
             p.add_argument(option, **kwargs)
             argument_names.append(argument)
         p.set_defaults(func=_no_args(handler) if not argument_names else _named_args(handler, *argument_names))

@@ -110,7 +110,7 @@ def _token() -> str:
     if not tok:
         raise RuntimeError(
             "HITHINK_FINANCE_API_KEY or the user credential file is required. "
-            "Create an API key at https://fuyao.aicubes.cn/admin. "
+            "Create an API key at https://fuyao.aicubes.cn/admin/. "
             "FUYAO_TOKEN and API_KEY remain legacy compatibility sources."
         )
     return tok
@@ -1609,8 +1609,40 @@ def futures_varieties() -> dict[str, Any]:
     return _get("/api/futures/varieties/list", {})
 
 
+def futures_variety_plates() -> dict[str, Any]:
+    return _get("/api/futures/variety-plates/list", {})
+
+
+def _derivative_contracts(path: str, limit: int = 100, offset: int = 0) -> dict[str, Any]:
+    if not 1 <= limit <= 1000:
+        raise ValueError("limit must be between 1 and 1000")
+    if offset < 0:
+        raise ValueError("offset must be non-negative")
+    return _get(path, {"limit": limit, "offset": offset})
+
+
 def futures_contract_detail(thscode: str) -> dict[str, Any]:
     return _get("/api/futures/contracts/detail", {"thscode": thscode})
+
+
+def futures_contracts(*, limit: int = 100, offset: int = 0) -> dict[str, Any]:
+    return _derivative_contracts("/api/futures/contracts/list", limit, offset)
+
+
+def futures_main_continuous() -> dict[str, Any]:
+    return _get("/api/futures/contracts/main-continuous-list", {})
+
+
+def futures_main() -> dict[str, Any]:
+    return _get("/api/futures/contracts/main-list", {})
+
+
+def futures_secondary_main() -> dict[str, Any]:
+    return _get("/api/futures/contracts/secondary-main-list", {})
+
+
+def futures_commodity_indexes() -> dict[str, Any]:
+    return _get("/api/futures/contracts/commodity-index-list", {})
 
 
 def futures_variety_positions(date: str) -> dict[str, Any]:
@@ -1658,6 +1690,10 @@ def futures_trading_schedule(thscode: str, start_date: str, end_date: str) -> di
     return _get("/api/futures/calendar/trading-schedule", {"thscode": thscode, "start_date": start_date, "end_date": end_date})
 
 
+def futures_session_timeline(thscode: str) -> dict[str, Any]:
+    return _get("/api/futures/calendar/session-timeline", {"thscode": thscode})
+
+
 def futures_intraday(thscode: str, *, session: str = "intraday") -> dict[str, Any]:
     return _get("/api/futures/prices/intraday", {"thscode": thscode, "session": _derivative_session(session)})
 
@@ -1672,6 +1708,14 @@ def options_varieties() -> dict[str, Any]:
 
 def options_contract_detail(thscode: str) -> dict[str, Any]:
     return _get("/api/options/contracts/detail", {"thscode": thscode})
+
+
+def options_contracts(*, limit: int = 100, offset: int = 0) -> dict[str, Any]:
+    return _derivative_contracts("/api/options/contracts/list", limit, offset)
+
+
+def options_session_timeline(thscode: str) -> dict[str, Any]:
+    return _get("/api/options/calendar/session-timeline", {"thscode": thscode})
 
 
 def options_intraday(thscode: str, *, session: str = "intraday") -> dict[str, Any]:
@@ -1747,7 +1791,13 @@ __all__ = [
     "special_data_hot_stock_rank_trend",
     "special_data_dragon_tiger_list",
     "futures_varieties",
+    "futures_variety_plates",
     "futures_contract_detail",
+    "futures_contracts",
+    "futures_main_continuous",
+    "futures_main",
+    "futures_secondary_main",
+    "futures_commodity_indexes",
     "futures_variety_positions",
     "futures_company_variety_positions",
     "futures_contract_positions",
@@ -1757,10 +1807,13 @@ __all__ = [
     "futures_latest_basis",
     "futures_basis_history",
     "futures_trading_schedule",
+    "futures_session_timeline",
     "futures_intraday",
     "futures_daily",
     "options_varieties",
     "options_contract_detail",
+    "options_contracts",
+    "options_session_timeline",
     "options_intraday",
     "options_daily",
 ]

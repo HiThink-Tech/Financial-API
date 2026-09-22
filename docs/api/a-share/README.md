@@ -82,14 +82,14 @@
 
 | 需求 / 文档 | 接口或工具 | 使用范围 |
 | --- | --- | --- |
-| [资金流向实时快照](capital-flow-snapshot.md) | `GET /api/a-share/capital-flow/snapshot` | 端内专用，待上线 |
-| [资金流向历史](capital-flow-historical.md) | `GET /api/a-share/capital-flow/historical` | 端内专用，待上线 |
+| [资金流向实时快照](capital-flow-snapshot.md) | `GET /api/a-share/capital-flow/snapshot` | 端内专用，客户端可用 |
+| [资金流向历史](capital-flow-historical.md) | `GET /api/a-share/capital-flow/historical` | 端内专用，客户端可用 |
 
-## 高频行情
+## 高频动向
 
-端内高频历史与单日分时。
+端内高频动向、参与度、历史与单日分时。
 
 | 需求 / 文档 | 接口或工具 | 使用范围 |
 | --- | --- | --- |
-| [高频历史](high-frequency-historical.md) | `GET /api/a-share/high-frequency/historical` | 端内专用，待上线 |
-| [单日高频分时](high-frequency-intraday.md) | `GET /api/a-share/high-frequency/intraday` | 端内专用，待上线 |
+| [高频历史](high-frequency-historical.md) | `GET /api/a-share/high-frequency/historical` | 端内专用，客户端可用 |
+| [单日高频分时](high-frequency-intraday.md) | `GET /api/a-share/high-frequency/intraday` | 端内专用，客户端可用 |

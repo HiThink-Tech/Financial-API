@@ -1,6 +1,6 @@
 ---
 name: hithink-finance-futures
-description: '用于 Agent 通过 hithink-finance CLI 查询公开期货品种、合约详情、持仓、仓单、基差、交易日程、分时和日 K；端内专用的品种板块、重点合约目录、F10 与会话时间轴不在本 skill 范围。'
+description: '通过 hithink-finance CLI 查询期货品种、合约详情、持仓、仓单、基差、交易日程、分时和日 K。'
 ---
 
 # hithink-finance-futures
@@ -9,12 +9,12 @@ description: '用于 Agent 通过 hithink-finance CLI 查询公开期货品种�
 
 ## 前置条件表
 
-| 条件                                   | 操作                                                                                                  |
-| -------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| 开始任何 CLI 调用                      | 先读取并遵循 [hithink-finance-shared](../hithink-finance-shared/SKILL.md)                             |
-| 不确定命令是否存在或参数是否变化       | 运行 `hithink-finance capabilities --format json`，再运行 `hithink-finance schema <id> --format json` |
-| 需要执行下表某个命令                   | 先读取对应 reference 文件，不要只凭命令名猜参数                                                       |
-| 结果可能是全市场、分页、多标的或长区间 | 使用命令声明的 `--output <path>` 落盘；远端 stdout 只返回摘要                                         |
+| 条件                         | 操作                                                                                                |
+| ---------------------------- | --------------------------------------------------------------------------------------------------- |
+| 首次使用本域                 | 读取 [共享规则](../hithink-finance-shared/SKILL.md)，同会话已加载内容可复用                         |
+| 首次执行或版本变化           | 查看 `capabilities --format json` 与目标 `schema <id> --format json`；组合规则不明确时查看 `--help` |
+| 需要执行下表某个命令         | 先读取对应 reference 文件，不要只凭命令名猜参数                                                     |
+| 全市场、分页、多标的或长区间 | 使用命令声明的 `--output <path>` 落盘，只报告摘要                                                   |
 
 ## 快速决策
 
@@ -33,16 +33,23 @@ description: '用于 Agent 通过 hithink-finance CLI 查询公开期货品种�
 | 命令                                                                                 | 何时使用                                           |
 | ------------------------------------------------------------------------------------ | -------------------------------------------------- |
 | [futures basis-history](references/futures-basis-history.md)                         | Query historical futures basis                     |
+| [futures commodity-indexes](references/futures-commodity-indexes.md)                 | List futures commodity indexes                     |
 | [futures company-variety-positions](references/futures-company-variety-positions.md) | Query daily company positions by futures varieties |
 | [futures contract-detail](references/futures-contract-detail.md)                     | Query futures contract details                     |
 | [futures contract-position-history](references/futures-contract-position-history.md) | Query up to one year of futures contract positions |
 | [futures contract-positions](references/futures-contract-positions.md)               | Query daily futures contract positions             |
+| [futures contracts](references/futures-contracts.md)                                 | List futures contracts                             |
 | [futures daily](references/futures-daily.md)                                         | Query fixed 1d futures prices                      |
 | [futures intraday](references/futures-intraday.md)                                   | Query current futures session intraday prices      |
 | [futures latest-basis](references/futures-latest-basis.md)                           | Query latest main-continuous futures basis         |
+| [futures main](references/futures-main.md)                                           | List futures main contracts                        |
+| [futures main-continuous](references/futures-main-continuous.md)                     | List futures main-continuous contracts             |
 | [futures position-companies](references/futures-position-companies.md)               | List futures position companies                    |
+| [futures secondary-main](references/futures-secondary-main.md)                       | List futures secondary-main contracts              |
+| [futures session-timeline](references/futures-session-timeline.md)                   | Query futures session timeline                     |
 | [futures trading-schedule](references/futures-trading-schedule.md)                   | Query futures trading schedule                     |
 | [futures varieties](references/futures-varieties.md)                                 | List public futures varieties                      |
+| [futures variety-plates](references/futures-variety-plates.md)                       | List futures variety plates                        |
 | [futures variety-positions](references/futures-variety-positions.md)                 | Query daily futures variety positions              |
 | [futures warehouse-receipts](references/futures-warehouse-receipts.md)               | Query historical futures warehouse receipts        |
 
@@ -54,15 +61,7 @@ hithink-finance schema <capability-id> --format json
 hithink-finance futures <command> --help
 ```
 
-使用原生命令前必须先看 schema；schema 是当前 CLI 参数契约，reference 是决策和边界补充。
-
-## 权限表
-
-| 命令类型                       | 要求                                                                   |
-| ------------------------------ | ---------------------------------------------------------------------- |
-| 远端服务查询                   | API Key 来自系统凭据库、`HITHINK_FINANCE_API_KEY` 或 `--api-key-stdin` |
-| 本地 DuckDB 查询/导出          | 本地库存在且 schema 兼容；可用全局 `--db <path>` 指定                  |
-| 删除、迁移、修复等有副作用操作 | 先预览或说明影响；需要用户明确确认时才加 `--yes`                       |
+schema 提供当前命令选项；reference 补充业务参数关系和验收方法。全局参数、凭据与输出约定见共享规则。
 
 ## 边界声明
 

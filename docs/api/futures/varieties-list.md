@@ -2,19 +2,16 @@
 
 [业务导航](README.md)
 
-期货基础资料提供品种目录与单个合约的详细信息。
+期货品种资料提供期货品种目录及交易属性。
 
-- 期货合约使用完整 `thscode`，品种代码使用大写形式；接口返回统一 `ApiResponse` 信封。
-- ISO 日期按 `Asia/Shanghai` 解释，Unix 时间戳为毫秒。金融数值与日期来源缺失时可为 `null`，列表无数据时返回 `[]`。
-
-<a id="varieties-list"></a>
-## 期货品种资料
+- 品种代码使用大写形式；接口返回统一 `ApiResponse` 信封。
+- Unix 时间戳均为毫秒；金融数值来源缺失时可为 `null`，列表无数据时返回 `[]`。
 
 ```text
 GET /api/futures/varieties/list
 ```
 
-### 请求参数
+## 请求参数
 
 无业务参数。
 
@@ -22,14 +19,14 @@ GET /api/futures/varieties/list
 |---|---|---|---|---|
 | — | — | — | — | 无业务参数。 |
 
-### 请求示例
+## 请求示例
 
 ```bash
 curl 'https://fuyao.aicubes.cn/api/futures/varieties/list' \
   -H 'X-api-key: <your-api-key>'
 ```
 
-### 响应示例
+## 响应示例
 
 ```json
 {
@@ -65,7 +62,7 @@ curl 'https://fuyao.aicubes.cn/api/futures/varieties/list' \
 }
 ```
 
-### 返回字段
+## 返回字段
 
 | 字段 | 类型 | 说明 |
 |---|---|---|

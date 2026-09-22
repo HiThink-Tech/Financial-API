@@ -204,7 +204,12 @@ export function registerRemoteCapabilityGroup(
     const leaf = group
       .command(capability.command[1])
       .description(localizeText(context.language, capability.description));
-    for (const option of capability.options) addDescriptorOption(leaf, option, context);
+    for (const option of capability.options) {
+      // Alternative code sources are merged before inputSchema validates the required list.
+      const batchInput =
+        option.flags.startsWith('--thscodes ') && capability.id !== 'valuation.snapshot';
+      addDescriptorOption(leaf, batchInput ? { ...option, required: false } : option, context);
+    }
     leaf.option(
       '--output <path>',
       localizeText(context.language, 'write the full JSON response envelope to a file'),

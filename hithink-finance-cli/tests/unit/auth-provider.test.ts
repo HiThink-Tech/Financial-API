@@ -128,7 +128,7 @@ describe('API key authentication', () => {
     await expect(provider.resolve('default')).rejects.toMatchObject({
       code: 'AUTH_API_KEY_MISSING',
       exitCode: 3,
-      hint: expect.stringContaining('https://fuyao.aicubes.cn/admin'),
+      hint: expect.stringContaining('https://fuyao.aicubes.cn/admin/'),
     });
   });
 });

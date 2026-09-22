@@ -261,7 +261,7 @@
       "command": ["fund", "indicators-table"],
       "endpoint": "/api/fund/indicators/table",
       "method": "GET",
-      "paging": "none",
+      "paging": "json",
       "window": "none",
       "source": "remote"
     },
@@ -419,6 +419,15 @@
       "source": "remote"
     },
     {
+      "id": "futures.commodity-indexes",
+      "command": ["futures", "commodity-indexes"],
+      "endpoint": "/api/futures/contracts/commodity-index-list",
+      "method": "GET",
+      "paging": "none",
+      "window": "none",
+      "source": "remote"
+    },
+    {
       "id": "futures.company-variety-positions",
       "command": ["futures", "company-variety-positions"],
       "endpoint": "/api/futures/positions/company-variety-daily",
@@ -455,6 +464,15 @@
       "source": "remote"
     },
     {
+      "id": "futures.contracts",
+      "command": ["futures", "contracts"],
+      "endpoint": "/api/futures/contracts/list",
+      "method": "GET",
+      "paging": "offset",
+      "window": "none",
+      "source": "remote"
+    },
+    {
       "id": "futures.daily",
       "command": ["futures", "daily"],
       "endpoint": "/api/futures/prices/daily",
@@ -482,9 +500,45 @@
       "source": "remote"
     },
     {
+      "id": "futures.main",
+      "command": ["futures", "main"],
+      "endpoint": "/api/futures/contracts/main-list",
+      "method": "GET",
+      "paging": "none",
+      "window": "none",
+      "source": "remote"
+    },
+    {
+      "id": "futures.main-continuous",
+      "command": ["futures", "main-continuous"],
+      "endpoint": "/api/futures/contracts/main-continuous-list",
+      "method": "GET",
+      "paging": "none",
+      "window": "none",
+      "source": "remote"
+    },
+    {
       "id": "futures.position-companies",
       "command": ["futures", "position-companies"],
       "endpoint": "/api/futures/positions/company-list",
+      "method": "GET",
+      "paging": "none",
+      "window": "none",
+      "source": "remote"
+    },
+    {
+      "id": "futures.secondary-main",
+      "command": ["futures", "secondary-main"],
+      "endpoint": "/api/futures/contracts/secondary-main-list",
+      "method": "GET",
+      "paging": "none",
+      "window": "none",
+      "source": "remote"
+    },
+    {
+      "id": "futures.session-timeline",
+      "command": ["futures", "session-timeline"],
+      "endpoint": "/api/futures/calendar/session-timeline",
       "method": "GET",
       "paging": "none",
       "window": "none",
@@ -503,6 +557,15 @@
       "id": "futures.varieties",
       "command": ["futures", "varieties"],
       "endpoint": "/api/futures/varieties/list",
+      "method": "GET",
+      "paging": "none",
+      "window": "none",
+      "source": "remote"
+    },
+    {
+      "id": "futures.variety-plates",
+      "command": ["futures", "variety-plates"],
+      "endpoint": "/api/futures/variety-plates/list",
       "method": "GET",
       "paging": "none",
       "window": "none",
@@ -638,6 +701,15 @@
       "source": "remote"
     },
     {
+      "id": "options.contracts",
+      "command": ["options", "contracts"],
+      "endpoint": "/api/options/contracts/list",
+      "method": "GET",
+      "paging": "offset",
+      "window": "none",
+      "source": "remote"
+    },
+    {
       "id": "options.daily",
       "command": ["options", "daily"],
       "endpoint": "/api/options/prices/daily",
@@ -653,6 +725,15 @@
       "method": "GET",
       "paging": "none",
       "window": "today-only",
+      "source": "remote"
+    },
+    {
+      "id": "options.session-timeline",
+      "command": ["options", "session-timeline"],
+      "endpoint": "/api/options/calendar/session-timeline",
+      "method": "GET",
+      "paging": "none",
+      "window": "none",
       "source": "remote"
     },
     {

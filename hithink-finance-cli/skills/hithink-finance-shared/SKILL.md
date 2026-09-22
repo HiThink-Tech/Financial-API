@@ -18,18 +18,18 @@ description: '用于 Agent 通过 hithink-finance CLI 做安装后自检、API K
 
 ## 快速决策
 
-| 用户意图                | 首选命令 / 路由                                                                                                                                                               |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 检查 CLI 是否可用或版本 | `hithink-finance version --format json`                                                                                                                                       |
-| 查看真实能力清单        | `hithink-finance capabilities --format json`                                                                                                                                  |
-| 查看某个命令参数契约    | `hithink-finance schema <capability-id> --format json`                                                                                                                        |
-| 获取并保存 API Key      | 先打开 https://fuyao.aicubes.cn/admin 获取 API Key，再运行 `hithink-finance auth login --api-key-stdin --format json`；交互终端也可运行 `hithink-finance auth login` 隐藏输入 |
-| 检查认证状态            | `hithink-finance auth status --format json`                                                                                                                                   |
-| 查看非敏感配置          | `hithink-finance config show --format json`                                                                                                                                   |
-| 诊断运行环境            | `hithink-finance doctor --format json`                                                                                                                                        |
-| 同步/修复配套 Skills    | `hithink-finance skills status --format json` 或 `hithink-finance skills sync --format json`                                                                                  |
-| 更新 CLI                | `hithink-finance update --check --format json` 只检查；确认后用 `hithink-finance update --format json` 更新到最新版                                                           |
-| 预览卸载                | `hithink-finance uninstall --plan --format json`                                                                                                                              |
+| 用户意图                | 首选命令 / 路由                                                                                                                                                                |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 检查 CLI 是否可用或版本 | `hithink-finance version --format json`                                                                                                                                        |
+| 查看真实能力清单        | `hithink-finance capabilities --format json`                                                                                                                                   |
+| 查看某个命令参数契约    | `hithink-finance schema <capability-id> --format json`                                                                                                                         |
+| 获取并保存 API Key      | 先打开 https://fuyao.aicubes.cn/admin/ 获取 API Key，再运行 `hithink-finance auth login --api-key-stdin --format json`；交互终端也可运行 `hithink-finance auth login` 隐藏输入 |
+| 检查认证状态            | `hithink-finance auth status --format json`                                                                                                                                    |
+| 查看非敏感配置          | `hithink-finance config show --format json`                                                                                                                                    |
+| 诊断运行环境            | `hithink-finance doctor --format json`                                                                                                                                         |
+| 同步/修复配套 Skills    | `hithink-finance skills status --format json` 或 `hithink-finance skills sync --format json`                                                                                   |
+| 更新 CLI                | `hithink-finance update --check --format json` 只检查；确认后用 `hithink-finance update --format json` 更新到最新版                                                            |
+| 预览卸载                | `hithink-finance uninstall --plan --format json`                                                                                                                               |
 
 ## References
 
@@ -51,5 +51,5 @@ description: '用于 Agent 通过 hithink-finance CLI 做安装后自检、API K
 ## 边界声明
 
 - 业务取数请求必须切到 symbol、market、special-data、financials、index、fund、futures、options、valuation、data 或 research skill。
-- 不要把 API Key 写入命令、配置文件、日志、Markdown、Git 或对话正文；优先 stdin 或系统凭据库。
+- 用户可以为了便利把 API Key 提供给 Agent 上下文；Agent 不复述，并提示聊天平台可能保留消息记录。不要把 Key 写入命令参数、项目配置、日志、Markdown、Git 或其他可共享内容；本地配置优先 stdin、用户级持久来源或系统凭据库。
 - 不要把 stderr 更新提示、诊断详情或完整大数据结果当作最终答案原样展开。

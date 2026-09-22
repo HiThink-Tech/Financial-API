@@ -1,6 +1,6 @@
 ---
 name: hithink-finance-symbol
-description: '用于 Agent 通过 hithink-finance CLI 处理标的目录、股票/指数代码搜索、名称或 ticker 到 thscode 的消歧、A 股或指数代码表分页导出；行情价格转 hithink-finance-market，指数成分转 hithink-finance-index。'
+description: '通过 hithink-finance CLI 搜索股票、指数、基金、期货和期权等标的，将名称或 ticker 消歧为 thscode，并导出 A 股或指数代码表；行情和成分查询转对应业务 Skill。'
 ---
 
 # hithink-finance-symbol
@@ -9,21 +9,21 @@ description: '用于 Agent 通过 hithink-finance CLI 处理标的目录、股�
 
 ## 前置条件表
 
-| 条件                                   | 操作                                                                                                  |
-| -------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| 开始任何 CLI 调用                      | 先读取并遵循 [hithink-finance-shared](../hithink-finance-shared/SKILL.md)                             |
-| 不确定命令是否存在或参数是否变化       | 运行 `hithink-finance capabilities --format json`，再运行 `hithink-finance schema <id> --format json` |
-| 需要执行下表某个命令                   | 先读取对应 reference 文件，不要只凭命令名猜参数                                                       |
-| 结果可能是全市场、分页、多标的或长区间 | 使用命令声明的 `--output <path>` 落盘；远端 stdout 只返回摘要                                         |
+| 条件                         | 操作                                                                                                |
+| ---------------------------- | --------------------------------------------------------------------------------------------------- |
+| 首次使用本域                 | 读取 [共享规则](../hithink-finance-shared/SKILL.md)，同会话已加载内容可复用                         |
+| 首次执行或版本变化           | 查看 `capabilities --format json` 与目标 `schema <id> --format json`；组合规则不明确时查看 `--help` |
+| 需要执行下表某个命令         | 先读取对应 reference 文件，不要只凭命令名猜参数                                                     |
+| 全市场、分页、多标的或长区间 | 使用命令声明的 `--output <path>` 落盘，只报告摘要                                                   |
 
 ## 快速决策
 
-| 用户意图                           | 首选命令 / 路由                                    |
-| ---------------------------------- | -------------------------------------------------- |
-| 用户给出名称/简称/ticker，需要消歧 | `symbol search`                                    |
-| 用户要股票或指数代码表/全量目录    | `symbol list`，大结果必须将 JSON stdout 重定向落盘 |
-| 用户要价格、K 线、快照             | 切到 `hithink-finance-market`                      |
-| 用户要指数成分或指数行情           | 切到 `hithink-finance-index`                       |
+| 用户意图                           | 首选命令 / 路由                                     |
+| ---------------------------------- | --------------------------------------------------- |
+| 用户给出名称/简称/ticker，需要消歧 | `symbol search`                                     |
+| 用户要股票或指数代码表/全量目录    | `symbol list --output <file>`，按页保存并核对完整性 |
+| 用户要价格、K 线、快照             | 切到 `hithink-finance-market`                       |
+| 用户要指数成分或指数行情           | 切到 `hithink-finance-index`                        |
 
 ## Shortcuts
 
@@ -40,15 +40,7 @@ hithink-finance schema <capability-id> --format json
 hithink-finance symbol <command> --help
 ```
 
-使用原生命令前必须先看 schema；schema 是当前 CLI 参数契约，reference 是决策和边界补充。
-
-## 权限表
-
-| 命令类型                       | 要求                                                                   |
-| ------------------------------ | ---------------------------------------------------------------------- |
-| 远端服务查询                   | API Key 来自系统凭据库、`HITHINK_FINANCE_API_KEY` 或 `--api-key-stdin` |
-| 本地 DuckDB 查询/导出          | 本地库存在且 schema 兼容；可用全局 `--db <path>` 指定                  |
-| 删除、迁移、修复等有副作用操作 | 先预览或说明影响；需要用户明确确认时才加 `--yes`                       |
+schema 提供当前命令选项；reference 补充业务参数关系和验收方法。全局参数、凭据与输出约定见共享规则。
 
 ## 边界声明
 

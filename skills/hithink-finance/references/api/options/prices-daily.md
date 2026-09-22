@@ -1,14 +1,14 @@
-# 期权日K
+# 期权K线
 
 [业务导航](README.md)
 
-期权行情提供合约当前或最近交易日的分时行情和历史日 K 数据。
+期权行情提供合约分时和 K 线数据；端外访问分时仅支持当前交易日、K 线仅支持日 K，AI 客户端内可使用历史交易日和全部周期。
 
 - 期权合约使用完整 `thscode`；接口返回统一 `ApiResponse` 信封。
 - Unix 时间戳均为毫秒；日期按 `Asia/Shanghai` 解释。金融数值与日期来源缺失时可为 `null`，列表无数据时返回 `[]`。
 
 <a id="prices-daily"></a>
-## 期权日K
+## 期权K线
 
 ```text
 GET /api/options/prices/daily
@@ -21,6 +21,7 @@ GET /api/options/prices/daily
 | `thscode` | string | 是 | — | 期权合约完整同花顺代码。 |
 | `start` | long | 否 | — | 与 `end` 成对提供的正毫秒时间戳；两者均省略时查询最近 100 根。 |
 | `end` | long | 否 | — | 与 `start` 成对提供的正毫秒时间戳，且不早于 `start`。 |
+| `time_period` | enum | 否 | — | 端外仅允许 `day_1`；AI 客户端内可使用 `min_1`、`min_10`、`hour_1`、`day_1`、`week_1`、`month_1`、`quarter_1`、`year_1`。 |
 
 ### 请求示例
 
@@ -61,5 +62,5 @@ curl 'https://fuyao.aicubes.cn/api/options/prices/daily?thscode=IO2601-C-4000.CF
 |---|---|---|
 | `timestamp` | long | 数据时间，毫秒时间戳。 |
 | `thscode` | string | 期权合约代码。 |
-| `interval` | string | 固定为 `1d`。 |
+| `interval` | string | 实际返回的 K 线周期；端外调用固定为 `day_1`。 |
 | `item[]` | array | 日 K 列表；每项含可空的 `timestamp`、`open_price`、`high_price`、`low_price`、`close_price`、`volume`、`turnover`。 |

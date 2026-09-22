@@ -52,9 +52,10 @@ def test_root_readme_has_current_brand_positioning_and_quick_start() -> None:
     ):
         assert server_name in readme
     assert "examples/inspirations/01-stock-overview/preview.jpg" in readme
-    assert "同花顺AI客户端尚未发布接入本项目数据源的版本" in readme
-    assert "后续版本计划接入" in readme
-    assert "金融数据与分析能力已内置，打开客户端即可使用" not in readme
+    assert "同花顺AI客户端已接入当前数据源" in readme
+    assert "金融数据与分析能力已内置，打开客户端即可使用" in readme
+    assert "尚未发布接入本项目数据源" not in readme
+    assert "后续版本计划接入" not in readme
 
 
 def test_root_changelog_preserves_history_and_documents_this_release() -> None:
@@ -62,6 +63,7 @@ def test_root_changelog_preserves_history_and_documents_this_release() -> None:
 
     assert changelog.startswith("# 更新日志")
     for release_date in (
+        "2026-09-20",
         "2026-07-10",
         "2026-07-06",
         "2026-07-02",
@@ -84,23 +86,26 @@ def test_root_skills_are_consolidated_to_hithink_finance() -> None:
     assert skill_directories == {"hithink-finance"}
     skill = read("skills/hithink-finance/SKILL.md")
     assert "name: hithink-finance" in skill
-    for access_mode in ("REST API", "MCP", "CLI", "Python SDK"):
+    for access_mode in ("REST API", "MCP", "CLI"):
         assert access_mode in skill
     assert "渐进" in skill or "按需" in skill
 
     references = REPO_ROOT / "skills" / "hithink-finance" / "references"
     assert {path.name for path in references.glob("*.md")} == {
+        "api-key-onboarding.md",
         "api.md",
         "client-only-capabilities.md",
         "cli.md",
         "mcp.md",
-        "python-sdk.md",
     }
-    assert {path.name for path in references.iterdir() if path.is_dir()} == {
+    assert {
+        path.name
+        for path in references.iterdir()
+        if path.is_dir() and any(path.iterdir())
+    } == {
         "api",
         "cli",
         "mcp",
-        "python-sdk",
     }
 
 
@@ -193,7 +198,6 @@ def test_public_entry_docs_recommend_one_cross_mode_api_key_contract() -> None:
         "python/toolkit/README.md",
         "python/toolkit/fuyao/README.md",
         "python/examples/README.md",
-        "skills/hithink-finance/references/python-sdk/remote-toolkit.md",
     )
 
     for document in entry_docs:

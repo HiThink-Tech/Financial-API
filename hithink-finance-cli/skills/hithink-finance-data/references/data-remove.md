@@ -2,9 +2,8 @@
 
 ## 前置条件
 
-- 先读取本 skill 的 `SKILL.md` 和 `../hithink-finance-shared/SKILL.md`。
-- 执行前用 `hithink-finance schema data.remove --format json` 确认当前参数契约。
-- 本地命令通常需要可用 DuckDB 或本地数据目录。
+- 按需读取[本域入口](../SKILL.md)与[共享规则](../../hithink-finance-shared/SKILL.md)，同会话已加载内容可复用。
+- 首次执行或版本变化时用 `hithink-finance schema data.remove --format json` 确认参数，未说明的组合规则再看命令 `--help`。
 - 高风险操作；先运行 `--plan` 报告路径和大小。
 
 ## 命令
@@ -20,14 +19,13 @@ hithink-finance data remove --plan --format json
 
 ## 窗口与分页
 
-- 本地命令无远端分页；只有声明 `--output` 的命令可直接落盘；其他大结果改用导出命令。
+- 本地命令按目标库执行；查询大结果使用 `db export` 或 `market panel --output`。
 
 ## 常见错误
 
-- 本地库不存在或 schema 不兼容时先运行 `data status` / `data migrate`。
 - 没有用户明确确认时不要追加 `--yes`。
 
 ## 批量操作说明
 
-- 批量或全量请求必须落盘，最终只报告路径、行数和窗口。
-- 如果需要多标的循环，逐批执行并记录每批参数；不要把完整结果塞进上下文。
+- 维护操作按目标库逐项执行，并检查每个结果。
+- 确认目标路径与影响；不要从只读查询意图推断清理、迁移或修复授权。

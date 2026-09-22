@@ -7,7 +7,6 @@
 先检查，不改变环境：
 
 ```bash
-hithink-finance --version
 hithink-finance version --format json
 node --version
 npm --version
@@ -34,14 +33,16 @@ npm view @hithink-tech/hithink-finance-cli version
 
 ```bash
 npm install -g @hithink-tech/hithink-finance-cli
-hithink-finance --version
+hithink-finance version --format json
 ```
 
-用户明确选择其他接入方式时不安装 CLI。用户直接提出金融任务、未指定方式且 CLI 不存在时，先简短告知“将安装官方 CLI 并继续完成任务”，随后执行安装；平台需要授权时遵循平台授权机制，不再追加一次相同确认。遇到 `EACCES`、PATH 或 registry 问题时报告原始错误并回退到已有 MCP、REST 或 Python 路径；遇到 `E404` 时检查 registry 与包发布状态，不擅自切换未知来源。
+用户明确选择其他接入方式时不安装 CLI。用户直接提出金融任务、未指定方式且 CLI 不存在时，先简短告知“将安装官方 CLI 并继续完成任务”，随后执行安装；平台需要授权时遵循平台授权机制，不再追加一次相同确认。遇到 `EACCES`、PATH 或 registry 问题时报告原始错误并回退到已有 MCP 或 REST 路径；遇到 `E404` 时检查 registry 与包发布状态，不擅自切换未知来源。
 
 ## 4. 统一凭据
 
-API Key 在 <https://fuyao.aicubes.cn/admin> 获取。CLI 不是统一凭据的前置条件；先检查 `HITHINK_FINANCE_API_KEY`，再检查用户级凭据文件：
+API Key 在 <https://fuyao.aicubes.cn/admin/> 获取。CLI 不是统一凭据的前置条件；先检查 `HITHINK_FINANCE_API_KEY`，再检查用户级凭据文件：
+
+首次登录、浏览器代办、扫码登录、用户自行操作和自动降级的完整流程见 [首次登录、创建与持久配置](../api-key-onboarding.md)。本节保留各平台的具体命令。
 
 | 平台 | 用户级凭据文件 |
 | --- | --- |
@@ -113,7 +114,7 @@ hithink-finance auth login
 
 登录后再次运行 `auth status`，并做一个有界真实请求。验证 CLI 系统凭据能独立工作时，不向该验证子进程注入 `HITHINK_FINANCE_API_KEY`，避免环境变量掩盖系统凭据失败。
 
-系统凭据库不可用时，不再次索取 Key；当前任务可向 CLI 子进程注入统一环境变量继续，或回退到其他接入方式，同时说明 CLI 独立登录尚未持久化。退出认证可用 `hithink-finance auth logout`，执行前确认清理范围。
+系统凭据库不可用时，不再次索取 Key；保留已经写入的用户级环境变量或用户级凭据文件，当前任务向 CLI 子进程注入统一环境变量继续，同时说明 CLI 系统凭据副本未同步。退出认证可用 `hithink-finance auth logout`，执行前确认清理范围。
 
 ## 6. CLI 内置 Skills 检查
 
@@ -123,15 +124,17 @@ hithink-finance skills status --format json
 
 输出中的 `canonical` 是随 CLI 发布的官方 Skills 来源；同时读取 `strategy`、`content` 和 `targets` 判断已保存目标、共享内容及逐目标文件状态。`ready` 表示链接或复制内容通过文件校验，不代表客户端会话已经加载；新增后按客户端需要刷新或新建会话。
 
-任何目录缺失时，先执行：
+当前 Agent 已受支持、目录缺失且用户保存策略允许同步时，执行：
 
 ```bash
 hithink-finance skills sync --agent <当前 Agent> --format json
 ```
 
-随后运行 `hithink-finance skills status --format json` 复查该目标，而不是把同步命令退出码当成客户端加载证明。`sync --agent <名称>` 是追加操作；用户后来安装另一个 Agent 时使用同一命令追加，例如 `sync --agent claude-code`。未知或用户占用的同名目录不会被覆盖；先检查 `status`。仅在该客户端不兼容目录链接且路径已确认时，使用 `sync --agent <名称> --directory <绝对路径> --copy` 保存复制模式。不要手工复制、改名或覆盖官方目录。
+随后运行 `hithink-finance skills status --format json` 复查该目标，而不是把同步命令退出码当成客户端加载证明。`sync --agent <名称>` 是追加操作；用户后来安装另一个 Agent 时使用同一命令追加，例如 `sync --agent claude-code`。未知或用户占用的同名目录不会被覆盖；先检查 `status`。未知 Agent、目标目录冲突或会话不能刷新时，直接读取 `canonical` 中的 Skill 完成当前任务；用户已禁用同步时保留其选择，不重新启用。仅在该客户端不兼容目录链接且路径已确认时，使用 `sync --agent <名称> --directory <绝对路径> --copy` 保存复制模式。不要手工复制、改名或覆盖官方目录。
 
 完整领域路由见 [内置 Skills 路由](builtin-skills.md)。
+
+`skills remove --agent <名称>` 只移除该目标的 CLI 托管内容，并阻止自动检测重新添加；无 `--agent` 的 `skills remove` 会禁用后续自动重装。用户明确要求移除时按指定范围执行。
 
 ## 7. 配置与最小验证
 
@@ -153,7 +156,7 @@ hithink-finance symbol search --q 600519 --limit 1 --format json
 ## 8. 安装后建议
 
 1. 运行 `hithink-finance skills status --format json`；核验当前 Agent 的目标状态，必要时用 `sync --agent <名称>` 追加或修复。
-2. 新建 Agent 会话，让新安装的内置 Skills 被重新发现。
+2. 当前任务可直接读取 `canonical` 中的内容；按客户端需要刷新或新建 Agent 会话，让内置 Skills 在后续任务被自动发现。
 3. 在新会话直接描述需求，或快速开始：
 
    ```bash

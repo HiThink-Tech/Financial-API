@@ -36,18 +36,18 @@ curl 'https://fuyao.aicubes.cn/api/a-share/calendar/trading-days' \
   "message": "success",
   "request_id": "a1b2c3d4e5f6789012345678abcdef01",
   "data": {
-    "timestamp": 1748102400000,
+    "timestamp": 1748275200000,
     "item": [
       {
-        "date_ms": 1716566400000,
-        "date": "20250525"
+        "date_ms": 1747929600000,
+        "date": "20250523"
       },
       {
-        "date_ms": 1716652800000,
+        "date_ms": 1748188800000,
         "date": "20250526"
       },
       {
-        "date_ms": 1716739200000,
+        "date_ms": 1748275200000,
         "date": "20250527"
       }
     ]

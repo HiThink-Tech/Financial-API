@@ -2,16 +2,15 @@
 
 ## 前置条件
 
-- 先读取本 skill 的 `SKILL.md` 和 `../hithink-finance-shared/SKILL.md`。
-- 执行前用 `hithink-finance schema market.panel --format json` 确认当前参数契约。
-- 本地命令通常需要可用 DuckDB 或本地数据目录。
+- 按需读取[本域入口](../SKILL.md)与[共享规则](../../hithink-finance-shared/SKILL.md)，同会话已加载内容可复用。
+- 首次执行或版本变化时用 `hithink-finance schema market.panel --format json` 确认参数，未说明的组合规则再看命令 `--help`。
 - 需要本地库覆盖请求窗口；适合作为研究样本输入。
 
 ## 命令
 
 ```bash
 hithink-finance schema market.panel --format json
-hithink-finance market panel --start <date> --end <date> --output <path> --format json
+hithink-finance market panel --start <YYYY-MM-DD> --end <YYYY-MM-DD> --output <panel.parquet> --file-format parquet --format json
 ```
 
 ## 参数选择策略
@@ -20,11 +19,10 @@ hithink-finance market panel --start <date> --end <date> --output <path> --forma
 
 ## 窗口与分页
 
-- 本地命令无远端分页；只有声明 `--output` 的命令可直接落盘；其他大结果改用导出命令。
+- 本地命令按目标库执行；查询大结果使用 `db export` 或 `market panel --output`。
 
 ## 常见错误
 
-- 本地库不存在或 schema 不兼容时先运行 `data status` / `data migrate`。
 - 日期必须是 `YYYY-MM-DD`；大面板永远落盘。
 
 ## 批量操作说明

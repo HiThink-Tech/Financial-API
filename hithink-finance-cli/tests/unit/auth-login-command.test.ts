@@ -59,7 +59,7 @@ describe('auth login command', () => {
     await expect(readHiddenApiKey(context, input)).resolves.toBe('interactive-secret');
 
     expect(stderr.text()).toContain('欢迎使用同花顺金融数据 CLI');
-    expect(stderr.text()).toContain('官网 API Key 获取地址：https://fuyao.aicubes.cn/admin');
+    expect(stderr.text()).toContain('官网 API Key 获取地址：https://fuyao.aicubes.cn/admin/');
     expect(stderr.text()).toContain('下方为隐藏输入模式');
     expect(stderr.text()).toContain('在此处填写您的 API Key：');
   });
@@ -76,7 +76,7 @@ describe('auth login command', () => {
     await expect(readHiddenApiKey(context, input)).resolves.toBe('interactive-secret');
 
     expect(stderr.text()).toContain('Welcome to HiThink Finance CLI');
-    expect(stderr.text()).toContain('API key page: https://fuyao.aicubes.cn/admin');
+    expect(stderr.text()).toContain('API key page: https://fuyao.aicubes.cn/admin/');
     expect(stderr.text()).toContain('hidden input mode');
     expect(stderr.text()).toContain('Paste your API key here:');
   });

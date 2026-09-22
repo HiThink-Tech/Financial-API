@@ -2,6 +2,12 @@
 
 本文件记录“同花顺金融数据服务（hithink finance）”对外可见的重要变化。版本升级与路径兼容说明见 [Monorepo 版本升级指南](docs/monorepo-migration.md)。
 
+## 2026-09-20 — 同花顺AI客户端接入上线
+
+- 同花顺AI客户端已接入当前数据源，可免配置使用内置金融数据与分析能力。
+- 资金流向、高频动向和期货期权专业数据等端内专用能力统一路由至客户端；公开 API、MCP、CLI 与 Python SDK 的访问边界保持不变。
+- 官网提供[在线接口调试](https://fuyao.aicubes.cn/playground/)能力，可直接在浏览器中选择接口、填写参数并调试请求。
+
 ## 2026-09-10 — 期货期权与端内专业能力同步
 
 - 新增 13 项公开期货能力和 4 项公开期权能力，同步 REST、MCP、CLI、Python toolkit 与统一 Agent Skill。

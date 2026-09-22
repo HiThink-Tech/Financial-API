@@ -2,16 +2,19 @@
 
 ## 前置条件
 
-- 先读取本 skill 的 `SKILL.md` 和 `../hithink-finance-shared/SKILL.md`。
-- 执行前用 `hithink-finance schema fund.backtest-result --format json` 确认当前参数契约。
-- 远端命令需要 API Key；认证失败时回到 shared skill。
+- 按需读取[本域入口](../SKILL.md)与[共享规则](../../hithink-finance-shared/SKILL.md)，同会话已加载内容可复用。
+- 首次执行或版本变化时用 `hithink-finance schema fund.backtest-result --format json` 确认参数，未说明的组合规则再看命令 `--help`。
+- 远端调用需要 API Key，先按共享规则复用已有凭据。
+- 先运行 fund backtest-indicators，按 indicator_code、support_operation、value_kind、unit 与 state_rules 核对用户指定的回测条件。示例仅用于说明参数结构，实际规则由用户给定。
 
 ## 命令
 
 ```bash
 hithink-finance schema fund.backtest-result --format json
-hithink-finance fund backtest-result --thscode <code> --buy-conditions <json> --sell-conditions <json> --buy-frequency-type <type> --max-buy-times <number> --per-buy-amount <number> --format json
+hithink-finance fund backtest-result --thscode 000001.OF --buy-conditions '{"indicator_code":"rsi_pct","operator":">","value":0.5}' --sell-conditions '{"indicator_code":"rsi_pct","operator":"<","value":0.3}' --buy-frequency-type WEEKLY --max-buy-times 5 --per-buy-amount 100 --output fund-backtest.json --format json
 ```
+
+JSON 参数作为单个字符串传给 CLI，CLI 负责 URL 编码。示例适用于 POSIX shell 和 PowerShell 7.3+ 的标准原生参数传递；其他执行器用参数数组或其原生引用方式。
 
 ## 参数选择策略
 

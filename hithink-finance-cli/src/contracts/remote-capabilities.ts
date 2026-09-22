@@ -19,7 +19,7 @@ export interface RemoteCapabilityDescriptor {
   inputSchema: ZodType<Record<string, unknown>>;
   outputSchema: ZodType<unknown>;
   options: readonly RemoteOptionDescriptor[];
-  paging: 'none' | 'offset' | 'page';
+  paging: 'none' | 'offset' | 'page' | 'json';
   pagingEnd?: 'short-page' | 'has-more';
   window: 'none' | 'ten-years' | 'five-years' | 'one-year' | 'today-only';
 }
@@ -73,8 +73,14 @@ function jsonString<T>(schema: z.ZodType<T>, field: string): z.ZodString {
       context.addIssue({ code: 'custom', message: `${field} must be valid JSON` });
       return;
     }
-    if (!schema.safeParse(parsed).success) {
-      context.addIssue({ code: 'custom', message: `${field} has an invalid structure` });
+    const result = schema.safeParse(parsed);
+    if (!result.success) {
+      for (const issue of result.error.issues) {
+        context.addIssue({
+          code: 'custom',
+          message: `${field}.${issue.path.join('.')}: ${issue.message}`,
+        });
+      }
     }
   });
 }
@@ -561,6 +567,7 @@ function derivativeCapability(
   options: readonly RemoteOptionDescriptor[] = [],
   outputSchema: ZodType<unknown> = itemOutput,
   window: RemoteCapabilityDescriptor['window'] = 'none',
+  paging: RemoteCapabilityDescriptor['paging'] = 'none',
 ): RemoteCapabilityDescriptor {
   return {
     id: `${domain}.${command}`,
@@ -571,7 +578,7 @@ function derivativeCapability(
     inputSchema,
     outputSchema,
     options,
-    paging: 'none',
+    paging,
     window,
   };
 }
@@ -582,6 +589,21 @@ const thscodeOption: RemoteOptionDescriptor = {
   type: 'string',
   required: true,
 };
+const derivativeContractListInput = z
+  .object({
+    limit: z.number().int().min(1).max(1000).optional(),
+    offset: z.number().int().min(0).optional(),
+  })
+  .strict();
+const derivativeContractListOptions: readonly RemoteOptionDescriptor[] = [
+  {
+    flags: '--limit <number>',
+    description: 'page size (1-1000)',
+    type: 'integer',
+    defaultValue: 100,
+  },
+  { flags: '--offset <number>', description: 'row offset', type: 'integer', defaultValue: 0 },
+];
 const sessionOption: RemoteOptionDescriptor = {
   flags: '--session <session>',
   description: 'trading session',
@@ -1437,13 +1459,15 @@ export const remoteCapabilities: readonly RemoteCapabilityDescriptor[] = [
     options: [
       {
         flags: '--indexes <json>',
-        description: 'indicator group JSON array with complete thscodes',
+        description:
+          'JSON array of groups: thscodes[], index_info[] with required index_id and optional attribute',
         type: 'string',
         required: true,
       },
       {
         flags: '--time-range <json>',
-        description: 'time range JSON object using Unix milliseconds',
+        description:
+          'JSON object: required time_type; optional Unix-millisecond start/end and integer offset',
         type: 'string',
         required: true,
         queryName: 'time_range',
@@ -1470,20 +1494,30 @@ export const remoteCapabilities: readonly RemoteCapabilityDescriptor[] = [
     options: [
       {
         flags: '--code-selectors <json>',
-        description: 'code selector JSON object',
+        description:
+          'JSON object with include[]; fund_code/stock_code selectors use thscodes[], other types use values[]',
         type: 'string',
         queryName: 'code_selectors',
       },
-      { flags: '--indexes <json>', description: 'indicator JSON array', type: 'string' },
+      {
+        flags: '--indexes <json>',
+        description: 'JSON array: required index_id; optional timestamp and attribute',
+        type: 'string',
+      },
       {
         flags: '--page-info <json>',
-        description: 'zero-based page JSON object',
+        description:
+          'JSON object: optional integer page_begin/page_size/code_begin/code_page_size; verify progress from returned rows',
         type: 'string',
         queryName: 'page_info',
       },
-      { flags: '--sort <json>', description: 'sort JSON array', type: 'string' },
+      {
+        flags: '--sort <json>',
+        description: 'JSON array with required integer idx and string type',
+        type: 'string',
+      },
     ],
-    paging: 'none',
+    paging: 'json',
     window: 'none',
   },
   {
@@ -1537,12 +1571,53 @@ export const remoteCapabilities: readonly RemoteCapabilityDescriptor[] = [
   ),
   derivativeCapability(
     'futures',
+    'variety-plates',
+    'List futures variety plates',
+    '/api/futures/variety-plates/list',
+  ),
+  derivativeCapability(
+    'futures',
     'contract-detail',
     'Query futures contract details',
     '/api/futures/contracts/detail',
     z.object({ thscode: derivativeCode }).strict(),
     [thscodeOption],
     objectOutput,
+  ),
+  derivativeCapability(
+    'futures',
+    'contracts',
+    'List futures contracts',
+    '/api/futures/contracts/list',
+    derivativeContractListInput,
+    derivativeContractListOptions,
+    itemOutput,
+    'none',
+    'offset',
+  ),
+  derivativeCapability(
+    'futures',
+    'main-continuous',
+    'List futures main-continuous contracts',
+    '/api/futures/contracts/main-continuous-list',
+  ),
+  derivativeCapability(
+    'futures',
+    'main',
+    'List futures main contracts',
+    '/api/futures/contracts/main-list',
+  ),
+  derivativeCapability(
+    'futures',
+    'secondary-main',
+    'List futures secondary-main contracts',
+    '/api/futures/contracts/secondary-main-list',
+  ),
+  derivativeCapability(
+    'futures',
+    'commodity-indexes',
+    'List futures commodity indexes',
+    '/api/futures/contracts/commodity-index-list',
   ),
   derivativeCapability(
     'futures',
@@ -1732,6 +1807,15 @@ export const remoteCapabilities: readonly RemoteCapabilityDescriptor[] = [
   ),
   derivativeCapability(
     'futures',
+    'session-timeline',
+    'Query futures session timeline',
+    '/api/futures/calendar/session-timeline',
+    z.object({ thscode: derivativeCode }).strict(),
+    [thscodeOption],
+    objectOutput,
+  ),
+  derivativeCapability(
+    'futures',
     'intraday',
     'Query current futures session intraday prices',
     '/api/futures/prices/intraday',
@@ -1760,6 +1844,26 @@ export const remoteCapabilities: readonly RemoteCapabilityDescriptor[] = [
     'contract-detail',
     'Query options contract details',
     '/api/options/contracts/detail',
+    z.object({ thscode: derivativeCode }).strict(),
+    [thscodeOption],
+    objectOutput,
+  ),
+  derivativeCapability(
+    'options',
+    'contracts',
+    'List options contracts',
+    '/api/options/contracts/list',
+    derivativeContractListInput,
+    derivativeContractListOptions,
+    itemOutput,
+    'none',
+    'offset',
+  ),
+  derivativeCapability(
+    'options',
+    'session-timeline',
+    'Query options session timeline',
+    '/api/options/calendar/session-timeline',
     z.object({ thscode: derivativeCode }).strict(),
     [thscodeOption],
     objectOutput,

@@ -2,10 +2,9 @@
 
 ## 前置条件
 
-- 先读取本 skill 的 `SKILL.md` 和 `../hithink-finance-shared/SKILL.md`。
-- 执行前用 `hithink-finance schema db.describe --format json` 确认当前参数契约。
-- 本地命令通常需要可用 DuckDB 或本地数据目录。
-- 查询本地 DuckDB 表和视图清单。
+- 按需读取[本域入口](../SKILL.md)与[共享规则](../../hithink-finance-shared/SKILL.md)，同会话已加载内容可复用。
+- 首次执行或版本变化时用 `hithink-finance schema db.describe --format json` 确认参数，未说明的组合规则再看命令 `--help`。
+- 查询表和视图清单，并应用普通迁移；严格只读研究使用 db query 查询 information_schema。
 
 ## 命令
 
@@ -20,11 +19,10 @@ hithink-finance db describe --format json
 
 ## 窗口与分页
 
-- 本地命令无远端分页；只有声明 `--output` 的命令可直接落盘；其他大结果改用导出命令。
+- 本地命令按目标库执行；查询大结果使用 `db export` 或 `market panel --output`。
 
 ## 常见错误
 
-- 本地库不存在或 schema 不兼容时先运行 `data status` / `data migrate`。
 - 如果库不存在或 schema 不兼容，先处理 `data status|migrate`。
 
 ## 批量操作说明

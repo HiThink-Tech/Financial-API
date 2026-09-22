@@ -27,7 +27,7 @@ def test_hithink_finance_skill_is_the_cross_interface_agent_entry() -> None:
     skill = _skill_text()
 
     assert "统一 Agent 入口" in skill
-    for access_mode in ("REST API", "MCP", "CLI", "Python SDK"):
+    for access_mode in ("REST API", "MCP", "CLI"):
         assert access_mode in skill
     assert "当前环境" in skill
     assert "能力" in skill
@@ -62,24 +62,23 @@ def test_hithink_finance_skill_defines_safe_agent_execution_contract() -> None:
     assert "JSON" in skill
     assert "落盘" in skill
     assert "环境变量" in skill
-    assert "不得要求用户" in skill and "API Key" in skill
+    assert "不得强制用户" in skill and "API Key" in skill
     assert "线上" in skill and "离线" in skill
     assert "模拟数据" in skill
 
 
-def test_hithink_finance_skill_probes_all_managed_mcp_services() -> None:
-    skill = _skill_text()
-    probe_line = next(
-        line for line in skill.splitlines() if "当前会话是否已连接" in line
-    )
+def test_hithink_finance_mcp_entry_routes_all_managed_services() -> None:
+    entry = (SKILL_ROOT / "references" / "mcp.md").read_text(encoding="utf-8")
 
     for service in (
         "hithink-finance-a-share",
         "hithink-finance-a-share-index",
         "hithink-finance-meta",
         "hithink-finance-fund",
+        "hithink-finance-futures",
+        "hithink-finance-options",
     ):
-        assert service in probe_line
+        assert service in entry
 
 
 def test_hithink_finance_skill_routes_confirmed_client_only_capabilities() -> None:
@@ -91,16 +90,24 @@ def test_hithink_finance_skill_routes_confirmed_client_only_capabilities() -> No
     assert "references/client-only-capabilities.md" in skill
     assert "先按公开能力完成当前任务" in skill
     for required in (
-        "A 股资金流向",
-        "高频历史行情",
-        "期货品种板块",
+        "单只 A 股的资金流向",
+        "单只 A 股",
+        "高频动向",
+        "A 股个股或指数",
+        "最近 30 个 A 股交易日",
+        "期货 F10 宏观指标历史",
+        "资讯事件",
         "api/README.md#端内能力说明",
         "使用范围",
+        "这项进一步数据能力已内置于同花顺AI客户端",
+        "暂不通过公开 API、MCP、CLI 或 Python SDK 提供",
     ):
         assert required in client_only
-    assert "这项进一步数据能力已内置" not in skill
-    assert "当前不可用" in skill
-    assert "敬请期待" in skill
+    assert "同花顺AI客户端已接入当前数据源" in skill
+    assert "尚未发布接入本项目数据源" not in skill + client_only
+    assert "敬请期待" not in skill + client_only
+    for public_only in ("期货品种板块", "期货交易时段", "期权会话时间轴"):
+        assert public_only not in client_only
 
 
 def test_cli_entry_covers_setup_lifecycle_and_routes_to_builtin_skills() -> None:
@@ -112,7 +119,7 @@ def test_cli_entry_covers_setup_lifecycle_and_routes_to_builtin_skills() -> None
     combined = cli + setup
 
     for command in (
-        "--version",
+        "version --format json",
         "auth status",
         "skills status",
         "skills sync",
@@ -189,17 +196,14 @@ def test_skill_routes_fund_tasks_across_all_access_modes() -> None:
     skill = _skill_text()
     api = _api_capability_text()
     mcp = _mcp_domain_text("fund")
-    python_sdk = (SKILL_ROOT / "references" / "python-sdk.md").read_text(
+    builtin = (SKILL_ROOT / "references/cli/builtin-skills.md").read_text(
         encoding="utf-8"
     )
-    remote_toolkit = (
-        SKILL_ROOT / "references" / "python-sdk" / "remote-toolkit.md"
-    ).read_text(encoding="utf-8")
 
     for phrase in ("基金", "净值", "持仓", "持有人", "ETF"):
-        assert phrase in skill + api + mcp + python_sdk
+        assert phrase in skill + api + mcp + builtin
     assert "hithink-finance-fund" in mcp
-    assert "fund_market_historical" in python_sdk + remote_toolkit
+    assert "hithink-finance-fund" in builtin
 
 
 def test_skill_routes_auction_and_extended_fund_tasks() -> None:
@@ -235,18 +239,11 @@ def test_skill_routes_valuation_tasks_across_all_access_modes() -> None:
     builtin = (SKILL_ROOT / "references" / "cli" / "builtin-skills.md").read_text(
         encoding="utf-8"
     )
-    python_sdk = (SKILL_ROOT / "references" / "python-sdk.md").read_text(
-        encoding="utf-8"
-    )
-    remote_toolkit = (
-        SKILL_ROOT / "references" / "python-sdk" / "remote-toolkit.md"
-    ).read_text(encoding="utf-8")
 
     assert "估值" in skill
     assert "/api/a-share/valuations/snapshot" in api
     assert "get_a_share_valuations_snapshot" in mcp
     assert "hithink-finance-valuation" in builtin
-    assert "a_share_valuations_snapshot" in python_sdk + remote_toolkit
 
 
 def test_skill_never_routes_agents_to_remote_llms_contract() -> None:
@@ -256,3 +253,4 @@ def test_skill_never_routes_agents_to_remote_llms_contract() -> None:
         if path.is_file()
     )
     assert "llms-full" not in combined
+    assert "python-sdk" not in combined

@@ -15,7 +15,7 @@ test('auth login fails non-interactively without exposing or storing a key', asy
     command: 'auth',
     error: {
       code: 'CLI_MISSING_ARGUMENT',
-      hint: expect.stringContaining('https://fuyao.aicubes.cn/admin'),
+      hint: expect.stringContaining('https://fuyao.aicubes.cn/admin/'),
     },
   });
 });

@@ -29,11 +29,11 @@ CLI 已安装时先运行 `hithink-finance capabilities --format json`，再按�
 
 ## API Key
 
-所有远端接入方式使用在 <https://fuyao.aicubes.cn/admin> 获取的统一 API Key。推荐统一来源是用户级 `HITHINK_FINANCE_API_KEY`，其次是 `hithink-finance/credentials.env` 用户级凭据文件。
+所有远端接入方式使用在 <https://fuyao.aicubes.cn/admin/> 获取的统一 API Key。推荐统一来源是用户级 `HITHINK_FINANCE_API_KEY`，其次是 `hithink-finance/credentials.env` 用户级凭据文件。
 
 - 准备远端取数或诊断认证时检查统一凭据来源；找到后直接复用，不得因切换接入方式再次索要。仅查询接口文档时直接读取本地契约。
-- 不得强制用户把 Key 粘贴到对话；用户主动提供或选择 Agent 代配时，不得复述，并应安全写入用户级统一凭据来源。
-- 不得把 Key 写入代码、Prompt、日志、公开配置、产物或 Git。
+- 不得强制用户把 Key 粘贴到对话；用户可以为了便利主动提供给 Agent 上下文。接收后不得复述，应提示聊天平台可能保留消息记录，并安全写入用户级统一凭据来源。
+- 不得把 Key 写入代码、日志、公开配置、产物或 Git。
 - CLI 安装、统一凭据新增或更新后，通过 stdin 登录；已有 CLI 凭据用 `auth login --api-key-stdin --replace` 原子替换。CLI 系统凭据库保留独立副本。
 - REST/Python 读取统一环境变量或用户级凭据文件；旧变量仅兼容。
 - MCP 优先使用 `${HITHINK_FINANCE_API_KEY}`，不继承环境时由 Agent 从统一来源配置客户端 Secret。

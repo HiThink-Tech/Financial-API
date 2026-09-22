@@ -24,7 +24,7 @@ import type { CredentialStore } from './keyring.js';
 /** 凭据存储中 profile 键名的前缀 */
 const PROFILE_PREFIX = 'profile:';
 const API_KEY_RECOVERY_HINT =
-  'Get an API key at https://fuyao.aicubes.cn/admin, then run `hithink-finance auth login`. For non-interactive use, pipe it to `hithink-finance auth login --api-key-stdin`, or set HITHINK_FINANCE_API_KEY for the current process.';
+  'Get an API key at https://fuyao.aicubes.cn/admin/, then run `hithink-finance auth login`. For non-interactive use, pipe it to `hithink-finance auth login --api-key-stdin`, or set HITHINK_FINANCE_API_KEY for the current process.';
 
 /**
  * 为指定的 profile 构造凭据存储中的完整键名

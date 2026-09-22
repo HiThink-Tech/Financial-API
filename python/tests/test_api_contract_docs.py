@@ -1,6 +1,7 @@
 """Independent checks for the atomic REST contract and navigation graph."""
 
 import json
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import re
 from urllib.parse import unquote
@@ -96,6 +97,18 @@ def test_response_examples_are_valid_json():
             json.loads(example)
 
 
+def test_trading_calendar_example_dates_match_shanghai_timestamps():
+    text = body("/api/a-share/calendar/trading-days")
+    example = json.loads(re.search(r"```json\s*\n(.*?)\n```", text, re.S)[1])
+    shanghai = timezone(timedelta(hours=8))
+    for item in example["data"]["item"]:
+        day = datetime.fromtimestamp(item["date_ms"] / 1000, shanghai)
+        assert day.strftime("%Y%m%d") == item["date"]
+        assert (day.hour, day.minute, day.second) == (0, 0, 0)
+        assert day.weekday() < 5
+        assert item["date_ms"] <= example["data"]["timestamp"]
+
+
 def test_financial_and_fund_semantics_remain_explicit():
     checks = {
         "/api/fund/holders/detail": [
@@ -152,8 +165,9 @@ def test_access_and_availability_are_separate():
     for record in client:
         text = (ROOT / record["output"]).read_text(encoding="utf-8")
         assert "README.md#端内能力说明" in text
-        if record["status"] == "planned":
-            assert "当前不可调用" in text
-    assert "当前客户端尚未发布" in (ROOT / "docs/api/README.md").read_text(
-        encoding="utf-8"
-    )
+        assert record["status"] == "documented"
+        assert "同花顺AI客户端可用" in text
+        assert "待上线，当前不可调用" not in text
+    entry = (ROOT / "docs/api/README.md").read_text(encoding="utf-8")
+    assert "已内置于同花顺AI客户端" in entry
+    assert "当前客户端尚未发布" not in entry

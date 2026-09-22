@@ -33,6 +33,7 @@
 | `fund-reits` | 公募 REITs |
 | `forex` | 外汇 |
 | `futures` | 期货 |
+| `futures-commodity-index` | 期货商品指数合约 |
 | `options` | 期权 |
 
 ## 调用示例

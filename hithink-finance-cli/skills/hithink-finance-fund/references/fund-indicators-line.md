@@ -2,24 +2,27 @@
 
 ## 前置条件
 
-- 先读取本 skill 的 `SKILL.md` 和 `../hithink-finance-shared/SKILL.md`。
-- 执行前用 `hithink-finance schema fund.indicators-line --format json` 确认当前参数契约。
-- 远端命令需要 API Key；认证失败时回到 shared skill。
+- 按需读取[本域入口](../SKILL.md)与[共享规则](../../hithink-finance-shared/SKILL.md)，同会话已加载内容可复用。
+- 首次执行或版本变化时用 `hithink-finance schema fund.indicators-line --format json` 确认参数，未说明的组合规则再看命令 `--help`。
+- 远端调用需要 API Key，先按共享规则复用已有凭据。
+- 每组 indexes 包含 thscodes 和 index_info；每个 index_info 元素包含 index_id。time_range 必须包含 time_type，绝对时间使用 Unix 毫秒。
 
 ## 命令
 
 ```bash
 hithink-finance schema fund.indicators-line --format json
-hithink-finance fund indicators-line --indexes <json> --time-range <json> --format json
+hithink-finance fund indicators-line --indexes '[{"thscodes":["000001.OF"],"index_info":[{"index_id":"rsi_pct"}]}]' --time-range '{"time_type":"DAY_1","start":1788192000000,"end":1788796800000}' --format json
 ```
+
+JSON 参数作为单个字符串传给 CLI，CLI 负责 URL 编码。示例适用于 POSIX shell 和 PowerShell 7.3+ 的标准原生参数传递；其他执行器用参数数组或其原生引用方式。
 
 ## 参数选择策略
 
-| 参数                  | 必填 | 说明                                                                 |
-| --------------------- | ---- | -------------------------------------------------------------------- |
-| `--indexes <json>`    | 是   | indicator group JSON array with complete thscodes                    |
-| `--time-range <json>` | 是   | time range JSON object using Unix milliseconds；上游参数: time_range |
-| `--output <path>`     | 否   | write the full JSON response envelope to a file                      |
+| 参数                  | 必填 | 说明                                                                                                          |
+| --------------------- | ---- | ------------------------------------------------------------------------------------------------------------- |
+| `--indexes <json>`    | 是   | JSON array of groups: thscodes[], index_info[] with required index_id and optional attribute                  |
+| `--time-range <json>` | 是   | JSON object: required time_type; optional Unix-millisecond start/end and integer offset；上游参数: time_range |
+| `--output <path>`     | 否   | write the full JSON response envelope to a file                                                               |
 
 ## 窗口与分页
 
@@ -30,6 +33,7 @@ hithink-finance fund indicators-line --indexes <json> --time-range <json> --form
 
 - 参数校验失败时按 `error.hint` 修正，不要猜字段名。
 - 认证失败时不要重试刷屏；先处理 API Key。
+- 缺少嵌套字段时按错误中的 JSON 路径修正。指标 ID 与时间类型沿用已知契约或实际返回，不猜枚举。
 
 ## 批量操作说明
 

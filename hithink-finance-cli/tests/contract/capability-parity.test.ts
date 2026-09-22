@@ -23,7 +23,7 @@ const localCommands = [
 ];
 
 test('exposes all remote and local capability paths', async () => {
-  expect(remoteCapabilities).toHaveLength(79);
+  expect(remoteCapabilities).toHaveLength(88);
   expect(localCapabilities.map((item) => item.command.join(' ')).sort()).toEqual(
     localCommands.map((item) => item.join(' ')).sort(),
   );
@@ -35,6 +35,10 @@ test('exposes all remote and local capability paths', async () => {
 
 test('local command schemas expose required CLI options', async () => {
   const expected = new Map([
+    ['data.init', ['--kline <path>', '--events <path>', '--symbols <path>']],
+    ['data.migrate', ['--apply', '--allow-heavy']],
+    ['data.clean', ['--cache']],
+    ['data.remove', ['--plan']],
     ['db.query', ['--sql <sql>']],
     ['market.panel', ['--start <date>', '--end <date>', '--output <path>']],
     ['market.adjustment-factors', ['--thscode <code>']],

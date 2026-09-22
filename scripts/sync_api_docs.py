@@ -271,10 +271,19 @@ def collect(source: Path, config: dict) -> tuple[list[dict], dict]:
                         group=route_group,
                         body=part,
                         access="client-only" if client else "public",
+                        # Client-only capability availability is maintained by
+                        # this repository. The source page may still carry the
+                        # historical pre-release notice for its public REST
+                        # example, but the capability is available in the
+                        # released AI client.
                         status=(
-                            "planned"
-                            if "当前版本暂不可使用" in body or "敬请期待" in body
-                            else "documented"
+                            "documented"
+                            if client
+                            else (
+                                "planned"
+                                if "当前版本暂不可使用" in body or "敬请期待" in body
+                                else "documented"
+                            )
                         ),
                         output=f"docs/api/{domain}/{name}.md",
                     )
@@ -297,8 +306,13 @@ def collect(source: Path, config: dict) -> tuple[list[dict], dict]:
                 raise DocumentError(f"MCP REST mapping missing/ambiguous: {filename}")
             endpoint = next(iter(endpoints))[1]
             rest = rest_by_endpoint.get(endpoint)
-            if not rest or rest["access"] != "public":
+            if not rest:
                 raise DocumentError(f"MCP has no public REST document: {filename}")
+            if rest["access"] == "client-only":
+                # The frontend also records the AI-client tool contract beside
+                # its REST page. It is not a public MCP surface, so retain its
+                # source hash but do not publish a MCP mirror.
+                continue
             domain, group, status = rest["domain"], rest["group"], "documented"
         records.append(
             dict(
@@ -399,7 +413,7 @@ def render(source: Path, config: dict) -> tuple[dict[str, str], dict]:
         parent = f"{root}/{r['domain']}/README.md"
         banner = f"[业务导航]({rel_link(r['output'], parent)})"
         if r["access"] == "client-only":
-            banner += f" · **端内专用** · [使用说明]({rel_link(r['output'], 'docs/api/README.md')}#端内能力说明)"
+            banner += f" · **端内专用** · **同花顺AI客户端可用** · [使用说明]({rel_link(r['output'], 'docs/api/README.md')}#端内能力说明)"
         if r["status"] == "planned":
             banner += " · **待上线，当前不可调用**"
         body = compact_rest(r["body"]) if r["kind"] == "rest" else r["body"]
@@ -461,7 +475,11 @@ def render(source: Path, config: dict) -> tuple[dict[str, str], dict]:
                 text += "| 需求 / 文档 | 接口或工具 | 使用范围 |\n| --- | --- | --- |\n"
                 for r in subset:
                     if (r["domain"], r["group"]) == (domain, group):
-                        scope = "端内专用" if r["access"] == "client-only" else "公开"
+                        scope = (
+                            "端内专用，客户端可用"
+                            if r["access"] == "client-only"
+                            else "公开"
+                        )
                         if r["status"] == "planned":
                             scope += "，待上线"
                         text += f"| [{r['title']}]({rel_link(domain_path, r['output'])}) | `{r['id']}` | {scope} |\n"

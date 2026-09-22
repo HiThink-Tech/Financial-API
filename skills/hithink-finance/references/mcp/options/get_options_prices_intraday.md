@@ -1,4 +1,4 @@
-# 期权分时行情
+# 期权分时
 
 [业务导航](README.md)
 
@@ -18,6 +18,7 @@
 |---|---|---|---|---|
 | `thscode` | string | 是 | — | 期权合约完整同花顺代码。 |
 | `session` | enum | 否 | — | 行情阶段：`pre_market`-盘前、`intraday`-盘中、`post_market`-盘后；省略时使用 `intraday`。 |
+| `trade_date` | string | 否 | — | 端外仅允许 `0`；AI 客户端内可传 `0` 或合法历史交易日 `yyyyMMdd`。 |
 
 ## 调用示例
 
@@ -26,6 +27,7 @@
 参数：
   - thscode: "IO2601-C-4000.CFE"
   - session: "intraday"
+  - trade_date: "0"
 ```
 
 ## 返回

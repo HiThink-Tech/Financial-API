@@ -12,6 +12,7 @@
 | 需求 / 文档 | 接口或工具 | 使用范围 |
 | --- | --- | --- |
 | [期权合约详情](get_options_contracts_detail.md) | `get_options_contracts_detail` | 公开 |
+| [期权合约基础信息列表](get_options_contracts_list.md) | `get_options_contracts_list` | 公开 |
 | [期权品种资料](get_options_varieties_list.md) | `get_options_varieties_list` | 公开 |
 
 ## 行情
@@ -20,5 +21,13 @@
 
 | 需求 / 文档 | 接口或工具 | 使用范围 |
 | --- | --- | --- |
-| [期权日K](get_options_prices_daily.md) | `get_options_prices_daily` | 公开 |
-| [期权分时行情](get_options_prices_intraday.md) | `get_options_prices_intraday` | 公开 |
+| [期权K线](get_options_prices_daily.md) | `get_options_prices_daily` | 公开 |
+| [期权分时](get_options_prices_intraday.md) | `get_options_prices_intraday` | 公开 |
+
+## 交易日程
+
+交易日、交易时段与会话时间。
+
+| 需求 / 文档 | 接口或工具 | 使用范围 |
+| --- | --- | --- |
+| [期权会话时间轴](get_options_calendar_session_timeline.md) | `get_options_calendar_session_timeline` | 公开 |

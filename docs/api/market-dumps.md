@@ -15,10 +15,10 @@
 ```
 1. GET 签名端点 → 获取 S3 预签名下载 URL
 2. GET 预签名 URL → 下载 Parquet 文件到本地
-3. 用 pandas/pyarrow/DuckDB 读取 Parquet 文件
+3. 用 DuckDB 或 Parquet 查看器读取本地文件
 ```
 
-⚠️ **预签名 URL 有效期只有约 5 分钟**，拿到立刻下载，不要缓存 URL。
+⚠️ **预签名 URL 有效期只有约 5 分钟**，拿到立刻下载。预签名 URL 是短期授权凭据，仅在进程内使用，不写入对话、日志、持久文件或原始错误输出。
 
 ---
 
@@ -52,16 +52,19 @@ curl 'https://fuyao.aicubes.cn/api/dump/market-dumps/daily-k/download-url' \
 
 ### 完整下载流程
 
+下面的 Bash 示例使用 `curl`、`jq` 和 DuckDB 命令行：
+
 ```bash
 # Step 1: 签出 URL
-DOWNLOAD_URL=$(curl -s 'https://fuyao.aicubes.cn/api/dump/market-dumps/daily-k/download-url' \
-  -H 'X-api-key: <your-api-key>' | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['presigned_url'])")
+DOWNLOAD_URL=$(curl --fail --silent --show-error 'https://fuyao.aicubes.cn/api/dump/market-dumps/daily-k/download-url' \
+  -H 'X-api-key: <your-api-key>' | jq -er 'select(.code == 0) | .data.presigned_url // empty') || exit 1
 
 # Step 2: 下载 Parquet（大文件，可能需要几分钟）
-curl -L -o /tmp/a_share_daily_k_full.parquet "$DOWNLOAD_URL"
+curl --fail --location --output /tmp/a_share_daily_k_full.parquet "$DOWNLOAD_URL" || exit 1
+unset DOWNLOAD_URL
 
 # Step 3: 验证
-python3 -c "import pandas as pd; df=pd.read_parquet('/tmp/a_share_daily_k_full.parquet'); print(f'rows={len(df)}, cols={list(df.columns)}')"
+duckdb -c "SELECT count(*) AS rows FROM read_parquet('/tmp/a_share_daily_k_full.parquet'); DESCRIBE SELECT * FROM read_parquet('/tmp/a_share_daily_k_full.parquet');"
 ```
 
 ### Parquet Schema（日K）
@@ -99,7 +102,7 @@ curl 'https://fuyao.aicubes.cn/api/dump/market-dumps/daily-k-10d/download-url' \
 
 ### 避错要点
 
-- 本地数据落后 >7 个交易日时，`daily-k-10d` 不能完全覆盖缺口，应改用 `daily-k`（全量）重新拉。
+- 为保留 3 个交易日的重叠窗口，本地数据落后 >7 个交易日时，推荐改用 `daily-k`（全量）刷新。
 - 增量 Parquet 内的日期可能与本地数据重叠，建议入库时按 `(thscode, date_ms)` 去重或 UPSERT。
 
 ---

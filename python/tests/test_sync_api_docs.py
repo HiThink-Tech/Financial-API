@@ -156,6 +156,68 @@ def test_domain_group_intent_overrides_shared_copy(inputs):
     assert 'A 股快照或历史' in (target / 'docs/api/a-share/README.md').read_text(encoding='utf-8')
 
 
+def test_client_only_capability_uses_released_client_status(inputs):
+    source, target, config, page = inputs
+    config["entry_templates"] = {
+        "rest": "# 业务路由\n\n{{domains}}\n\n## 端内能力说明\n\n客户端可用。\n"
+    }
+    governance_path = source / "apps/docs/api-doc-governance.json"
+    governance = json.loads(governance_path.read_text(encoding="utf-8"))
+    governance["restClientOnly"] = [page.relative_to(source).as_posix()]
+    governance_path.write_text(json.dumps(governance), encoding="utf-8")
+    notice = (
+        '<div className="ai-client-notice">'
+        '<span>当前版本暂不可使用本项目数据，敬请期待。</span>'
+        '<a href="https://example.com">客户端</a></div>\n'
+    )
+    page.write_text(
+        page.read_text(encoding="utf-8").replace("---\n\n", "---\n\n" + notice, 1),
+        encoding="utf-8",
+    )
+
+    state = sync.synchronize(source, target, config)
+    rest = [record for record in state["entries"] if record["kind"] == "rest"]
+    assert rest and all(record["access"] == "client-only" for record in rest)
+    assert all(record["status"] == "documented" for record in rest)
+    for record in rest:
+        text = (target / record["output"]).read_text(encoding="utf-8")
+        assert "**同花顺AI客户端可用**" in text
+        assert "待上线，当前不可调用" not in text
+    domain = (target / "docs/api/a-share/README.md").read_text(encoding="utf-8")
+    assert "端内专用，客户端可用" in domain
+
+
+def test_client_only_mcp_source_is_not_published(inputs):
+    source, target, config, page = inputs
+    config["entry_templates"] = {
+        "rest": "# 业务路由\n\n{{domains}}\n\n## 端内能力说明\n\n客户端可用。\n"
+    }
+    governance_path = source / "apps/docs/api-doc-governance.json"
+    governance = json.loads(governance_path.read_text(encoding="utf-8"))
+    governance["restClientOnly"] = [page.relative_to(source).as_posix()]
+    governance_path.write_text(json.dumps(governance), encoding="utf-8")
+    page.write_text(
+        page.read_text(encoding="utf-8").replace(
+            "---\n\n",
+            "---\n\n<div className=\"ai-client-notice\"><a href=\"https://example.com\">客户端</a></div>\n",
+            1,
+        ),
+        encoding="utf-8",
+    )
+    tool = source / "apps/docs/docs/mcp/tools/get_client_only_prices.mdx"
+    tool.write_text(
+        "---\ntitle: 端内行情工具\n---\n工具名：`get_client_only_prices`\n"
+        "[GET /api/a-share/prices/snapshot](/docs/api-reference/prices#快照)\n",
+        encoding="utf-8",
+    )
+
+    state = sync.synchronize(source, target, config)
+
+    assert [record["kind"] for record in state["entries"]] == ["rest", "rest"]
+    assert tool.relative_to(source).as_posix() in state["sources"]
+    assert not (target / "docs/mcp/a-share").exists()
+
+
 def test_heading_in_code_is_not_an_interface():
     text = "```text\n## example\n```\n## real\n"
     assert sync.headings(text) == [(text.index("## real"), "real")]
