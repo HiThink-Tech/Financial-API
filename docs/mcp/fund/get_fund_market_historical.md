@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_fund_market_historical`
 >
-> 对应 REST 端点：[`GET /api/fund/market/historical`](../../api/fund/market-historical.md#场内基金历史日线行情)
+> 对应 REST 端点：[`GET /api/fund/market/historical`](../../api/fund/fund-market.md#market-historical--场内基金历史日线行情)
 
 
 ## 工具描述
@@ -37,4 +37,4 @@
 
 返回 `{ timestamp, thscode, interval, adjust, item: [PriceBarItem, ...] }`，其中
 价格字段采用前复权口径；`adjust` 固定为 `null`。字段含义见 REST 端点
-[场内基金历史日线行情](../../api/fund/market-historical.md#场内基金历史日线行情)。
+[场内基金历史日线行情](../../api/fund/fund-market.md#market-historical--场内基金历史日线行情)。

@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_futures_contracts_main_continuous_list`
 >
-> 对应 REST 端点：[`GET /api/futures/contracts/main-continuous-list`](../../api/futures/contracts-main-continuous-list.md#futures-main-continuous)
+> 对应 REST 端点：[`GET /api/futures/contracts/main-continuous-list`](../../api/futures/futures-contracts-extended.md#contracts-main-continuous-list--futures-main-continuous)
 
 
 ## 工具描述
@@ -28,4 +28,4 @@
 
 ## 返回
 
-返回期货主连列表，字段详见 [期货主力与指数合约](../../api/futures/contracts-main-continuous-list.md#futures-main-continuous)。
+返回期货主连列表，字段详见 [期货主力与指数合约](../../api/futures/futures-contracts-extended.md#contracts-main-continuous-list--futures-main-continuous)。

@@ -20,8 +20,8 @@ ETF 成交价格选择快照或历史日线；基金净值进入净值与业绩�
 
 | 需求 / 文档 | 接口或工具 | 使用范围 |
 | --- | --- | --- |
-| [场内基金行情快照](market-snapshot.md) | `GET /api/fund/market/snapshot` | 公开 |
-| [场内基金历史日线行情](market-historical.md) | `GET /api/fund/market/historical` | 公开 |
+| [场内基金行情快照](fund-market.md#market-snapshot) | `GET /api/fund/market/snapshot` | 公开 |
+| [场内基金历史日线行情](fund-market.md#market-historical) | `GET /api/fund/market/historical` | 公开 |
 
 ## 财务报表与指标
 
@@ -29,9 +29,9 @@ ETF 成交价格选择快照或历史日线；基金净值进入净值与业绩�
 
 | 需求 / 文档 | 接口或工具 | 使用范围 |
 | --- | --- | --- |
-| [基金财务指标](financials-indicators.md) | `GET /api/fund/financials/indicators` | 公开 |
-| [基金利润表](financials-income-statements.md) | `GET /api/fund/financials/income-statements` | 公开 |
-| [基金资产负债表](financials-balance-sheets.md) | `GET /api/fund/financials/balance-sheets` | 公开 |
+| [基金财务指标](fund-financials.md#financials-indicators) | `GET /api/fund/financials/indicators` | 公开 |
+| [基金利润表](fund-financials.md#financials-income-statements) | `GET /api/fund/financials/income-statements` | 公开 |
+| [基金资产负债表](fund-financials.md#financials-balance-sheets) | `GET /api/fund/financials/balance-sheets` | 公开 |
 
 ## 净值与业绩
 
@@ -39,10 +39,10 @@ ETF 成交价格选择快照或历史日线；基金净值进入净值与业绩�
 
 | 需求 / 文档 | 接口或工具 | 使用范围 |
 | --- | --- | --- |
-| [基金净值](performance-nav.md) | `GET /api/fund/performance/nav` | 公开 |
-| [基金区间收益](performance-returns.md) | `GET /api/fund/performance/returns` | 公开 |
-| [基金历史业绩指标](performance-indicators-historical.md) | `GET /api/fund/performance/indicators-historical` | 公开 |
-| [基金最大回撤](performance-drawdowns.md) | `GET /api/fund/performance/drawdowns` | 公开 |
+| [基金净值](fund-performance.md#performance-nav) | `GET /api/fund/performance/nav` | 公开 |
+| [基金区间收益](fund-performance.md#performance-returns) | `GET /api/fund/performance/returns` | 公开 |
+| [基金历史业绩指标](fund-performance.md#performance-indicators-historical) | `GET /api/fund/performance/indicators-historical` | 公开 |
+| [基金最大回撤](fund-performance.md#performance-drawdowns) | `GET /api/fund/performance/drawdowns` | 公开 |
 
 ## 持仓与配置
 
@@ -51,12 +51,12 @@ ETF 成交价格选择快照或历史日线；基金净值进入净值与业绩�
 | 需求 / 文档 | 接口或工具 | 使用范围 |
 | --- | --- | --- |
 | [基金重仓持仓](portfolio-holdings.md) | `GET /api/fund/portfolio/holdings` | 公开 |
-| [基金历史股票持仓](portfolio-stock-history.md) | `GET /api/fund/portfolio/stock-history` | 公开 |
-| [基金历史债券持仓](portfolio-bond-history.md) | `GET /api/fund/portfolio/bond-history` | 公开 |
-| [基金股票持仓报告日期](portfolio-stock-report-dates.md) | `GET /api/fund/portfolio/stock-report-dates` | 公开 |
-| [基金债券持仓报告日期](portfolio-bond-report-dates.md) | `GET /api/fund/portfolio/bond-report-dates` | 公开 |
-| [基金资产配置](portfolio-asset-allocation.md) | `GET /api/fund/portfolio/asset-allocation` | 公开 |
-| [基金行业配置](portfolio-industry-allocation.md) | `GET /api/fund/portfolio/industry-allocation` | 公开 |
+| [基金历史股票持仓](fund-portfolio.md#portfolio-stock-history) | `GET /api/fund/portfolio/stock-history` | 公开 |
+| [基金历史债券持仓](fund-portfolio.md#portfolio-bond-history) | `GET /api/fund/portfolio/bond-history` | 公开 |
+| [基金股票持仓报告日期](fund-portfolio.md#portfolio-stock-report-dates) | `GET /api/fund/portfolio/stock-report-dates` | 公开 |
+| [基金债券持仓报告日期](fund-portfolio.md#portfolio-bond-report-dates) | `GET /api/fund/portfolio/bond-report-dates` | 公开 |
+| [基金资产配置](fund-portfolio.md#portfolio-asset-allocation) | `GET /api/fund/portfolio/asset-allocation` | 公开 |
+| [基金行业配置](fund-portfolio.md#portfolio-industry-allocation) | `GET /api/fund/portfolio/industry-allocation` | 公开 |
 
 ## 持有人
 
@@ -64,8 +64,8 @@ ETF 成交价格选择快照或历史日线；基金净值进入净值与业绩�
 
 | 需求 / 文档 | 接口或工具 | 使用范围 |
 | --- | --- | --- |
-| [基金持有人结构](holders-detail.md) | `GET /api/fund/holders/detail` | 公开 |
-| [基金前十大持有人](holders-top.md) | `GET /api/fund/holders/top` | 公开 |
+| [基金持有人结构](fund-holders.md#holders-detail) | `GET /api/fund/holders/detail` | 公开 |
+| [基金前十大持有人](fund-holders.md#holders-top) | `GET /api/fund/holders/top` | 公开 |
 
 ## 基金经理
 
@@ -73,10 +73,10 @@ ETF 成交价格选择快照或历史日线；基金净值进入净值与业绩�
 
 | 需求 / 文档 | 接口或工具 | 使用范围 |
 | --- | --- | --- |
-| [投资风格](managers-investment-style.md) | `GET /api/fund/managers/investment-style` | 公开 |
-| [基金经理业绩](managers-performance.md) | `GET /api/fund/managers/performance` | 公开 |
-| [从业经历](managers-experience.md) | `GET /api/fund/managers/experience` | 公开 |
-| [基金经理详情](managers-detail.md) | `GET /api/fund/managers/detail` | 公开 |
+| [投资风格](fund-managers.md#managers-investment-style) | `GET /api/fund/managers/investment-style` | 公开 |
+| [基金经理业绩](fund-managers.md#managers-performance) | `GET /api/fund/managers/performance` | 公开 |
+| [从业经历](fund-managers.md#managers-experience) | `GET /api/fund/managers/experience` | 公开 |
+| [基金经理详情](fund-managers.md#managers-detail) | `GET /api/fund/managers/detail` | 公开 |
 
 ## 在线回测
 
@@ -84,8 +84,8 @@ ETF 成交价格选择快照或历史日线；基金净值进入净值与业绩�
 
 | 需求 / 文档 | 接口或工具 | 使用范围 |
 | --- | --- | --- |
-| [基金在线回测](backtest-result.md) | `GET /api/fund/backtest/result` | 公开 |
-| [基金回测可用指标](backtest-indicators.md) | `GET /api/fund/backtest/indicators` | 公开 |
+| [基金在线回测](fund-backtest.md#backtest-result) | `GET /api/fund/backtest/result` | 公开 |
+| [基金回测可用指标](fund-backtest.md#backtest-indicators) | `GET /api/fund/backtest/indicators` | 公开 |
 
 ## 通用指标
 
@@ -93,8 +93,8 @@ ETF 成交价格选择快照或历史日线；基金净值进入净值与业绩�
 
 | 需求 / 文档 | 接口或工具 | 使用范围 |
 | --- | --- | --- |
-| [基金画线指标](indicators-line.md) | `GET /api/fund/indicators/line` | 公开 |
-| [基金表格指标](indicators-table.md) | `GET /api/fund/indicators/table` | 公开 |
+| [基金画线指标](fund-indicators.md#indicators-line) | `GET /api/fund/indicators/line` | 公开 |
+| [基金表格指标](fund-indicators.md#indicators-table) | `GET /api/fund/indicators/table` | 公开 |
 
 ## QDII 额度
 
@@ -102,8 +102,8 @@ ETF 成交价格选择快照或历史日线；基金净值进入净值与业绩�
 
 | 需求 / 文档 | 接口或工具 | 使用范围 |
 | --- | --- | --- |
-| [QDII额度汇总](quota-summary.md) | `GET /api/fund/quota/summary` | 公开 |
-| [QDII额度列表](quota-list.md) | `GET /api/fund/quota/list` | 公开 |
+| [QDII额度汇总](fund-quota.md#quota-summary) | `GET /api/fund/quota/summary` | 公开 |
+| [QDII额度列表](fund-quota.md#quota-list) | `GET /api/fund/quota/list` | 公开 |
 
 ## 资讯与募集
 

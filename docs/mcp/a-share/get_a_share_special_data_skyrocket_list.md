@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_a_share_special_data_skyrocket_list`
 >
-> 对应 REST 端点：[`GET /api/a-share/special-data/skyrocket-list`](../../api/a-share/special-data-skyrocket-list.md#飙升榜)
+> 对应 REST 端点：[`GET /api/a-share/special-data/skyrocket-list`](../../api/a-share/hot-list-data.md#special-data-skyrocket-list--飙升榜)
 
 
 ## 工具描述
@@ -29,7 +29,7 @@
 
 ## 返回
 
-返回 `{ timestamp, item: [HotListItem, ...] }`。字段含义见 REST 端点 [飙升榜](../../api/a-share/special-data-skyrocket-list.md#飙升榜)。
+返回 `{ timestamp, item: [HotListItem, ...] }`。字段含义见 REST 端点 [飙升榜](../../api/a-share/hot-list-data.md#special-data-skyrocket-list--飙升榜)。
 
 ```json
 {

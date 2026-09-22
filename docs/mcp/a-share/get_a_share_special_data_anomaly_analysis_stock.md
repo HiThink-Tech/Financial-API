@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_a_share_special_data_anomaly_analysis_stock`
 >
-> 对应 REST 端点：[`GET /api/a-share/special-data/anomaly-analysis-stock`](../../api/a-share/special-data-anomaly-analysis-stock.md#按股票查询个股异动原因)
+> 对应 REST 端点：[`GET /api/a-share/special-data/anomaly-analysis-stock`](../../api/a-share/anomaly-analysis.md#special-data-anomaly-analysis-stock--按股票查询个股异动原因)
 
 
 ## 工具描述
@@ -30,7 +30,7 @@
 ## 返回
 
 返回 `{ timestamp, item: [AnomalyAnalysisItem, ...] }`。
-字段含义见 REST 端点 [按股票查询个股异动原因](../../api/a-share/special-data-anomaly-analysis-stock.md#按股票查询个股异动原因)。
+字段含义见 REST 端点 [按股票查询个股异动原因](../../api/a-share/anomaly-analysis.md#special-data-anomaly-analysis-stock--按股票查询个股异动原因)。
 
 ```json
 {

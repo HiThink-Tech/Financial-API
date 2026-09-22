@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_fund_managers_detail`
 >
-> 对应 REST 端点：[`GET /api/fund/managers/detail`](../../api/fund/managers-detail.md#基金经理详情)
+> 对应 REST 端点：[`GET /api/fund/managers/detail`](../../api/fund/fund-managers.md#managers-detail--基金经理详情)
 
 
 ## 工具描述
@@ -28,4 +28,4 @@
 
 ## 返回
 
-返回经理资料、公司、收益与雷达对比；字段见 [基金经理详情](../../api/fund/managers-detail.md#基金经理详情)。
+返回经理资料、公司、收益与雷达对比；字段见 [基金经理详情](../../api/fund/fund-managers.md#managers-detail--基金经理详情)。

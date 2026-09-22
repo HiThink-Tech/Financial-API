@@ -54,12 +54,16 @@ def test_split_preserves_common_contract_and_json(inputs):
     source, target, config, _ = inputs
     state = sync.synchronize(source, target, config)
     assert len(state["entries"]) == 2
+    assert all(record["page_title"] == "行情" for record in state["entries"])
+    page_map = json.loads((target / "docs/api/page-map.json").read_text(encoding="utf-8"))
+    assert [record["page"] for record in page_map["entries"]] == ["prices", "prices"]
+    assert all("source" not in record for record in page_map["entries"])
     bodies = [
         (target / r["output"]).read_text(encoding="utf-8") for r in state["entries"]
     ]
     assert all("价格单位元，null 保留。" in body for body in bodies)
     assert '{"data":{"item":[{"price":null}]}}' in bodies[0]
-    assert '<a id="history"></a>' in bodies[1]
+    assert '<a id="prices-historical--history"></a>' in bodies[1]
     before = {p: p.read_bytes() for p in target.rglob("*") if p.is_file()}
     sync.synchronize(source, target, config, check=True)
     sync.synchronize(source, target, config)
@@ -90,7 +94,9 @@ def test_changed_source_check_and_owned_deletion(inputs):
     with pytest.raises(sync.DocumentError, match="drift"):
         sync.synchronize(source, target, config, check=True)
     sync.synchronize(source, target, config)
-    assert not (target / old["entries"][0]["output"]).exists()
+    grouped = (target / old["entries"][0]["output"]).read_text(encoding="utf-8")
+    assert "GET /api/a-share/prices/snapshot" not in grouped
+    assert "GET /api/a-share/prices/latest" in grouped
     assert unrelated.read_text(encoding="utf-8") == "maintained"
 
 
@@ -145,7 +151,7 @@ def test_overview_routes_to_readme_without_generating_guide(inputs):
     state = sync.synchronize(source, target, config)
     assert all(r['kind'] == 'rest' for r in state['entries'])
     assert not (target / 'docs/api/common').exists()
-    historical = target / 'docs/api/a-share/prices-historical.md'
+    historical = target / 'docs/api/a-share/prices.md'
     assert '[总览](../README.md)' in historical.read_text(encoding='utf-8')
 
 
@@ -268,7 +274,7 @@ def test_mcp_identity_and_atomic_rest_link(inputs):
     state = sync.synchronize(source, target, config)
     record = next(r for r in state["entries"] if r["kind"] == "mcp")
     text = (target / record["output"]).read_text(encoding="utf-8")
-    assert "../../api/a-share/prices-snapshot.md#快照" in text
+    assert "../../api/a-share/prices.md#prices-snapshot--快照" in text
     tool.write_text(
         tool.read_text(encoding="utf-8").replace(
             "工具名：`get_snapshot`", "工具名：`invented`"

@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_fund_performance_drawdowns`
 >
-> 对应 REST 端点：[`GET /api/fund/performance/drawdowns`](../../api/fund/performance-drawdowns.md#基金最大回撤)
+> 对应 REST 端点：[`GET /api/fund/performance/drawdowns`](../../api/fund/fund-performance.md#performance-drawdowns--基金最大回撤)
 
 
 ## 工具描述
@@ -28,4 +28,4 @@
 
 ## 返回
 
-返回基金代码与十个区间最大回撤；字段见 [基金最大回撤](../../api/fund/performance-drawdowns.md#基金最大回撤)。
+返回基金代码与十个区间最大回撤；字段见 [基金最大回撤](../../api/fund/fund-performance.md#performance-drawdowns--基金最大回撤)。

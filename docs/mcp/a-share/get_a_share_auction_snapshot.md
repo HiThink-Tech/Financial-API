@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_a_share_auction_snapshot`
 >
-> 对应 REST 端点：[`GET /api/a-share/auction/snapshot`](../../api/a-share/auction-snapshot.md#a股集合竞价快照)
+> 对应 REST 端点：[`GET /api/a-share/auction/snapshot`](../../api/a-share/auction.md#auction-snapshot--a股集合竞价快照)
 
 
 ## 工具描述
@@ -31,4 +31,4 @@
 
 ## 返回
 
-返回接口响应组装时间、集合竞价阶段、数据状态、总数及竞价明细；字段见 [A股集合竞价快照](../../api/a-share/auction-snapshot.md#a股集合竞价快照)。
+返回接口响应组装时间、集合竞价阶段、数据状态、总数及竞价明细；字段见 [A股集合竞价快照](../../api/a-share/auction.md#auction-snapshot--a股集合竞价快照)。

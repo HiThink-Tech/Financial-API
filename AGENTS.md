@@ -6,14 +6,14 @@
 
 1. 旧 checkout、旧 Prompt 或旧根级 Python 路径：先读 [`docs/monorepo-migration.md`](docs/monorepo-migration.md)。
 2. 所有金融数据任务：先读 [`skills/hithink-finance/SKILL.md`](skills/hithink-finance/SKILL.md)。
-3. 只加载 Skill 选择的接入入口、业务域首页和目标原子文档，不要递归读取全部契约。
+3. 只加载 Skill 选择的接入入口、业务域首页和目标接口小节或工具文档，不要递归读取全部契约。
 
 ## Monorepo 边界
 
 - `hithink-finance-cli/`：Node.js CLI 子项目，面向人类、Agent 和自动化；运行时不依赖 Python。
 - `python/`：唯一 Python 项目根，包含远端取数 toolkit、本地 `marketdb`、示例和测试。
-- `docs/`：公共文档中心；`docs/api/` 按业务域提供从文档源同步的原子 REST 文档，`docs/mcp/` 提供原子工具文档。
-- `skills/hithink-finance/`：可独立发布的统一 Skill；API/MCP 契约由脚本从 `docs/` 镜像。
+- `docs/`：公共文档中心；`docs/api/` 按前端单接口页与多接口模块页组织 REST 契约，`docs/mcp/` 提供原子工具文档。
+- `skills/hithink-finance/`：可独立发布的统一 Skill；REST 从 `docs/api/` 镜像，MCP 从 `docs/mcp/` 按业务域合并生成。
 - `examples/`：monorepo 级示例导航与静态灵感。
 
 ## 选择接入方式
@@ -52,14 +52,14 @@ CLI 优先使用具体命令的 `--output`、`db export` 或 `market panel --out
 ## 文档治理
 
 - 根 README 做项目总览；子目录 README 详细解释当前目录，不把细节继续拆散到不必要的多层文档。
-- REST/MCP 原子文档按业务域组织，业务域 README 提供索引，API 根 README 集中通用协议与端内说明。接口字段以源接口正文为准；MCP 只收录明确工具定义。Market Dumps 的 API Key 契约由本项目维护。契约更新后运行：
+- REST 单接口页与多接口模块页、MCP 原子文档按业务域组织，业务域 README 提供索引，API 根 README 集中通用协议与端内说明。接口字段以源接口正文为准；MCP 只收录明确工具定义。Market Dumps 的 API Key 契约由本项目维护。契约更新后运行：
 
   ```bash
   python scripts/sync_skill_contracts.py
   python scripts/sync_skill_contracts.py --check
   ```
 
-- 不要直接编辑 `skills/hithink-finance/references/api/` 或 `references/mcp.md`。
+- 不要直接编辑 `skills/hithink-finance/references/api/` 或 `references/mcp/`；更新源文档后重新生成 Skill 并检查覆盖。
 - 不要在 Python、CLI、examples 或其他 README 中复制上游参数表、响应字段表和错误码全集；这些文档只说明自身功能与运行方式并链接契约。
 - 仓库不保存 `llms.txt`、`llms-full.txt` 或相似副本，只链接远端地址。
 - 改动公开能力、命令、选项或路由时，同步更新 README、统一 Skill、契约镜像和开发期契约测试。

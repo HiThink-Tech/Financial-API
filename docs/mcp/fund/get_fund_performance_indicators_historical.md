@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_fund_performance_indicators_historical`
 >
-> 对应 REST 端点：[`GET /api/fund/performance/indicators-historical`](../../api/fund/performance-indicators-historical.md#基金历史业绩指标)
+> 对应 REST 端点：[`GET /api/fund/performance/indicators-historical`](../../api/fund/fund-performance.md#performance-indicators-historical--基金历史业绩指标)
 
 
 ## 工具描述
@@ -34,4 +34,4 @@
 
 ## 返回
 
-返回 `{ timestamp, item[] }`，`timestamp` 保留明确的上游数据时间；固定周期 `DAY_1` 不作为顶层字段返回，也不返回顶层 `thscode` 或 `interval`。字段见 [基金历史业绩指标](../../api/fund/performance-indicators-historical.md#基金历史业绩指标)。
+返回 `{ timestamp, item[] }`，`timestamp` 保留明确的上游数据时间；固定周期 `DAY_1` 不作为顶层字段返回，也不返回顶层 `thscode` 或 `interval`。字段见 [基金历史业绩指标](../../api/fund/fund-performance.md#performance-indicators-historical--基金历史业绩指标)。

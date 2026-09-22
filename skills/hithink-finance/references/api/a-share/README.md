@@ -11,8 +11,8 @@
 
 | 需求 / 文档 | 接口或工具 | 使用范围 |
 | --- | --- | --- |
-| [行情快照](prices-snapshot.md) | `GET /api/a-share/prices/snapshot` | 公开 |
-| [历史 K 线](prices-historical.md) | `GET /api/a-share/prices/historical` | 公开 |
+| [行情快照](prices.md#prices-snapshot) | `GET /api/a-share/prices/snapshot` | 公开 |
+| [历史 K 线](prices.md#prices-historical) | `GET /api/a-share/prices/historical` | 公开 |
 
 ## 财务报表与指标
 
@@ -21,9 +21,9 @@
 | 需求 / 文档 | 接口或工具 | 使用范围 |
 | --- | --- | --- |
 | [财务指标数据](financials-indicators.md) | `GET /api/a-share/financials/indicators` | 公开 |
-| [利润表](financials-income-statements.md) | `GET /api/a-share/financials/income-statements` | 公开 |
-| [资产负债表](financials-balance-sheets.md) | `GET /api/a-share/financials/balance-sheets` | 公开 |
-| [现金流量表](financials-cash-flow-statements.md) | `GET /api/a-share/financials/cash-flow-statements` | 公开 |
+| [利润表](financials.md#financials-income-statements) | `GET /api/a-share/financials/income-statements` | 公开 |
+| [资产负债表](financials.md#financials-balance-sheets) | `GET /api/a-share/financials/balance-sheets` | 公开 |
+| [现金流量表](financials.md#financials-cash-flow-statements) | `GET /api/a-share/financials/cash-flow-statements` | 公开 |
 
 ## 特色数据
 
@@ -32,16 +32,16 @@
 | 需求 / 文档 | 接口或工具 | 使用范围 |
 | --- | --- | --- |
 | [龙虎榜数据](special-data-dragon-tiger-list.md) | `GET /api/a-share/special-data/dragon-tiger-list` | 公开 |
-| [个股异动原因列表](special-data-anomaly-analysis-list.md) | `GET /api/a-share/special-data/anomaly-analysis-list` | 公开 |
-| [按股票查询个股异动原因](special-data-anomaly-analysis-stock.md) | `GET /api/a-share/special-data/anomaly-analysis-stock` | 公开 |
-| [飙升榜](special-data-skyrocket-list.md) | `GET /api/a-share/special-data/skyrocket-list` | 公开 |
-| [A股热股榜单](special-data-hot-stock-list.md) | `GET /api/a-share/special-data/hot-stock-list` | 公开 |
-| [历史热股排行](special-data-hot-stock-list-history.md) | `GET /api/a-share/special-data/hot-stock-list-history` | 公开 |
-| [个股排名走势](special-data-hot-stock-rank-trend.md) | `GET /api/a-share/special-data/hot-stock-rank-trend` | 公开 |
-| [涨停股票池](special-data-limit-up-pool.md) | `GET /api/a-share/special-data/limit-up-pool` | 公开 |
-| [跌停股票池](special-data-limit-down-pool.md) | `GET /api/a-share/special-data/limit-down-pool` | 公开 |
-| [炸板股票池](special-data-limit-break-pool.md) | `GET /api/a-share/special-data/limit-break-pool` | 公开 |
-| [连板天梯](special-data-limit-up-ladder.md) | `GET /api/a-share/special-data/limit-up-ladder` | 公开 |
+| [个股异动原因列表](anomaly-analysis.md#special-data-anomaly-analysis-list) | `GET /api/a-share/special-data/anomaly-analysis-list` | 公开 |
+| [按股票查询个股异动原因](anomaly-analysis.md#special-data-anomaly-analysis-stock) | `GET /api/a-share/special-data/anomaly-analysis-stock` | 公开 |
+| [飙升榜](hot-list-data.md#special-data-skyrocket-list) | `GET /api/a-share/special-data/skyrocket-list` | 公开 |
+| [A股热股榜单](hot-list-data.md#special-data-hot-stock-list) | `GET /api/a-share/special-data/hot-stock-list` | 公开 |
+| [历史热股排行](hot-list-data.md#special-data-hot-stock-list-history) | `GET /api/a-share/special-data/hot-stock-list-history` | 公开 |
+| [个股排名走势](hot-list-data.md#special-data-hot-stock-rank-trend) | `GET /api/a-share/special-data/hot-stock-rank-trend` | 公开 |
+| [涨停股票池](limit-up-data.md#special-data-limit-up-pool) | `GET /api/a-share/special-data/limit-up-pool` | 公开 |
+| [跌停股票池](limit-up-data.md#special-data-limit-down-pool) | `GET /api/a-share/special-data/limit-down-pool` | 公开 |
+| [炸板股票池](limit-up-data.md#special-data-limit-break-pool) | `GET /api/a-share/special-data/limit-break-pool` | 公开 |
+| [连板天梯](limit-up-data.md#special-data-limit-up-ladder) | `GET /api/a-share/special-data/limit-up-ladder` | 公开 |
 
 ## 集合竞价
 
@@ -49,8 +49,8 @@
 
 | 需求 / 文档 | 接口或工具 | 使用范围 |
 | --- | --- | --- |
-| [A股集合竞价快照](auction-snapshot.md) | `GET /api/a-share/auction/snapshot` | 公开 |
-| [短线风向标竞价基准](auction-short-term-benchmark.md) | `GET /api/a-share/auction/short-term-benchmark` | 公开 |
+| [A股集合竞价快照](auction.md#auction-snapshot) | `GET /api/a-share/auction/snapshot` | 公开 |
+| [短线风向标竞价基准](auction.md#auction-short-term-benchmark) | `GET /api/a-share/auction/short-term-benchmark` | 公开 |
 
 ## 交易日程
 
@@ -82,8 +82,8 @@
 
 | 需求 / 文档 | 接口或工具 | 使用范围 |
 | --- | --- | --- |
-| [资金流向实时快照](capital-flow-snapshot.md) | `GET /api/a-share/capital-flow/snapshot` | 端内专用，客户端可用 |
-| [资金流向历史](capital-flow-historical.md) | `GET /api/a-share/capital-flow/historical` | 端内专用，客户端可用 |
+| [资金流向实时快照](capital-flow.md#capital-flow-snapshot) | `GET /api/a-share/capital-flow/snapshot` | 端内专用，客户端可用 |
+| [资金流向历史](capital-flow.md#capital-flow-historical) | `GET /api/a-share/capital-flow/historical` | 端内专用，客户端可用 |
 
 ## 高频动向
 
@@ -91,5 +91,5 @@
 
 | 需求 / 文档 | 接口或工具 | 使用范围 |
 | --- | --- | --- |
-| [高频历史](high-frequency-historical.md) | `GET /api/a-share/high-frequency/historical` | 端内专用，客户端可用 |
-| [单日高频分时](high-frequency-intraday.md) | `GET /api/a-share/high-frequency/intraday` | 端内专用，客户端可用 |
+| [高频历史](high-frequency.md#high-frequency-historical) | `GET /api/a-share/high-frequency/historical` | 端内专用，客户端可用 |
+| [单日高频分时](high-frequency.md#high-frequency-intraday) | `GET /api/a-share/high-frequency/intraday` | 端内专用，客户端可用 |

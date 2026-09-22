@@ -69,7 +69,7 @@ API、MCP、CLI 和 Python 远端取数共用同一个 API Key。安装 `hithink
 
 ### 2. Agent Skill
 
-`hithink-finance` Skill 是 AI Agent 使用本项目的统一入口，提供接入方式选择、标的消歧、REST 与 MCP 契约镜像、安全规则和大结果落盘约定。
+`hithink-finance` Skill 是 AI Agent 使用本项目的统一入口，提供接入方式选择、标的消歧、按前端页面组织的 REST 契约、按业务域合并的 MCP 工具文档、安全规则和大结果落盘约定。
 
 推荐通过公开仓库安装：
 
@@ -142,7 +142,7 @@ curl 'https://fuyao.aicubes.cn/api/a-share/prices/snapshot?thscodes=600519.SH' \
 - 在线文档：<https://fuyao.aicubes.cn/docs/>
 - 文档全文聚合：<https://fuyao.aicubes.cn/llms-full.txt>
 
-`docs/api/` 按业务域提供原子接口文档；字段、参数和错误语义以目标接口正文为准。
+`docs/api/` 按业务域提供单接口页与多接口模块页；字段、参数和错误语义以目标接口小节为准。
 
 ### 5. MCP
 
@@ -247,7 +247,7 @@ examples/                monorepo 级示例导航和静态灵感
 scripts/                 仓库级维护脚本
 ```
 
-详细参数和契约下沉到对应子项目 README 或 `docs/`。`skills/hithink-finance/references/api.md`、`references/api/`、`references/mcp.md` 和 `references/mcp/` 均由同步脚本生成，不要直接编辑；契约更新后从仓库根目录运行：
+详细参数和契约下沉到对应子项目 README 或 `docs/`。`docs/api/` 与 Skill 的 REST 文档均按单接口页和多接口模块页组织，接口可通过独立锚点定位；`references/mcp/` 按业务域生成。`references/mcp.md` 维护接入与业务域入口。契约更新后从仓库根目录运行：
 
 ```bash
 python scripts/sync_skill_contracts.py

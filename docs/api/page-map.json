@@ -1,0 +1,851 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "page": "calendar",
+      "page_title": "交易日历",
+      "domain": "a-share",
+      "title": "交易日历",
+      "id": "GET /api/a-share/calendar/trading-days",
+      "output": "docs/api/a-share/calendar-trading-days.md",
+      "section_anchor": ""
+    },
+    {
+      "page": "news-events",
+      "page_title": "资讯事件库",
+      "domain": "news",
+      "title": "资讯事件库",
+      "id": "GET /api/news/events/search",
+      "output": "docs/api/news/events-search.md",
+      "section_anchor": ""
+    },
+    {
+      "page": "corporate-actions",
+      "page_title": "除复权",
+      "domain": "a-share",
+      "title": "除复权",
+      "id": "GET /api/a-share/corporate-actions/adjustment-factors",
+      "output": "docs/api/a-share/corporate-actions-adjustment-factors.md",
+      "section_anchor": ""
+    },
+    {
+      "page": "dragon-tiger-data",
+      "page_title": "龙虎榜数据",
+      "domain": "a-share",
+      "title": "龙虎榜数据",
+      "id": "GET /api/a-share/special-data/dragon-tiger-list",
+      "output": "docs/api/a-share/special-data-dragon-tiger-list.md",
+      "section_anchor": ""
+    },
+    {
+      "page": "financial-indicators",
+      "page_title": "财务指标数据",
+      "domain": "a-share",
+      "title": "财务指标数据",
+      "id": "GET /api/a-share/financials/indicators",
+      "output": "docs/api/a-share/financials-indicators.md",
+      "section_anchor": ""
+    },
+    {
+      "page": "fund-company",
+      "page_title": "基金公司详情",
+      "domain": "fund",
+      "title": "基金公司详情",
+      "id": "GET /api/fund/companies/detail",
+      "output": "docs/api/fund/companies-detail.md",
+      "section_anchor": ""
+    },
+    {
+      "page": "fund-corporate-actions",
+      "page_title": "基金分红记录",
+      "domain": "fund",
+      "title": "基金分红记录",
+      "id": "GET /api/fund/corporate-actions/dividends",
+      "output": "docs/api/fund/corporate-actions-dividends.md",
+      "section_anchor": ""
+    },
+    {
+      "page": "fund-diagnostics",
+      "page_title": "基金诊断详情",
+      "domain": "fund",
+      "title": "基金诊断详情",
+      "id": "GET /api/fund/diagnostics/detail",
+      "output": "docs/api/fund/diagnostics-detail.md",
+      "section_anchor": ""
+    },
+    {
+      "page": "fund-holdings",
+      "page_title": "基金重仓持仓",
+      "domain": "fund",
+      "title": "基金重仓持仓",
+      "id": "GET /api/fund/portfolio/holdings",
+      "output": "docs/api/fund/portfolio-holdings.md",
+      "section_anchor": ""
+    },
+    {
+      "page": "fund-news",
+      "page_title": "基金资讯列表",
+      "domain": "fund",
+      "title": "基金资讯列表",
+      "id": "GET /api/fund/news/article-list",
+      "output": "docs/api/fund/news-article-list.md",
+      "section_anchor": ""
+    },
+    {
+      "page": "fund-offerings",
+      "page_title": "基金募集列表",
+      "domain": "fund",
+      "title": "基金募集列表",
+      "id": "GET /api/fund/offerings/list",
+      "output": "docs/api/fund/offerings-list.md",
+      "section_anchor": ""
+    },
+    {
+      "page": "fund-profile",
+      "page_title": "基金基本资料",
+      "domain": "fund",
+      "title": "基金基本资料",
+      "id": "GET /api/fund/profile/detail",
+      "output": "docs/api/fund/profile-detail.md",
+      "section_anchor": ""
+    },
+    {
+      "page": "futures-calendar",
+      "page_title": "期货交易日",
+      "domain": "futures",
+      "title": "期货交易日",
+      "id": "GET /api/futures/calendar/trading-schedule",
+      "output": "docs/api/futures/calendar-trading-schedule.md",
+      "section_anchor": ""
+    },
+    {
+      "page": "futures-fundamentals",
+      "page_title": "期货F10宏观指标历史数据",
+      "domain": "futures",
+      "title": "期货F10宏观指标历史数据",
+      "id": "GET /api/futures/fundamentals/indicators-historical",
+      "output": "docs/api/futures/fundamentals-indicators-historical.md",
+      "section_anchor": ""
+    },
+    {
+      "page": "futures-session-timeline",
+      "page_title": "期货交易时间轴",
+      "domain": "futures",
+      "title": "期货交易时间轴",
+      "id": "GET /api/futures/calendar/session-timeline",
+      "output": "docs/api/futures/calendar-session-timeline.md",
+      "section_anchor": ""
+    },
+    {
+      "page": "futures-varieties",
+      "page_title": "期货品种资料",
+      "domain": "futures",
+      "title": "期货品种资料",
+      "id": "GET /api/futures/varieties/list",
+      "output": "docs/api/futures/varieties-list.md",
+      "section_anchor": ""
+    },
+    {
+      "page": "futures-variety-plates",
+      "page_title": "期货品种板块",
+      "domain": "futures",
+      "title": "期货品种板块",
+      "id": "GET /api/futures/variety-plates/list",
+      "output": "docs/api/futures/variety-plates-list.md",
+      "section_anchor": ""
+    },
+    {
+      "page": "futures-warehouse-receipts",
+      "page_title": "期货历史仓单",
+      "domain": "futures",
+      "title": "期货历史仓单",
+      "id": "GET /api/futures/warehouse-receipts/historical",
+      "output": "docs/api/futures/warehouse-receipts-historical.md",
+      "section_anchor": ""
+    },
+    {
+      "page": "options-session-timeline",
+      "page_title": "期权交易时间轴",
+      "domain": "options",
+      "title": "期权交易时间轴",
+      "id": "GET /api/options/calendar/session-timeline",
+      "output": "docs/api/options/calendar-session-timeline.md",
+      "section_anchor": ""
+    },
+    {
+      "page": "options-varieties",
+      "page_title": "期权品种资料",
+      "domain": "options",
+      "title": "期权品种资料",
+      "id": "GET /api/options/varieties/list",
+      "output": "docs/api/options/varieties-list.md",
+      "section_anchor": ""
+    },
+    {
+      "page": "ticker-list",
+      "page_title": "标的列表获取",
+      "domain": "meta",
+      "title": "标的列表获取",
+      "id": "GET /api/meta/tickers/list",
+      "output": "docs/api/meta/tickers-list.md",
+      "section_anchor": ""
+    },
+    {
+      "page": "ticker-search",
+      "page_title": "标的检索",
+      "domain": "meta",
+      "title": "标的检索",
+      "id": "GET /api/meta/tickers/search",
+      "output": "docs/api/meta/tickers-search.md",
+      "section_anchor": ""
+    },
+    {
+      "page": "valuations",
+      "page_title": "估值数据",
+      "domain": "a-share",
+      "title": "估值数据",
+      "id": "GET /api/a-share/valuations/snapshot",
+      "output": "docs/api/a-share/valuations-snapshot.md",
+      "section_anchor": ""
+    },
+    {
+      "page": "a-share-index",
+      "page_title": "指数数据",
+      "domain": "index",
+      "title": "同花顺指数列表",
+      "id": "GET /api/a-share-index/catalog/ths-index-list",
+      "output": "docs/api/index/a-share-index.md",
+      "section_anchor": "catalog-ths-index-list"
+    },
+    {
+      "page": "a-share-index",
+      "page_title": "指数数据",
+      "domain": "index",
+      "title": "同花顺指数成分股",
+      "id": "GET /api/a-share-index/constituents/ths-stock-list",
+      "output": "docs/api/index/a-share-index.md",
+      "section_anchor": "constituents-ths-stock-list"
+    },
+    {
+      "page": "a-share-index",
+      "page_title": "指数数据",
+      "domain": "index",
+      "title": "指数行情快照",
+      "id": "GET /api/a-share-index/prices/snapshot",
+      "output": "docs/api/index/a-share-index.md",
+      "section_anchor": "prices-snapshot"
+    },
+    {
+      "page": "a-share-index",
+      "page_title": "指数数据",
+      "domain": "index",
+      "title": "指数历史 K 线",
+      "id": "GET /api/a-share-index/prices/historical",
+      "output": "docs/api/index/a-share-index.md",
+      "section_anchor": "prices-historical"
+    },
+    {
+      "page": "anomaly-analysis",
+      "page_title": "个股异动原因",
+      "domain": "a-share",
+      "title": "个股异动原因列表",
+      "id": "GET /api/a-share/special-data/anomaly-analysis-list",
+      "output": "docs/api/a-share/anomaly-analysis.md",
+      "section_anchor": "special-data-anomaly-analysis-list"
+    },
+    {
+      "page": "anomaly-analysis",
+      "page_title": "个股异动原因",
+      "domain": "a-share",
+      "title": "按股票查询个股异动原因",
+      "id": "GET /api/a-share/special-data/anomaly-analysis-stock",
+      "output": "docs/api/a-share/anomaly-analysis.md",
+      "section_anchor": "special-data-anomaly-analysis-stock"
+    },
+    {
+      "page": "auction",
+      "page_title": "集合竞价数据",
+      "domain": "a-share",
+      "title": "A股集合竞价快照",
+      "id": "GET /api/a-share/auction/snapshot",
+      "output": "docs/api/a-share/auction.md",
+      "section_anchor": "auction-snapshot"
+    },
+    {
+      "page": "auction",
+      "page_title": "集合竞价数据",
+      "domain": "a-share",
+      "title": "短线风向标竞价基准",
+      "id": "GET /api/a-share/auction/short-term-benchmark",
+      "output": "docs/api/a-share/auction.md",
+      "section_anchor": "auction-short-term-benchmark"
+    },
+    {
+      "page": "capital-flow",
+      "page_title": "主力资金",
+      "domain": "a-share",
+      "title": "资金流向实时快照",
+      "id": "GET /api/a-share/capital-flow/snapshot",
+      "output": "docs/api/a-share/capital-flow.md",
+      "section_anchor": "capital-flow-snapshot"
+    },
+    {
+      "page": "capital-flow",
+      "page_title": "主力资金",
+      "domain": "a-share",
+      "title": "资金流向历史",
+      "id": "GET /api/a-share/capital-flow/historical",
+      "output": "docs/api/a-share/capital-flow.md",
+      "section_anchor": "capital-flow-historical"
+    },
+    {
+      "page": "financials",
+      "page_title": "财务报表",
+      "domain": "a-share",
+      "title": "利润表",
+      "id": "GET /api/a-share/financials/income-statements",
+      "output": "docs/api/a-share/financials.md",
+      "section_anchor": "financials-income-statements"
+    },
+    {
+      "page": "financials",
+      "page_title": "财务报表",
+      "domain": "a-share",
+      "title": "资产负债表",
+      "id": "GET /api/a-share/financials/balance-sheets",
+      "output": "docs/api/a-share/financials.md",
+      "section_anchor": "financials-balance-sheets"
+    },
+    {
+      "page": "financials",
+      "page_title": "财务报表",
+      "domain": "a-share",
+      "title": "现金流量表",
+      "id": "GET /api/a-share/financials/cash-flow-statements",
+      "output": "docs/api/a-share/financials.md",
+      "section_anchor": "financials-cash-flow-statements"
+    },
+    {
+      "page": "fund-backtest",
+      "page_title": "基金在线回测",
+      "domain": "fund",
+      "title": "基金在线回测",
+      "id": "GET /api/fund/backtest/result",
+      "output": "docs/api/fund/fund-backtest.md",
+      "section_anchor": "backtest-result"
+    },
+    {
+      "page": "fund-backtest",
+      "page_title": "基金在线回测",
+      "domain": "fund",
+      "title": "基金回测可用指标",
+      "id": "GET /api/fund/backtest/indicators",
+      "output": "docs/api/fund/fund-backtest.md",
+      "section_anchor": "backtest-indicators"
+    },
+    {
+      "page": "fund-financials",
+      "page_title": "基金财务数据",
+      "domain": "fund",
+      "title": "基金财务指标",
+      "id": "GET /api/fund/financials/indicators",
+      "output": "docs/api/fund/fund-financials.md",
+      "section_anchor": "financials-indicators"
+    },
+    {
+      "page": "fund-financials",
+      "page_title": "基金财务数据",
+      "domain": "fund",
+      "title": "基金利润表",
+      "id": "GET /api/fund/financials/income-statements",
+      "output": "docs/api/fund/fund-financials.md",
+      "section_anchor": "financials-income-statements"
+    },
+    {
+      "page": "fund-financials",
+      "page_title": "基金财务数据",
+      "domain": "fund",
+      "title": "基金资产负债表",
+      "id": "GET /api/fund/financials/balance-sheets",
+      "output": "docs/api/fund/fund-financials.md",
+      "section_anchor": "financials-balance-sheets"
+    },
+    {
+      "page": "fund-holders",
+      "page_title": "基金持有人数据",
+      "domain": "fund",
+      "title": "基金持有人结构",
+      "id": "GET /api/fund/holders/detail",
+      "output": "docs/api/fund/fund-holders.md",
+      "section_anchor": "holders-detail"
+    },
+    {
+      "page": "fund-holders",
+      "page_title": "基金持有人数据",
+      "domain": "fund",
+      "title": "基金前十大持有人",
+      "id": "GET /api/fund/holders/top",
+      "output": "docs/api/fund/fund-holders.md",
+      "section_anchor": "holders-top"
+    },
+    {
+      "page": "fund-indicators",
+      "page_title": "基金通用指标",
+      "domain": "fund",
+      "title": "基金画线指标",
+      "id": "GET /api/fund/indicators/line",
+      "output": "docs/api/fund/fund-indicators.md",
+      "section_anchor": "indicators-line"
+    },
+    {
+      "page": "fund-indicators",
+      "page_title": "基金通用指标",
+      "domain": "fund",
+      "title": "基金表格指标",
+      "id": "GET /api/fund/indicators/table",
+      "output": "docs/api/fund/fund-indicators.md",
+      "section_anchor": "indicators-table"
+    },
+    {
+      "page": "fund-managers",
+      "page_title": "基金经理数据",
+      "domain": "fund",
+      "title": "投资风格",
+      "id": "GET /api/fund/managers/investment-style",
+      "output": "docs/api/fund/fund-managers.md",
+      "section_anchor": "managers-investment-style"
+    },
+    {
+      "page": "fund-managers",
+      "page_title": "基金经理数据",
+      "domain": "fund",
+      "title": "基金经理业绩",
+      "id": "GET /api/fund/managers/performance",
+      "output": "docs/api/fund/fund-managers.md",
+      "section_anchor": "managers-performance"
+    },
+    {
+      "page": "fund-managers",
+      "page_title": "基金经理数据",
+      "domain": "fund",
+      "title": "从业经历",
+      "id": "GET /api/fund/managers/experience",
+      "output": "docs/api/fund/fund-managers.md",
+      "section_anchor": "managers-experience"
+    },
+    {
+      "page": "fund-managers",
+      "page_title": "基金经理数据",
+      "domain": "fund",
+      "title": "基金经理详情",
+      "id": "GET /api/fund/managers/detail",
+      "output": "docs/api/fund/fund-managers.md",
+      "section_anchor": "managers-detail"
+    },
+    {
+      "page": "fund-market",
+      "page_title": "基金行情数据",
+      "domain": "fund",
+      "title": "场内基金行情快照",
+      "id": "GET /api/fund/market/snapshot",
+      "output": "docs/api/fund/fund-market.md",
+      "section_anchor": "market-snapshot"
+    },
+    {
+      "page": "fund-market",
+      "page_title": "基金行情数据",
+      "domain": "fund",
+      "title": "场内基金历史日线行情",
+      "id": "GET /api/fund/market/historical",
+      "output": "docs/api/fund/fund-market.md",
+      "section_anchor": "market-historical"
+    },
+    {
+      "page": "fund-performance",
+      "page_title": "基金业绩与回撤",
+      "domain": "fund",
+      "title": "基金净值",
+      "id": "GET /api/fund/performance/nav",
+      "output": "docs/api/fund/fund-performance.md",
+      "section_anchor": "performance-nav"
+    },
+    {
+      "page": "fund-performance",
+      "page_title": "基金业绩与回撤",
+      "domain": "fund",
+      "title": "基金区间收益",
+      "id": "GET /api/fund/performance/returns",
+      "output": "docs/api/fund/fund-performance.md",
+      "section_anchor": "performance-returns"
+    },
+    {
+      "page": "fund-performance",
+      "page_title": "基金业绩与回撤",
+      "domain": "fund",
+      "title": "基金历史业绩指标",
+      "id": "GET /api/fund/performance/indicators-historical",
+      "output": "docs/api/fund/fund-performance.md",
+      "section_anchor": "performance-indicators-historical"
+    },
+    {
+      "page": "fund-performance",
+      "page_title": "基金业绩与回撤",
+      "domain": "fund",
+      "title": "基金最大回撤",
+      "id": "GET /api/fund/performance/drawdowns",
+      "output": "docs/api/fund/fund-performance.md",
+      "section_anchor": "performance-drawdowns"
+    },
+    {
+      "page": "fund-portfolio",
+      "page_title": "基金持仓与资产配置",
+      "domain": "fund",
+      "title": "基金历史股票持仓",
+      "id": "GET /api/fund/portfolio/stock-history",
+      "output": "docs/api/fund/fund-portfolio.md",
+      "section_anchor": "portfolio-stock-history"
+    },
+    {
+      "page": "fund-portfolio",
+      "page_title": "基金持仓与资产配置",
+      "domain": "fund",
+      "title": "基金历史债券持仓",
+      "id": "GET /api/fund/portfolio/bond-history",
+      "output": "docs/api/fund/fund-portfolio.md",
+      "section_anchor": "portfolio-bond-history"
+    },
+    {
+      "page": "fund-portfolio",
+      "page_title": "基金持仓与资产配置",
+      "domain": "fund",
+      "title": "基金股票持仓报告日期",
+      "id": "GET /api/fund/portfolio/stock-report-dates",
+      "output": "docs/api/fund/fund-portfolio.md",
+      "section_anchor": "portfolio-stock-report-dates"
+    },
+    {
+      "page": "fund-portfolio",
+      "page_title": "基金持仓与资产配置",
+      "domain": "fund",
+      "title": "基金债券持仓报告日期",
+      "id": "GET /api/fund/portfolio/bond-report-dates",
+      "output": "docs/api/fund/fund-portfolio.md",
+      "section_anchor": "portfolio-bond-report-dates"
+    },
+    {
+      "page": "fund-portfolio",
+      "page_title": "基金持仓与资产配置",
+      "domain": "fund",
+      "title": "基金资产配置",
+      "id": "GET /api/fund/portfolio/asset-allocation",
+      "output": "docs/api/fund/fund-portfolio.md",
+      "section_anchor": "portfolio-asset-allocation"
+    },
+    {
+      "page": "fund-portfolio",
+      "page_title": "基金持仓与资产配置",
+      "domain": "fund",
+      "title": "基金行业配置",
+      "id": "GET /api/fund/portfolio/industry-allocation",
+      "output": "docs/api/fund/fund-portfolio.md",
+      "section_anchor": "portfolio-industry-allocation"
+    },
+    {
+      "page": "fund-quota",
+      "page_title": "QDII 额度",
+      "domain": "fund",
+      "title": "QDII额度汇总",
+      "id": "GET /api/fund/quota/summary",
+      "output": "docs/api/fund/fund-quota.md",
+      "section_anchor": "quota-summary"
+    },
+    {
+      "page": "fund-quota",
+      "page_title": "QDII 额度",
+      "domain": "fund",
+      "title": "QDII额度列表",
+      "id": "GET /api/fund/quota/list",
+      "output": "docs/api/fund/fund-quota.md",
+      "section_anchor": "quota-list"
+    },
+    {
+      "page": "futures-basis",
+      "page_title": "期货基差",
+      "domain": "futures",
+      "title": "期货主连最新基差",
+      "id": "GET /api/futures/basis/main-continuous-latest",
+      "output": "docs/api/futures/futures-basis.md",
+      "section_anchor": "basis-main-continuous-latest"
+    },
+    {
+      "page": "futures-basis",
+      "page_title": "期货基差",
+      "domain": "futures",
+      "title": "期货历史基差",
+      "id": "GET /api/futures/basis/historical",
+      "output": "docs/api/futures/futures-basis.md",
+      "section_anchor": "basis-historical"
+    },
+    {
+      "page": "futures-contracts-extended",
+      "page_title": "期货主力与指数合约",
+      "domain": "futures",
+      "title": "期货主连资料",
+      "id": "GET /api/futures/contracts/main-continuous-list",
+      "output": "docs/api/futures/futures-contracts-extended.md",
+      "section_anchor": "contracts-main-continuous-list"
+    },
+    {
+      "page": "futures-contracts-extended",
+      "page_title": "期货主力与指数合约",
+      "domain": "futures",
+      "title": "期货主力合约",
+      "id": "GET /api/futures/contracts/main-list",
+      "output": "docs/api/futures/futures-contracts-extended.md",
+      "section_anchor": "contracts-main-list"
+    },
+    {
+      "page": "futures-contracts-extended",
+      "page_title": "期货主力与指数合约",
+      "domain": "futures",
+      "title": "期货次主力合约",
+      "id": "GET /api/futures/contracts/secondary-main-list",
+      "output": "docs/api/futures/futures-contracts-extended.md",
+      "section_anchor": "contracts-secondary-main-list"
+    },
+    {
+      "page": "futures-contracts-extended",
+      "page_title": "期货主力与指数合约",
+      "domain": "futures",
+      "title": "商品指数合约列表",
+      "id": "GET /api/futures/contracts/commodity-index-list",
+      "output": "docs/api/futures/futures-contracts-extended.md",
+      "section_anchor": "contracts-commodity-index-list"
+    },
+    {
+      "page": "futures-positions",
+      "page_title": "期货持仓",
+      "domain": "futures",
+      "title": "期货品种日持仓",
+      "id": "GET /api/futures/positions/variety-daily",
+      "output": "docs/api/futures/futures-positions.md",
+      "section_anchor": "positions-variety-daily"
+    },
+    {
+      "page": "futures-positions",
+      "page_title": "期货持仓",
+      "domain": "futures",
+      "title": "期货公司品种日持仓",
+      "id": "GET /api/futures/positions/company-variety-daily",
+      "output": "docs/api/futures/futures-positions.md",
+      "section_anchor": "positions-company-variety-daily"
+    },
+    {
+      "page": "futures-positions",
+      "page_title": "期货持仓",
+      "domain": "futures",
+      "title": "期货公司合约日持仓",
+      "id": "GET /api/futures/positions/contract-daily",
+      "output": "docs/api/futures/futures-positions.md",
+      "section_anchor": "positions-contract-daily"
+    },
+    {
+      "page": "futures-positions",
+      "page_title": "期货持仓",
+      "domain": "futures",
+      "title": "期货公司合约历史持仓",
+      "id": "GET /api/futures/positions/contract-historical",
+      "output": "docs/api/futures/futures-positions.md",
+      "section_anchor": "positions-contract-historical"
+    },
+    {
+      "page": "futures-positions",
+      "page_title": "期货持仓",
+      "domain": "futures",
+      "title": "期货公司列表",
+      "id": "GET /api/futures/positions/company-list",
+      "output": "docs/api/futures/futures-positions.md",
+      "section_anchor": "positions-company-list"
+    },
+    {
+      "page": "futures-prices",
+      "page_title": "期货行情",
+      "domain": "futures",
+      "title": "期货分时",
+      "id": "GET /api/futures/prices/intraday",
+      "output": "docs/api/futures/futures-prices.md",
+      "section_anchor": "prices-intraday"
+    },
+    {
+      "page": "futures-prices",
+      "page_title": "期货行情",
+      "domain": "futures",
+      "title": "期货K线",
+      "id": "GET /api/futures/prices/daily",
+      "output": "docs/api/futures/futures-prices.md",
+      "section_anchor": "prices-daily"
+    },
+    {
+      "page": "futures-reference",
+      "page_title": "期货合约基础资料",
+      "domain": "futures",
+      "title": "期货合约详情",
+      "id": "GET /api/futures/contracts/detail",
+      "output": "docs/api/futures/futures-reference.md",
+      "section_anchor": "contracts-detail"
+    },
+    {
+      "page": "futures-reference",
+      "page_title": "期货合约基础资料",
+      "domain": "futures",
+      "title": "期货合约基础信息列表",
+      "id": "GET /api/futures/contracts/list",
+      "output": "docs/api/futures/futures-reference.md",
+      "section_anchor": "contracts-list"
+    },
+    {
+      "page": "high-frequency",
+      "page_title": "高频动向",
+      "domain": "a-share",
+      "title": "高频历史",
+      "id": "GET /api/a-share/high-frequency/historical",
+      "output": "docs/api/a-share/high-frequency.md",
+      "section_anchor": "high-frequency-historical"
+    },
+    {
+      "page": "high-frequency",
+      "page_title": "高频动向",
+      "domain": "a-share",
+      "title": "单日高频分时",
+      "id": "GET /api/a-share/high-frequency/intraday",
+      "output": "docs/api/a-share/high-frequency.md",
+      "section_anchor": "high-frequency-intraday"
+    },
+    {
+      "page": "hot-list-data",
+      "page_title": "同花顺热榜",
+      "domain": "a-share",
+      "title": "飙升榜",
+      "id": "GET /api/a-share/special-data/skyrocket-list",
+      "output": "docs/api/a-share/hot-list-data.md",
+      "section_anchor": "special-data-skyrocket-list"
+    },
+    {
+      "page": "hot-list-data",
+      "page_title": "同花顺热榜",
+      "domain": "a-share",
+      "title": "A股热股榜单",
+      "id": "GET /api/a-share/special-data/hot-stock-list",
+      "output": "docs/api/a-share/hot-list-data.md",
+      "section_anchor": "special-data-hot-stock-list"
+    },
+    {
+      "page": "hot-list-data",
+      "page_title": "同花顺热榜",
+      "domain": "a-share",
+      "title": "历史热股排行",
+      "id": "GET /api/a-share/special-data/hot-stock-list-history",
+      "output": "docs/api/a-share/hot-list-data.md",
+      "section_anchor": "special-data-hot-stock-list-history"
+    },
+    {
+      "page": "hot-list-data",
+      "page_title": "同花顺热榜",
+      "domain": "a-share",
+      "title": "个股排名走势",
+      "id": "GET /api/a-share/special-data/hot-stock-rank-trend",
+      "output": "docs/api/a-share/hot-list-data.md",
+      "section_anchor": "special-data-hot-stock-rank-trend"
+    },
+    {
+      "page": "limit-up-data",
+      "page_title": "涨跌停与炸板数据",
+      "domain": "a-share",
+      "title": "涨停股票池",
+      "id": "GET /api/a-share/special-data/limit-up-pool",
+      "output": "docs/api/a-share/limit-up-data.md",
+      "section_anchor": "special-data-limit-up-pool"
+    },
+    {
+      "page": "limit-up-data",
+      "page_title": "涨跌停与炸板数据",
+      "domain": "a-share",
+      "title": "跌停股票池",
+      "id": "GET /api/a-share/special-data/limit-down-pool",
+      "output": "docs/api/a-share/limit-up-data.md",
+      "section_anchor": "special-data-limit-down-pool"
+    },
+    {
+      "page": "limit-up-data",
+      "page_title": "涨跌停与炸板数据",
+      "domain": "a-share",
+      "title": "炸板股票池",
+      "id": "GET /api/a-share/special-data/limit-break-pool",
+      "output": "docs/api/a-share/limit-up-data.md",
+      "section_anchor": "special-data-limit-break-pool"
+    },
+    {
+      "page": "limit-up-data",
+      "page_title": "涨跌停与炸板数据",
+      "domain": "a-share",
+      "title": "连板天梯",
+      "id": "GET /api/a-share/special-data/limit-up-ladder",
+      "output": "docs/api/a-share/limit-up-data.md",
+      "section_anchor": "special-data-limit-up-ladder"
+    },
+    {
+      "page": "options-prices",
+      "page_title": "期权行情",
+      "domain": "options",
+      "title": "期权分时",
+      "id": "GET /api/options/prices/intraday",
+      "output": "docs/api/options/options-prices.md",
+      "section_anchor": "prices-intraday"
+    },
+    {
+      "page": "options-prices",
+      "page_title": "期权行情",
+      "domain": "options",
+      "title": "期权K线",
+      "id": "GET /api/options/prices/daily",
+      "output": "docs/api/options/options-prices.md",
+      "section_anchor": "prices-daily"
+    },
+    {
+      "page": "options-reference",
+      "page_title": "期权合约基础资料",
+      "domain": "options",
+      "title": "期权合约详情",
+      "id": "GET /api/options/contracts/detail",
+      "output": "docs/api/options/options-reference.md",
+      "section_anchor": "contracts-detail"
+    },
+    {
+      "page": "options-reference",
+      "page_title": "期权合约基础资料",
+      "domain": "options",
+      "title": "期权合约基础信息列表",
+      "id": "GET /api/options/contracts/list",
+      "output": "docs/api/options/options-reference.md",
+      "section_anchor": "contracts-list"
+    },
+    {
+      "page": "prices",
+      "page_title": "股票行情数据",
+      "domain": "a-share",
+      "title": "行情快照",
+      "id": "GET /api/a-share/prices/snapshot",
+      "output": "docs/api/a-share/prices.md",
+      "section_anchor": "prices-snapshot"
+    },
+    {
+      "page": "prices",
+      "page_title": "股票行情数据",
+      "domain": "a-share",
+      "title": "历史 K 线",
+      "id": "GET /api/a-share/prices/historical",
+      "output": "docs/api/a-share/prices.md",
+      "section_anchor": "prices-historical"
+    }
+  ]
+}

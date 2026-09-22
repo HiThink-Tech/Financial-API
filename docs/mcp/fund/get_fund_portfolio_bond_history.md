@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_fund_portfolio_bond_history`
 >
-> 对应 REST 端点：[`GET /api/fund/portfolio/bond-history`](../../api/fund/portfolio-bond-history.md#基金历史债券持仓)
+> 对应 REST 端点：[`GET /api/fund/portfolio/bond-history`](../../api/fund/fund-portfolio.md#portfolio-bond-history--基金历史债券持仓)
 
 
 ## 工具描述
@@ -32,4 +32,4 @@
 
 ## 返回
 
-返回历史债券持仓明细；`rank` 仅前十大持仓为 `1`–`10`，其余持仓为 `null`。字段见 [基金历史债券持仓](../../api/fund/portfolio-bond-history.md#基金历史债券持仓)。
+返回历史债券持仓明细；`rank` 仅前十大持仓为 `1`–`10`，其余持仓为 `null`。字段见 [基金历史债券持仓](../../api/fund/fund-portfolio.md#portfolio-bond-history--基金历史债券持仓)。

@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_fund_portfolio_asset_allocation`
 >
-> 对应 REST 端点：[`GET /api/fund/portfolio/asset-allocation`](../../api/fund/portfolio-asset-allocation.md#基金资产配置)
+> 对应 REST 端点：[`GET /api/fund/portfolio/asset-allocation`](../../api/fund/fund-portfolio.md#portfolio-asset-allocation--基金资产配置)
 
 
 ## 工具描述
@@ -28,4 +28,4 @@
 
 ## 返回
 
-返回报告日期与各资产配置比例；字段见 [基金资产配置](../../api/fund/portfolio-asset-allocation.md#基金资产配置)。
+返回报告日期与各资产配置比例；字段见 [基金资产配置](../../api/fund/fund-portfolio.md#portfolio-asset-allocation--基金资产配置)。

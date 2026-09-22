@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_a_share_financials_income_statements`
 >
-> 对应 REST 端点：[`GET /api/a-share/financials/income-statements`](../../api/a-share/financials-income-statements.md#利润表)
+> 对应 REST 端点：[`GET /api/a-share/financials/income-statements`](../../api/a-share/financials.md#financials-income-statements--利润表)
 
 
 ## 工具描述
@@ -37,8 +37,8 @@
 ## 返回
 
 返回 `{ timestamp, item: [IncomeStatementItem, ...] }`，按 `period_end` 降序。
-字段含义见 REST 端点 [利润表返回字段](../../api/a-share/financials-income-statements.md#income-statements-return-fields) 与
-[共有响应字段](../../api/a-share/financials-income-statements.md#共有响应字段)。
+字段含义见 REST 端点 [利润表返回字段](../../api/a-share/financials.md#financials-income-statements--income-statements-return-fields) 与
+[共有响应字段](../../api/a-share/financials.md#financials-income-statements--共有响应字段)。
 
 ```json
 {

@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_fund_managers_performance`
 >
-> 对应 REST 端点：[`GET /api/fund/managers/performance`](../../api/fund/managers-performance.md#基金经理业绩)
+> 对应 REST 端点：[`GET /api/fund/managers/performance`](../../api/fund/fund-managers.md#managers-performance--基金经理业绩)
 
 
 ## 工具描述
@@ -30,4 +30,4 @@
 
 ## 返回
 
-返回经理、同类和基准的收益序列；字段见 [基金经理业绩](../../api/fund/managers-performance.md#基金经理业绩)。
+返回经理、同类和基准的收益序列；字段见 [基金经理业绩](../../api/fund/fund-managers.md#managers-performance--基金经理业绩)。

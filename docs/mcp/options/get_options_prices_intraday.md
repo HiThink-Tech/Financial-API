@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_options_prices_intraday`
 >
-> 对应 REST 端点：[`GET /api/options/prices/intraday`](../../api/options/prices-intraday.md#prices-intraday)
+> 对应 REST 端点：[`GET /api/options/prices/intraday`](../../api/options/options-prices.md#prices-intraday--prices-intraday)
 
 
 ## 工具描述
@@ -32,4 +32,4 @@
 
 ## 返回
 
-返回统一数据对象；字段、空值和数组语义见 [期权分时行情](../../api/options/prices-intraday.md#prices-intraday)。
+返回统一数据对象；字段、空值和数组语义见 [期权分时行情](../../api/options/options-prices.md#prices-intraday--prices-intraday)。

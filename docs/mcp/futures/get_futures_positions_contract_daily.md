@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_futures_positions_contract_daily`
 >
-> 对应 REST 端点：[`GET /api/futures/positions/contract-daily`](../../api/futures/positions-contract-daily.md#positions-contract-daily)
+> 对应 REST 端点：[`GET /api/futures/positions/contract-daily`](../../api/futures/futures-positions.md#positions-contract-daily--positions-contract-daily)
 
 
 ## 工具描述
@@ -32,4 +32,4 @@
 
 ## 返回
 
-返回统一数据对象；字段、空值和数组语义见 [期货公司合约日持仓](../../api/futures/positions-contract-daily.md#positions-contract-daily)。
+返回统一数据对象；字段、空值和数组语义见 [期货公司合约日持仓](../../api/futures/futures-positions.md#positions-contract-daily--positions-contract-daily)。

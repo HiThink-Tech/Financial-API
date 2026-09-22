@@ -13,8 +13,8 @@
 | --- | --- | --- |
 | [期货品种资料](varieties-list.md) | `GET /api/futures/varieties/list` | 公开 |
 | [期货品种板块](variety-plates-list.md) | `GET /api/futures/variety-plates/list` | 公开 |
-| [期货合约详情](contracts-detail.md) | `GET /api/futures/contracts/detail` | 公开 |
-| [期货合约基础信息列表](contracts-list.md) | `GET /api/futures/contracts/list` | 公开 |
+| [期货合约详情](futures-reference.md#contracts-detail) | `GET /api/futures/contracts/detail` | 公开 |
+| [期货合约基础信息列表](futures-reference.md#contracts-list) | `GET /api/futures/contracts/list` | 公开 |
 
 ## 行情
 
@@ -22,8 +22,8 @@
 
 | 需求 / 文档 | 接口或工具 | 使用范围 |
 | --- | --- | --- |
-| [期货分时](prices-intraday.md) | `GET /api/futures/prices/intraday` | 公开 |
-| [期货K线](prices-daily.md) | `GET /api/futures/prices/daily` | 公开 |
+| [期货分时](futures-prices.md#prices-intraday) | `GET /api/futures/prices/intraday` | 公开 |
+| [期货K线](futures-prices.md#prices-daily) | `GET /api/futures/prices/daily` | 公开 |
 
 ## 交易日程
 
@@ -40,11 +40,11 @@
 
 | 需求 / 文档 | 接口或工具 | 使用范围 |
 | --- | --- | --- |
-| [期货品种日持仓](positions-variety-daily.md) | `GET /api/futures/positions/variety-daily` | 公开 |
-| [期货公司品种日持仓](positions-company-variety-daily.md) | `GET /api/futures/positions/company-variety-daily` | 公开 |
-| [期货公司合约日持仓](positions-contract-daily.md) | `GET /api/futures/positions/contract-daily` | 公开 |
-| [期货公司合约历史持仓](positions-contract-historical.md) | `GET /api/futures/positions/contract-historical` | 公开 |
-| [期货公司列表](positions-company-list.md) | `GET /api/futures/positions/company-list` | 公开 |
+| [期货品种日持仓](futures-positions.md#positions-variety-daily) | `GET /api/futures/positions/variety-daily` | 公开 |
+| [期货公司品种日持仓](futures-positions.md#positions-company-variety-daily) | `GET /api/futures/positions/company-variety-daily` | 公开 |
+| [期货公司合约日持仓](futures-positions.md#positions-contract-daily) | `GET /api/futures/positions/contract-daily` | 公开 |
+| [期货公司合约历史持仓](futures-positions.md#positions-contract-historical) | `GET /api/futures/positions/contract-historical` | 公开 |
+| [期货公司列表](futures-positions.md#positions-company-list) | `GET /api/futures/positions/company-list` | 公开 |
 
 ## 基差
 
@@ -52,8 +52,8 @@
 
 | 需求 / 文档 | 接口或工具 | 使用范围 |
 | --- | --- | --- |
-| [期货主连最新基差](basis-main-continuous-latest.md) | `GET /api/futures/basis/main-continuous-latest` | 公开 |
-| [期货历史基差](basis-historical.md) | `GET /api/futures/basis/historical` | 公开 |
+| [期货主连最新基差](futures-basis.md#basis-main-continuous-latest) | `GET /api/futures/basis/main-continuous-latest` | 公开 |
+| [期货历史基差](futures-basis.md#basis-historical) | `GET /api/futures/basis/historical` | 公开 |
 
 ## 仓单
 
@@ -70,7 +70,7 @@
 | 需求 / 文档 | 接口或工具 | 使用范围 |
 | --- | --- | --- |
 | [期货F10宏观指标历史数据](fundamentals-indicators-historical.md) | `GET /api/futures/fundamentals/indicators-historical` | 端内专用，客户端可用 |
-| [期货主连资料](contracts-main-continuous-list.md) | `GET /api/futures/contracts/main-continuous-list` | 公开 |
-| [期货主力合约](contracts-main-list.md) | `GET /api/futures/contracts/main-list` | 公开 |
-| [期货次主力合约](contracts-secondary-main-list.md) | `GET /api/futures/contracts/secondary-main-list` | 公开 |
-| [商品指数合约列表](contracts-commodity-index-list.md) | `GET /api/futures/contracts/commodity-index-list` | 公开 |
+| [期货主连资料](futures-contracts-extended.md#contracts-main-continuous-list) | `GET /api/futures/contracts/main-continuous-list` | 公开 |
+| [期货主力合约](futures-contracts-extended.md#contracts-main-list) | `GET /api/futures/contracts/main-list` | 公开 |
+| [期货次主力合约](futures-contracts-extended.md#contracts-secondary-main-list) | `GET /api/futures/contracts/secondary-main-list` | 公开 |
+| [商品指数合约列表](futures-contracts-extended.md#contracts-commodity-index-list) | `GET /api/futures/contracts/commodity-index-list` | 公开 |

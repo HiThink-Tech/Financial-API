@@ -85,4 +85,4 @@ curl 'https://fuyao.aicubes.cn/api/a-share/corporate-actions/adjustment-factors?
 
 > **note 字段约定差异**
 > - 响应中**不返回** `event_type` / `record_date` / `adjust_factor`，事件类型由 `dividend_per_share` 与 `per_share_bonus` 两个数值字段隐式区分。
-> - 复权因子需调用方按 `dividend_per_share` + `per_share_bonus` 自行推导；若仅需复权后价格，直接调用 [`/api/a-share/prices/historical`](prices-historical.md#历史-k-线) 并传 `adjust=forward|backward`。
+> - 复权因子需调用方按 `dividend_per_share` + `per_share_bonus` 自行推导；若仅需复权后价格，直接调用 [`/api/a-share/prices/historical`](prices.md#prices-historical--历史-k-线) 并传 `adjust=forward|backward`。

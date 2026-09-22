@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_fund_indicators_table`
 >
-> 对应 REST 端点：[`GET /api/fund/indicators/table`](../../api/fund/indicators-table.md#基金表格指标)
+> 对应 REST 端点：[`GET /api/fund/indicators/table`](../../api/fund/fund-indicators.md#indicators-table--基金表格指标)
 
 
 ## 工具描述
@@ -32,4 +32,4 @@
 
 ## 返回
 
-返回总数、指标元信息、完整 `thscode`、指标值及 `part_order_thscodes`；详见[基金表格指标](../../api/fund/indicators-table.md#基金表格指标)。
+返回总数、指标元信息、完整 `thscode`、指标值及 `part_order_thscodes`；详见[基金表格指标](../../api/fund/fund-indicators.md#indicators-table--基金表格指标)。

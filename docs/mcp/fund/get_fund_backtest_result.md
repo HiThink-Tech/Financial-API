@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_fund_backtest_result`
 >
-> 对应 REST 端点：[`GET /api/fund/backtest/result`](../../api/fund/backtest-result.md#基金在线回测)
+> 对应 REST 端点：[`GET /api/fund/backtest/result`](../../api/fund/fund-backtest.md#backtest-result--基金在线回测)
 
 
 ## 工具描述
@@ -38,4 +38,4 @@
 
 ## 返回
 
-返回交易明细、回测指标与收益曲线；详见[基金在线回测](../../api/fund/backtest-result.md#基金在线回测)。
+返回交易明细、回测指标与收益曲线；详见[基金在线回测](../../api/fund/fund-backtest.md#backtest-result--基金在线回测)。

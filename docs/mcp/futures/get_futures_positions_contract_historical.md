@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_futures_positions_contract_historical`
 >
-> 对应 REST 端点：[`GET /api/futures/positions/contract-historical`](../../api/futures/positions-contract-historical.md#positions-contract-historical)
+> 对应 REST 端点：[`GET /api/futures/positions/contract-historical`](../../api/futures/futures-positions.md#positions-contract-historical--positions-contract-historical)
 
 
 ## 工具描述
@@ -34,4 +34,4 @@
 
 ## 返回
 
-返回统一数据对象；字段、空值和数组语义见 [期货公司合约历史持仓](../../api/futures/positions-contract-historical.md#positions-contract-historical)。
+返回统一数据对象；字段、空值和数组语义见 [期货公司合约历史持仓](../../api/futures/futures-positions.md#positions-contract-historical--positions-contract-historical)。

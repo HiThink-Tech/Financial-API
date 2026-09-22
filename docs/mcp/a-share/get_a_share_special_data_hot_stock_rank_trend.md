@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_a_share_special_data_hot_stock_rank_trend`
 >
-> 对应 REST 端点：[`GET /api/a-share/special-data/hot-stock-rank-trend`](../../api/a-share/special-data-hot-stock-rank-trend.md#个股排名走势)
+> 对应 REST 端点：[`GET /api/a-share/special-data/hot-stock-rank-trend`](../../api/a-share/hot-list-data.md#special-data-hot-stock-rank-trend--个股排名走势)
 
 
 ## 工具描述
@@ -33,7 +33,7 @@
 
 ## 返回
 
-返回 `{ timestamp, item: [HotListRankTrendItem, ...] }`。字段含义见 REST 端点 [个股排名走势](../../api/a-share/special-data-hot-stock-rank-trend.md#个股排名走势)。
+返回 `{ timestamp, item: [HotListRankTrendItem, ...] }`。字段含义见 REST 端点 [个股排名走势](../../api/a-share/hot-list-data.md#special-data-hot-stock-rank-trend--个股排名走势)。
 
 ```json
 {

@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_options_contracts_detail`
 >
-> 对应 REST 端点：[`GET /api/options/contracts/detail`](../../api/options/contracts-detail.md#contracts-detail)
+> 对应 REST 端点：[`GET /api/options/contracts/detail`](../../api/options/options-reference.md#contracts-detail--contracts-detail)
 
 
 ## 工具描述
@@ -28,4 +28,4 @@
 
 ## 返回
 
-返回统一数据对象；字段、空值和数组语义见 [期权合约详情](../../api/options/contracts-detail.md#contracts-detail)。
+返回统一数据对象；字段、空值和数组语义见 [期权合约详情](../../api/options/options-reference.md#contracts-detail--contracts-detail)。

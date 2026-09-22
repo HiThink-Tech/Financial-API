@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_a_share_index_prices_historical`
 >
-> 对应 REST 端点：[`GET /api/a-share-index/prices/historical`](../../api/index/prices-historical.md#指数历史-k-线)
+> 对应 REST 端点：[`GET /api/a-share-index/prices/historical`](../../api/index/a-share-index.md#prices-historical--指数历史-k-线)
 
 
 ## 工具描述
@@ -36,7 +36,7 @@
 ## 返回
 
 返回 `{ timestamp, adjust, item: [PriceBarItem, ...] }`，其中 `adjust` 固定为 `null`。字段含义见 REST 端点
-[指数历史 K 线](../../api/index/prices-historical.md#指数历史-k-线)。
+[指数历史 K 线](../../api/index/a-share-index.md#prices-historical--指数历史-k-线)。
 
 ```json
 {

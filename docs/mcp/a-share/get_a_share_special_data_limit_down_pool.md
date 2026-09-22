@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_a_share_special_data_limit_down_pool`
 >
-> 对应 REST 端点：[`GET /api/a-share/special-data/limit-down-pool`](../../api/a-share/special-data-limit-down-pool.md#跌停股票池)
+> 对应 REST 端点：[`GET /api/a-share/special-data/limit-down-pool`](../../api/a-share/limit-up-data.md#special-data-limit-down-pool--跌停股票池)
 
 
 ## 工具描述
@@ -35,4 +35,4 @@
 
 ## 返回
 
-返回 `{ timestamp, pagination, item[] }`；字段见 [跌停股票池](../../api/a-share/special-data-limit-down-pool.md#跌停股票池)。
+返回 `{ timestamp, pagination, item[] }`；字段见 [跌停股票池](../../api/a-share/limit-up-data.md#special-data-limit-down-pool--跌停股票池)。

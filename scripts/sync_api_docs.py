@@ -265,6 +265,7 @@ def collect(source: Path, config: dict) -> tuple[list[dict], dict]:
                         title=title,
                         source=filename,
                         page=page,
+                        page_title=meta["title"],
                         anchor=section_anchor,
                         fragments=fragments,
                         domain=domain,
@@ -337,6 +338,129 @@ def collect(source: Path, config: dict) -> tuple[list[dict], dict]:
     return records, hashes
 
 
+def group_rest_pages(outputs: dict[str, str], records: list[dict]) -> dict[str, str]:
+    """Render one REST document per frontend page and redirect local links."""
+    rest = [record for record in records if record["kind"] == "rest"]
+    atomic_records = [(record, record["output"]) for record in rest]
+    groups: dict[tuple[str, str], list[dict]] = {}
+    for record in rest:
+        groups.setdefault((record["domain"], record["page"]), []).append(record)
+
+    destinations: dict[str, str] = {}
+    for (domain, page), items in groups.items():
+        target = f"docs/api/{domain}/{page}.md" if len(items) > 1 else items[0]["output"]
+        for record in items:
+            old = record["output"]
+            destinations[old] = target + (f"#{Path(old).stem}" if len(items) > 1 else "")
+
+    def rewrite_links(content: str, old: str, target: str) -> str:
+        def replace(match: re.Match[str]) -> str:
+            label, url = match.groups()
+            if re.match(r"\w+:|//", url):
+                return match.group(0)
+            path, _, fragment = url.partition("#")
+            original = (
+                posixpath.normpath(posixpath.join(posixpath.dirname(old), path))
+                if path else old
+            )
+            resolved = destinations.get(original)
+            if resolved:
+                destination, _, section = resolved.partition("#")
+                new_fragment = (
+                    f"{section}--{unquote(fragment)}" if section and fragment
+                    else section or fragment
+                )
+            else:
+                destination, new_fragment = original, fragment
+            relative = "" if destination == target else rel_link(target, destination)
+            return f"[{label}]({relative}{'#' + new_fragment if new_fragment else ''})"
+
+        parts = re.split(r"(```[^\n]*\n.*?^```[^\n]*$)", content, flags=re.S | re.M)
+        return "".join(
+            part if part.startswith("```") else LINK.sub(replace, part)
+            for part in parts
+        )
+
+    def section_anchors(content: str, stem: str) -> str:
+        counts: dict[str, int] = {}
+        lines, in_fence = [], False
+        for line in content.splitlines():
+            if line.startswith("```"):
+                in_fence = not in_fence
+            explicit = re.fullmatch(r'<a id="([^"]+)"></a>', line)
+            if explicit and not in_fence:
+                line = f'<a id="{stem}--{explicit.group(1)}"></a>'
+            heading = re.match(r"^#{1,6} (.+)$", line) if not in_fence else None
+            if heading:
+                slug = anchor(heading.group(1))
+                index = counts.get(slug, 0)
+                counts[slug] = index + 1
+                suffix = f"-{index}" if index else ""
+                lines.append(f'<a id="{stem}--{slug}{suffix}"></a>')
+            lines.append(line)
+        return "\n".join(lines)
+
+    grouped = {
+        name: rewrite_links(content, name, name)
+        for name, content in outputs.items()
+        if name not in destinations
+    }
+    for (domain, page), items in groups.items():
+        first = items[0]["output"]
+        target = destinations[first].partition("#")[0]
+        if target in grouped:
+            raise DocumentError(f"Duplicate REST page target: {target}")
+        if len(items) == 1:
+            grouped[target] = rewrite_links(outputs[first], first, target)
+            continue
+        if len({(r["page_title"], r["access"], r["status"]) for r in items}) != 1:
+            raise DocumentError(f"Inconsistent REST page metadata: {domain}/{page}")
+        first_lines = outputs[first].splitlines()
+        banner = first_lines[2]
+        parts = [f"# {items[0]['page_title']}", banner]
+        parts.append("\n".join(
+            f"- [{r['title']}](#{Path(r['output']).stem})：`{r['id']}`"
+            for r in items
+        ))
+        first_preamble = ""
+        for number, record in enumerate(items):
+            old = record["output"]
+            content = outputs[old]
+            section = re.search(r"^## " + re.escape(record["title"]) + r"\s*$", content, re.M)
+            if not section:
+                raise DocumentError(f"Missing REST interface section: {old}")
+            preamble = content[:section.start()]
+            preamble = re.sub(
+                r"^# [^\n]+\n\s*\[业务导航\]\(README\.md\)[^\n]*\s*",
+                "",
+                preamble,
+            ).strip()
+            plain = re.sub(r'^<a id="[^"]+"></a>\s*', "", preamble, flags=re.M).strip()
+            stem = Path(old).stem
+            if number == 0:
+                first_preamble = plain
+                parts.append(section_anchors(rewrite_links(preamble, old, target), stem))
+            body = content[section.start():].strip()
+            if number:
+                if plain != first_preamble:
+                    heading, _, remainder = body.partition("\n")
+                    body = f"{heading}\n\n{preamble}\n\n{remainder.strip()}"
+                else:
+                    aliases = re.findall(r'^<a id="([^"]+)"></a>\s*$', preamble, re.M)
+                    body = "\n".join(f'<a id="{alias}"></a>' for alias in aliases) + "\n" + body
+            rendered = section_anchors(rewrite_links(body, old, target), stem)
+            parts.append(f'<a id="{stem}"></a>\n{rendered}')
+            record["output"] = target
+            record["section_anchor"] = stem
+        grouped[target] = "\n\n".join(parts).rstrip() + "\n"
+    for record, original in atomic_records:
+        combined = grouped[record["output"]]
+        for block in re.findall(r"```[^\n]*\n.*?^```", outputs[original], re.S | re.M):
+            if block not in combined:
+                raise DocumentError(f"REST code example lost in grouping: {record['id']}")
+    return grouped
+
+
 def render(source: Path, config: dict) -> tuple[dict[str, str], dict]:
     records, hashes = collect(source, config)
     outputs, pages, anchors = {}, {}, {}
@@ -347,7 +471,7 @@ def render(source: Path, config: dict) -> tuple[dict[str, str], dict]:
             anchors[(key, r["anchor"])] = (r["output"], "")
         for original, local in r.get("fragments", {}).items():
             anchors[(key, original)] = (r["output"], local)
-    # Module landing pages preserve the source page's local address and aliases.
+    # Resolve source-page links to interface sections before grouping outputs.
     page_targets = {}
     for key, items in pages.items():
         if len(items) == 1:
@@ -380,8 +504,8 @@ def render(source: Path, config: dict) -> tuple[dict[str, str], dict]:
                 same = [x for x in candidates if x["endpoint"] == r["endpoint"]]
                 if len(same) == 1 and (not fragment or (key, fragment) not in anchors):
                     target = same[0]["output"]
-                # Section links resolved to their standalone document. Generic
-                # field anchors remain on the selected atomic document.
+                # Keep the selected interface and field anchor in the
+                # intermediate document; grouping retargets both below.
                 destination_fragment = (
                     resolved_anchor[1] if resolved_anchor else fragment
                 )
@@ -485,7 +609,24 @@ def render(source: Path, config: dict) -> tuple[dict[str, str], dict]:
                         text += f"| [{r['title']}]({rel_link(domain_path, r['output'])}) | `{r['id']}` | {scope} |\n"
                 outputs[domain_path] += text
         outputs[entry] = entry_template.replace("{{domains}}", domain_links.rstrip())
+    outputs = group_rest_pages(outputs, records)
     entries = [{k: v for k, v in r.items() if k != "body"} for r in records]
+    outputs["docs/api/page-map.json"] = json.dumps(
+        {
+            "version": 1,
+            "entries": [
+                {
+                    key: record[key]
+                    for key in ("page", "page_title", "domain", "title", "id", "output")
+                }
+                | {"section_anchor": record.get("section_anchor", "")}
+                for record in records
+                if record["kind"] == "rest"
+            ],
+        },
+        ensure_ascii=False,
+        indent=2,
+    ) + "\n"
     for filename, expected in hashes.items():
         if digest((source / filename).read_text(encoding="utf-8")) != expected:
             raise DocumentError(f"Source changed during synchronization: {filename}")

@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+from collections import Counter
 import re
 import subprocess
 import sys
 from pathlib import Path
+
+from .contract_doc_inventory import inventory
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -112,17 +115,35 @@ def test_root_skills_are_consolidated_to_hithink_finance() -> None:
 def test_upstream_api_contract_has_one_canonical_source_and_skill_mirror() -> None:
     canonical_root = REPO_ROOT / "docs" / "api"
     mirror_root = REPO_ROOT / "skills" / "hithink-finance" / "references" / "api"
-    contract_files = {
-        path.relative_to(canonical_root).as_posix()
+    canonical_contracts = {record["id"] for record in inventory() if record["kind"] == "rest"}
+    mirrored_contracts = [
+        endpoint
+        for path in mirror_root.rglob("*.md")
+        if path.name != "market-dumps.md"
+        for endpoint in re.findall(
+            r"^`?(GET /api/[a-z0-9/-]+)`?$",
+            path.read_text(encoding="utf-8"),
+            re.M,
+        )
+    ]
+    assert Counter(mirrored_contracts) == Counter({item: 1 for item in canonical_contracts})
+    assert (canonical_root / "market-dumps.md").read_text(encoding="utf-8") == (
+        mirror_root / "market-dumps.md"
+    ).read_text(encoding="utf-8")
+    canonical_files = {
+        path.relative_to(canonical_root).as_posix(): path
         for path in canonical_root.rglob("*.md")
     }
-    assert {
-        path.relative_to(mirror_root).as_posix() for path in mirror_root.rglob("*.md")
-    } == contract_files
-    for filename in contract_files:
-        assert (canonical_root / filename).read_bytes() == (
-            mirror_root / filename
-        ).read_bytes()
+    mirrored_files = {
+        path.relative_to(mirror_root).as_posix(): path
+        for path in mirror_root.rglob("*.md")
+    }
+    assert canonical_files.keys() == mirrored_files.keys()
+    assert all(
+        canonical_files[name].read_text(encoding="utf-8")
+        == mirrored_files[name].read_text(encoding="utf-8")
+        for name in canonical_files
+    )
     assert read("skills/hithink-finance/references/api.md").startswith(
         "# REST API 契约"
     )
@@ -171,7 +192,7 @@ def test_obsolete_local_llms_contracts_and_legacy_skill_names_are_absent() -> No
     skill_files = [
         path
         for path in (REPO_ROOT / "skills" / "hithink-finance").rglob("*")
-        if path.is_file()
+        if path.is_file() and path.suffix in {".md", ".yaml"}
     ]
     skill_text = "\n".join(path.read_text(encoding="utf-8") for path in skill_files)
     assert "llms-full" not in skill_text

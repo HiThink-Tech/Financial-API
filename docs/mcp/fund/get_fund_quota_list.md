@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_fund_quota_list`
 >
-> 对应 REST 端点：[`GET /api/fund/quota/list`](../../api/fund/quota-list.md#qdii额度列表)
+> 对应 REST 端点：[`GET /api/fund/quota/list`](../../api/fund/fund-quota.md#quota-list--qdii额度列表)
 
 
 ## 工具描述
@@ -30,4 +30,4 @@
 
 ## 返回
 
-返回分类下的完整基金 `thscode`、名称、额度、近一年收益率和可空 `classify` 类别列表；详见[QDII额度列表](../../api/fund/quota-list.md#qdii额度列表)。
+返回分类下的完整基金 `thscode`、名称、额度、近一年收益率和可空 `classify` 类别列表；详见[QDII额度列表](../../api/fund/fund-quota.md#quota-list--qdii额度列表)。

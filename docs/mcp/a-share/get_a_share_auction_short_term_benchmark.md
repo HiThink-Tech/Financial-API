@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_a_share_auction_short_term_benchmark`
 >
-> 对应 REST 端点：[`GET /api/a-share/auction/short-term-benchmark`](../../api/a-share/auction-short-term-benchmark.md#短线风向标竞价基准)
+> 对应 REST 端点：[`GET /api/a-share/auction/short-term-benchmark`](../../api/a-share/auction.md#auction-short-term-benchmark--短线风向标竞价基准)
 
 
 ## 工具描述
@@ -29,4 +29,4 @@
 
 ## 返回
 
-返回 `{ timestamp, date, date_ms, item[] }`。`timestamp` 是接口响应组装时间，`date` / `date_ms` 是最终查询日期；明细包含标准代码、名称、竞价涨跌幅和标签。字段见 [短线风向标竞价基准](../../api/a-share/auction-short-term-benchmark.md#短线风向标竞价基准)。
+返回 `{ timestamp, date, date_ms, item[] }`。`timestamp` 是接口响应组装时间，`date` / `date_ms` 是最终查询日期；明细包含标准代码、名称、竞价涨跌幅和标签。字段见 [短线风向标竞价基准](../../api/a-share/auction.md#auction-short-term-benchmark--短线风向标竞价基准)。

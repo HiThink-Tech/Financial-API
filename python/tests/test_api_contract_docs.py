@@ -1,4 +1,4 @@
-"""Independent checks for the atomic REST contract and navigation graph."""
+"""Independent checks for the grouped REST contract and navigation graph."""
 
 import json
 from datetime import datetime, timedelta, timezone
@@ -17,7 +17,19 @@ def body(endpoint):
     return (ROOT / record["output"]).read_text(encoding="utf-8")
 
 
-def test_atomic_identity_and_output_integrity():
+def interface_body(record):
+    text = (ROOT / record["output"]).read_text(encoding="utf-8")
+    if not record["section_anchor"]:
+        return text
+    marker = f'<a id="{record["section_anchor"]}"></a>'
+    start = text.index(marker)
+    siblings = [item for item in REST if item["output"] == record["output"]]
+    following = siblings[siblings.index(record) + 1:]
+    end = text.index(f'<a id="{following[0]["section_anchor"]}"></a>', start) if following else len(text)
+    return text[start:end]
+
+
+def test_grouped_identity_and_output_integrity():
     assert not (ROOT / 'docs/api/common').exists()
     assert not (ROOT / 'skills/hithink-finance/references/api/common').exists()
     assert len(REST) == len({r["id"] for r in REST})
@@ -30,7 +42,7 @@ def test_atomic_identity_and_output_integrity():
     }
     assert actual == {r["output"] for r in REST}
     for record in REST:
-        text = (ROOT / record["output"]).read_text(encoding="utf-8")
+        text = interface_body(record)
         assert record["id"] in text
         assert "请求参数" in text
         assert "```bash" in text and "```json" in text
@@ -38,10 +50,11 @@ def test_atomic_identity_and_output_integrity():
         assert "> **info 通用约定**" not in text
         assert "MCP Tool" not in text
         assert "../../mcp/" not in text
-        assert ("**端内专用**" in text) == (record["access"] == "client-only")
+        page = (ROOT / record["output"]).read_text(encoding="utf-8")
+        assert ("**端内专用**" in page) == (record["access"] == "client-only")
 
 
-def test_navigation_reaches_every_atomic_document():
+def test_navigation_reaches_every_rest_page():
     for kind, directory in [("rest", "api"), ("mcp", "mcp")]:
         visited, queue = set(), [ROOT / f"docs/{directory}/README.md"]
         while queue:

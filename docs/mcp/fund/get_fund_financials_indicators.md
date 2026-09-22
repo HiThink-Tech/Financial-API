@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_fund_financials_indicators`
 >
-> 对应 REST 端点：[`GET /api/fund/financials/indicators`](../../api/fund/financials-indicators.md#基金财务指标)
+> 对应 REST 端点：[`GET /api/fund/financials/indicators`](../../api/fund/fund-financials.md#financials-indicators--基金财务指标)
 
 
 ## 工具描述
@@ -28,4 +28,4 @@
 
 ## 返回
 
-返回报告期及基金主要财务指标；字段见 [基金财务指标](../../api/fund/financials-indicators.md#基金财务指标)。
+返回报告期及基金主要财务指标；字段见 [基金财务指标](../../api/fund/fund-financials.md#financials-indicators--基金财务指标)。

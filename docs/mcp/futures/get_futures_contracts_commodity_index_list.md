@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_futures_contracts_commodity_index_list`
 >
-> 对应 REST 端点：[`GET /api/futures/contracts/commodity-index-list`](../../api/futures/contracts-commodity-index-list.md#futures-commodity-indexes)
+> 对应 REST 端点：[`GET /api/futures/contracts/commodity-index-list`](../../api/futures/futures-contracts-extended.md#contracts-commodity-index-list--futures-commodity-indexes)
 
 
 ## 工具描述

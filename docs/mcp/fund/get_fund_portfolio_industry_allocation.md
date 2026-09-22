@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_fund_portfolio_industry_allocation`
 >
-> 对应 REST 端点：[`GET /api/fund/portfolio/industry-allocation`](../../api/fund/portfolio-industry-allocation.md#基金行业配置)
+> 对应 REST 端点：[`GET /api/fund/portfolio/industry-allocation`](../../api/fund/fund-portfolio.md#portfolio-industry-allocation--基金行业配置)
 
 
 ## 工具描述
@@ -28,4 +28,4 @@
 
 ## 返回
 
-返回报告期、行业名称与配置比例；字段见 [基金行业配置](../../api/fund/portfolio-industry-allocation.md#基金行业配置)。
+返回报告期、行业名称与配置比例；字段见 [基金行业配置](../../api/fund/fund-portfolio.md#portfolio-industry-allocation--基金行业配置)。

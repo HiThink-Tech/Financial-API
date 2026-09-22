@@ -20,7 +20,7 @@ API、MCP、CLI、Python SDK 和 Agent Skill 适合自主接入；同花顺AI客
 
 ## 文档边界
 
-- `docs/api/` 与 `docs/mcp/` 按业务域组织原子文档；正文从文档源同步，业务域首页集中提供分组和选路条件。统一 Skill 通过脚本递归镜像。
+- `docs/api/` 按前端单接口页和多接口模块页组织 REST 契约；`docs/mcp/` 按业务域保留原子工具文档。业务域首页集中提供分组和选路条件，统一 Skill 镜像 REST 页面并按业务域合并 MCP 文档。
 - 文档全文聚合：<https://fuyao.aicubes.cn/llms-full.txt>。本地查询按业务域首页进入目标接口或工具页。
 - `hithink-finance-cli/` 只说明 CLI 的安装、命令和运行语义，不复制上游响应字段契约。
 - `python/` 只说明 Python toolkit、SDK、marketdb 和脚本运行方式，不复制上游响应字段契约。
@@ -35,4 +35,4 @@ python scripts/sync_skill_contracts.py
 python scripts/sync_skill_contracts.py --check
 ```
 
-第一条命令更新独立发布 Skill 中的镜像，第二条命令用于 CI 或提交前检查。不要直接编辑 `skills/hithink-finance/references/api/` 或 `skills/hithink-finance/references/mcp.md`。
+第一条命令更新独立发布 Skill 中的文档，第二条命令用于 CI 或提交前检查。不要直接编辑 `skills/hithink-finance/references/api/` 或 `skills/hithink-finance/references/mcp/`。

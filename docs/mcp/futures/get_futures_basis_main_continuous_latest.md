@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_futures_basis_main_continuous_latest`
 >
-> 对应 REST 端点：[`GET /api/futures/basis/main-continuous-latest`](../../api/futures/basis-main-continuous-latest.md#basis-main-continuous-latest)
+> 对应 REST 端点：[`GET /api/futures/basis/main-continuous-latest`](../../api/futures/futures-basis.md#basis-main-continuous-latest--basis-main-continuous-latest)
 
 
 ## 工具描述
@@ -28,4 +28,4 @@
 
 ## 返回
 
-返回统一数据对象；字段、空值和数组语义见 [期货主连最新基差](../../api/futures/basis-main-continuous-latest.md#basis-main-continuous-latest)。
+返回统一数据对象；字段、空值和数组语义见 [期货主连最新基差](../../api/futures/futures-basis.md#basis-main-continuous-latest--basis-main-continuous-latest)。

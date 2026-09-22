@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_fund_quota_summary`
 >
-> 对应 REST 端点：[`GET /api/fund/quota/summary`](../../api/fund/quota-summary.md#qdii额度汇总)
+> 对应 REST 端点：[`GET /api/fund/quota/summary`](../../api/fund/fund-quota.md#quota-summary--qdii额度汇总)
 
 
 ## 工具描述
@@ -28,4 +28,4 @@
 
 ## 返回
 
-返回分类额度汇总；详见[QDII额度汇总](../../api/fund/quota-summary.md#qdii额度汇总)。
+返回分类额度汇总；详见[QDII额度汇总](../../api/fund/fund-quota.md#quota-summary--qdii额度汇总)。

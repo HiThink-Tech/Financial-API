@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_fund_portfolio_stock_report_dates`
 >
-> 对应 REST 端点：[`GET /api/fund/portfolio/stock-report-dates`](../../api/fund/portfolio-stock-report-dates.md#基金股票持仓报告日期)
+> 对应 REST 端点：[`GET /api/fund/portfolio/stock-report-dates`](../../api/fund/fund-portfolio.md#portfolio-stock-report-dates--基金股票持仓报告日期)
 
 
 ## 工具描述
@@ -30,4 +30,4 @@
 
 ## 返回
 
-返回报告类型、名称与起止日期；字段见 [基金股票持仓报告日期](../../api/fund/portfolio-stock-report-dates.md#基金股票持仓报告日期)。
+返回报告类型、名称与起止日期；字段见 [基金股票持仓报告日期](../../api/fund/fund-portfolio.md#portfolio-stock-report-dates--基金股票持仓报告日期)。

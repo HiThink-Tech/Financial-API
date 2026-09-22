@@ -1,94 +1,20 @@
-# MCP 接入与 Agent 路由契约
+# MCP 接入与工具路由
 
-同花顺金融数据服务提供 6 个托管 MCP 端点，适合 Claude Desktop、Cursor、Windsurf 等支持 HTTP MCP 的 Chat/Agent 客户端。六个端点共用在 <https://fuyao.aicubes.cn/admin/> 获取的 API Key，无需在本地运行 MCP Server。
+已连接 MCP 的 Agent 先按用户意图选择业务域，再读取对应文档。业务域文档按工具保留名称、描述、入参和响应摘要；当前连接的 `tools/list` 和工具 schema 优先于静态文档，决定工具是否可用及其实际契约。若工具不在当前列表中，不按静态文档构造调用。
 
-按[业务域路由](mcp/README.md)读取目标工具的本地能力快照，再以当前连接的工具名和 schema 核对调用参数。
+| 业务域 | 客户端服务名 | 地址 | 路由 |
+| --- | --- | --- | --- |
+| 标的搜索与代码表 | `hithink-finance-meta` | `https://fuyao.aicubes.cn/mcp/meta` | [基础数据](mcp/meta.md) |
+| A 股行情、财务、竞价与特色数据 | `hithink-finance-a-share` | `https://fuyao.aicubes.cn/mcp/a-share` | [A 股](mcp/a-share.md) |
+| 指数与板块 | `hithink-finance-a-share-index` | `https://fuyao.aicubes.cn/mcp/a-share-index` | [指数](mcp/index.md) |
+| 公募基金 | `hithink-finance-fund` | `https://fuyao.aicubes.cn/mcp/fund` | [基金](mcp/fund.md) |
+| 期货 | `hithink-finance-futures` | `https://fuyao.aicubes.cn/mcp/futures` | [期货](mcp/futures.md) |
+| 期权 | `hithink-finance-options` | `https://fuyao.aicubes.cn/mcp/options` | [期权](mcp/options.md) |
 
-## 六个服务
+用户只给名称、简称或不完整代码时，先在基础数据域消歧为唯一 `thscode`。只检查本次需要的服务和工具；调用前读取目标工具的实时 schema，不重复加载全部工具定义。分页全集、全市场或长序列结果应落盘，只向会话返回摘要。
 
-| 客户端服务名 | 地址 | 职责 |
-| --- | --- | --- |
-| `hithink-finance-a-share` | `https://fuyao.aicubes.cn/mcp/a-share` | A 股行情、公司行为、财务、估值、集合竞价、日历和特色数据 |
-| `hithink-finance-a-share-index` | `https://fuyao.aicubes.cn/mcp/a-share-index` | 指数/板块目录、成分和行情 |
-| `hithink-finance-meta` | `https://fuyao.aicubes.cn/mcp/meta` | 标的搜索、名称消歧和代码表 |
-| `hithink-finance-fund` | `https://fuyao.aicubes.cn/mcp/fund` | 基金资料、经理、披露、财务、回测、指标、QDII 额度、净值、收益、资讯和场内行情 |
-| `hithink-finance-futures` | `https://fuyao.aicubes.cn/mcp/futures` | 期货品种、合约、持仓、仓单、基差、日程和行情 |
-| `hithink-finance-options` | `https://fuyao.aicubes.cn/mcp/options` | 期权品种、合约和行情 |
+## 连接与认证
 
-`hithink-finance-*` 是推荐写入客户端配置的本地服务名；URL 路径保持不变。
+六个端点共用在 <https://fuyao.aicubes.cn/admin/> 获取的 API Key，HTTP MCP 客户端通过 `X-api-key` 请求头传递。推荐从用户级 `HITHINK_FINANCE_API_KEY` 插值；客户端不继承环境变量时，从已配置的统一凭据来源写入客户端 Secret。
 
-## 默认配置
-
-不同客户端的配置文件位置和 Secret 插值语法不同。下面给出通用 HTTP MCP 结构，默认一次配置全部六个端点，之后由 Agent 按意图只调用需要的服务：
-
-```json
-{
-  "mcpServers": {
-    "hithink-finance-a-share": {
-      "type": "http",
-      "url": "https://fuyao.aicubes.cn/mcp/a-share",
-      "headers": { "X-api-key": "${HITHINK_FINANCE_API_KEY}" }
-    },
-    "hithink-finance-a-share-index": {
-      "type": "http",
-      "url": "https://fuyao.aicubes.cn/mcp/a-share-index",
-      "headers": { "X-api-key": "${HITHINK_FINANCE_API_KEY}" }
-    },
-    "hithink-finance-meta": {
-      "type": "http",
-      "url": "https://fuyao.aicubes.cn/mcp/meta",
-      "headers": { "X-api-key": "${HITHINK_FINANCE_API_KEY}" }
-    },
-    "hithink-finance-fund": {
-      "type": "http",
-      "url": "https://fuyao.aicubes.cn/mcp/fund",
-      "headers": { "X-api-key": "${HITHINK_FINANCE_API_KEY}" }
-    },
-    "hithink-finance-futures": {
-      "type": "http",
-      "url": "https://fuyao.aicubes.cn/mcp/futures",
-      "headers": { "X-api-key": "${HITHINK_FINANCE_API_KEY}" }
-    },
-    "hithink-finance-options": {
-      "type": "http",
-      "url": "https://fuyao.aicubes.cn/mcp/options",
-      "headers": { "X-api-key": "${HITHINK_FINANCE_API_KEY}" }
-    }
-  }
-}
-```
-
-`HITHINK_FINANCE_API_KEY` 是各接入方式共用的推荐变量。若客户端不继承用户级环境变量，由 Agent 从已经配置的统一凭据来源写入客户端 Secret，不要求用户重新提供；用户也可以直接把 Key 提供给 Agent 上下文完成代配。Agent 不复述，并提示聊天平台可能保留消息记录。不得把真实 Key 写入仓库、Issue、日志或可共享配置。
-
-## Agent 决策流程
-
-1. **先理解意图**：用 [业务域路由](mcp/README.md) 选择业务域和工具。
-2. **先消歧再取数**：用户只给名称、ticker 或不完整代码时，先调用 `hithink-finance-meta` 的搜索工具确认唯一 `thscode`。
-3. **只读取相关工具**：确定业务域后，在业务域首页的分组中读取目标工具文档；返回字段通过文档中的 REST 链接按需读取：
-   - [A 股工具](mcp/a-share/README.md)
-   - [指数与板块工具](mcp/index/README.md)
-   - [标的元数据工具](mcp/meta/README.md)
-   - [基金工具](mcp/fund/README.md)
-   - [期货工具](mcp/futures/README.md)
-   - [期权工具](mcp/options/README.md)
-4. **按需检查连接**：只有准备使用某个服务，或用户明确要求诊断连接时，才检查该服务是否连接并读取当前 `tools/list`。
-5. **执行最小调用**：认证检查也使用目标任务所需的最小有界请求，禁止用省略标的的全市场快照做探针。
-6. **控制结果规模**：分页全集、全市场、长时间序列或大量成分股必须落盘，只返回路径、行数和必要摘要。
-
-Skill 中的能力快照用于意图识别、工具选择和参数避错；当前连接的 `tools/list` 只用于确认工具是否实际存在，以及调用时的参数名、类型、必填项和枚举是否发生变化。不要在每次请求前重复读取所有 schema。
-
-## 认证与恢复
-
-- 所有服务使用请求头 `X-api-key`。
-- 业务成功条件是响应信封 `code=0`，不能只看 HTTP 200。
-- `code=2003`、`Invalid or revoked API key`、401 或 403 通常表示 Key 缺失、无效、已撤销或客户端没有正确传递请求头。
-- 认证失败时，先重新检查 `HITHINK_FINANCE_API_KEY` 和 Skill 的用户级凭据文件。仍未配置时，引导用户前往 <https://fuyao.aicubes.cn/admin/> 创建 Key，并说明既可以按平台命令配置，也可以交给 Agent 代为安全配置；不得强制用户在对话中粘贴，也不得复述收到的 Key。
-- 更新配置后通常需要重启或重连 MCP 客户端，再对目标服务执行一次最小验证。
-
-## 能力边界
-
-- 工具清单按[业务域](mcp/README.md)维护，待上线工具单独标记，当前不可调用。
-- MCP 适合 Chat 场景和自然语言调用；终端自动化、本地 DuckDB 与大结果工作流优先考虑 `hithink-finance` CLI。
-- 当前快照不覆盖分钟 K、tick、Level-2、港股、美股、基金申赎交易、研报或自建回测引擎；基金资讯仅提供已公开文章的元数据列表。
-- 文档或静态快照不能证明当前会话已经连接，也不能证明账号具有相应权限；只有实际授权请求才能完成线上验证。
-- 未支持能力必须明确说明，不得用近似数据、静态示例或模拟数据冒充。
+业务成功需检查响应信封 `code=0`。认证失败时先检查客户端是否传入 Key，再检查已有凭据来源；更新后重连目标服务并做最小有界验证。静态路由不能证明会话已连接或账号具有权限。

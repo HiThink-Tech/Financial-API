@@ -1,4 +1,8 @@
 from pathlib import Path
+import re
+import shutil
+import subprocess
+import sys
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -18,7 +22,7 @@ def _api_capability_text() -> str:
 
 def _mcp_domain_text(domain: str) -> str:
     entry = (SKILL_ROOT / "references/mcp.md").read_text(encoding="utf-8")
-    return entry + (SKILL_ROOT / "references/mcp" / domain / "README.md").read_text(
+    return entry + (SKILL_ROOT / "references/mcp" / f"{domain}.md").read_text(
         encoding="utf-8"
     )
 
@@ -79,6 +83,53 @@ def test_hithink_finance_mcp_entry_routes_all_managed_services() -> None:
         "hithink-finance-options",
     ):
         assert service in entry
+
+    route_root = SKILL_ROOT / "references" / "mcp"
+    assert {path.name for path in route_root.rglob("*.md")} == {
+        "meta.md",
+        "a-share.md",
+        "index.md",
+        "fund.md",
+        "futures.md",
+        "options.md",
+    }
+    for route in route_root.glob("*.md"):
+        text = route.read_text(encoding="utf-8")
+        source_tools = {
+            path.stem
+            for path in (REPO_ROOT / "docs" / "mcp" / route.stem).glob("get_*.md")
+        }
+        sections = re.findall(r"^### .+（`(get_[a-z0-9_]+)`）$", text, re.M)
+        assert set(sections) == source_tools
+        assert len(sections) == len(source_tools)
+        assert text.count("**描述**") == len(sections)
+        assert text.count("**入参**") == len(sections)
+        assert text.count("**响应**") == len(sections)
+        assert "对应 REST 端点" not in text
+        assert "## 调用示例" not in text
+        assert f"mcp/{route.name}" in entry
+
+
+def test_public_checkout_can_check_skill_without_internal_sync_state(tmp_path: Path) -> None:
+    for relative in ("docs/api", "docs/mcp", "skills/hithink-finance"):
+        shutil.copytree(
+            REPO_ROOT / relative,
+            tmp_path / relative,
+            ignore=shutil.ignore_patterns("*.zip", "__pycache__"),
+        )
+    script = tmp_path / "scripts/sync_skill_contracts.py"
+    script.parent.mkdir()
+    shutil.copyfile(REPO_ROOT / "scripts/sync_skill_contracts.py", script)
+    assert not (tmp_path / ".agents").exists()
+
+    result = subprocess.run(
+        [sys.executable, str(script), "--check"],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
 
 
 def test_hithink_finance_skill_routes_confirmed_client_only_capabilities() -> None:
@@ -250,7 +301,7 @@ def test_skill_never_routes_agents_to_remote_llms_contract() -> None:
     combined = "\n".join(
         path.read_text(encoding="utf-8")
         for path in SKILL_ROOT.rglob("*")
-        if path.is_file()
+        if path.is_file() and path.suffix in {".md", ".yaml"}
     )
     assert "llms-full" not in combined
     assert "python-sdk" not in combined

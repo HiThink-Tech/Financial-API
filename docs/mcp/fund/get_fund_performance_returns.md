@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_fund_performance_returns`
 >
-> 对应 REST 端点：[`GET /api/fund/performance/returns`](../../api/fund/performance-returns.md#基金区间收益)
+> 对应 REST 端点：[`GET /api/fund/performance/returns`](../../api/fund/fund-performance.md#performance-returns--基金区间收益)
 
 
 ## 工具描述
@@ -30,4 +30,4 @@
 ## 返回
 
 返回 `{ timestamp, item: [FundReturnsItem, ...] }`。字段含义见 REST 端点
-[基金区间收益](../../api/fund/performance-returns.md#基金区间收益)。
+[基金区间收益](../../api/fund/fund-performance.md#performance-returns--基金区间收益)。

@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_fund_performance_nav`
 >
-> 对应 REST 端点：[`GET /api/fund/performance/nav`](../../api/fund/performance-nav.md#基金净值)
+> 对应 REST 端点：[`GET /api/fund/performance/nav`](../../api/fund/fund-performance.md#performance-nav--基金净值)
 
 
 ## 工具描述
@@ -34,4 +34,4 @@
 ## 返回
 
 返回 `{ timestamp, item: [FundNavItem, ...] }`。字段含义见 REST 端点
-[基金净值](../../api/fund/performance-nav.md#基金净值)。
+[基金净值](../../api/fund/fund-performance.md#performance-nav--基金净值)。

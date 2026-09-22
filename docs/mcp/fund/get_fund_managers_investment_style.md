@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_fund_managers_investment_style`
 >
-> 对应 REST 端点：[`GET /api/fund/managers/investment-style`](../../api/fund/managers-investment-style.md#投资风格)
+> 对应 REST 端点：[`GET /api/fund/managers/investment-style`](../../api/fund/fund-managers.md#managers-investment-style--投资风格)
 
 
 ## 工具描述
@@ -28,4 +28,4 @@
 
 ## 返回
 
-返回代表基金、投资理念、管理规模与行业偏好；字段见 [投资风格](../../api/fund/managers-investment-style.md#投资风格)。
+返回代表基金、投资理念、管理规模与行业偏好；字段见 [投资风格](../../api/fund/fund-managers.md#managers-investment-style--投资风格)。

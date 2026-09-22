@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_futures_prices_intraday`
 >
-> 对应 REST 端点：[`GET /api/futures/prices/intraday`](../../api/futures/prices-intraday.md#prices-intraday)
+> 对应 REST 端点：[`GET /api/futures/prices/intraday`](../../api/futures/futures-prices.md#prices-intraday--prices-intraday)
 
 
 ## 工具描述
@@ -32,4 +32,4 @@
 
 ## 返回
 
-返回统一数据对象；字段、空值和数组语义见 [期货分时行情](../../api/futures/prices-intraday.md#prices-intraday)。
+返回统一数据对象；字段、空值和数组语义见 [期货分时行情](../../api/futures/futures-prices.md#prices-intraday--prices-intraday)。

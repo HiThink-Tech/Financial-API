@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_fund_financials_income_statements`
 >
-> 对应 REST 端点：[`GET /api/fund/financials/income-statements`](../../api/fund/financials-income-statements.md#基金利润表)
+> 对应 REST 端点：[`GET /api/fund/financials/income-statements`](../../api/fund/fund-financials.md#financials-income-statements--基金利润表)
 
 
 ## 工具描述
@@ -28,4 +28,4 @@
 
 ## 返回
 
-返回报告期、收入、费用与利润字段；字段见 [基金利润表](../../api/fund/financials-income-statements.md#基金利润表)。
+返回报告期、收入、费用与利润字段；字段见 [基金利润表](../../api/fund/fund-financials.md#financials-income-statements--基金利润表)。

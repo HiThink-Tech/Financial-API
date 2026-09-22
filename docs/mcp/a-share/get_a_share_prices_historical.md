@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_a_share_prices_historical`
 >
-> 对应 REST 端点：[`GET /api/a-share/prices/historical`](../../api/a-share/prices-historical.md#历史-k-线)
+> 对应 REST 端点：[`GET /api/a-share/prices/historical`](../../api/a-share/prices.md#prices-historical--历史-k-线)
 
 
 ## 工具描述
@@ -38,7 +38,7 @@
 ## 返回
 
 返回 `{ timestamp, item: [PriceBarItem, ...] }`。字段含义见 REST 端点
-[历史 K 线](../../api/a-share/prices-historical.md#响应字段)。
+[历史 K 线](../../api/a-share/prices.md#prices-historical--响应字段)。
 
 ```json
 {

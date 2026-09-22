@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_a_share_financials_cash_flow_statements`
 >
-> 对应 REST 端点：[`GET /api/a-share/financials/cash-flow-statements`](../../api/a-share/financials-cash-flow-statements.md#现金流量表)
+> 对应 REST 端点：[`GET /api/a-share/financials/cash-flow-statements`](../../api/a-share/financials.md#financials-cash-flow-statements--现金流量表)
 
 
 ## 工具描述
@@ -38,8 +38,8 @@
 ## 返回
 
 返回 `{ timestamp, item: [CashFlowStatementItem, ...] }`，按 `period_end` 降序。
-字段含义见 REST 端点 [现金流量表返回字段](../../api/a-share/financials-cash-flow-statements.md#cash-flow-statements-return-fields) 与
-[共有响应字段](../../api/a-share/financials-cash-flow-statements.md#共有响应字段)。
+字段含义见 REST 端点 [现金流量表返回字段](../../api/a-share/financials.md#financials-cash-flow-statements--cash-flow-statements-return-fields) 与
+[共有响应字段](../../api/a-share/financials.md#financials-cash-flow-statements--共有响应字段)。
 
 ```json
 {

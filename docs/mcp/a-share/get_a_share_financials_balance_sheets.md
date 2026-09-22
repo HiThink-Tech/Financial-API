@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_a_share_financials_balance_sheets`
 >
-> 对应 REST 端点：[`GET /api/a-share/financials/balance-sheets`](../../api/a-share/financials-balance-sheets.md#资产负债表)
+> 对应 REST 端点：[`GET /api/a-share/financials/balance-sheets`](../../api/a-share/financials.md#financials-balance-sheets--资产负债表)
 
 
 ## 工具描述
@@ -36,8 +36,8 @@
 ## 返回
 
 返回 `{ timestamp, item: [BalanceSheetItem, ...] }`，按 `period_end` 降序。
-字段含义见 REST 端点 [资产负债表返回字段](../../api/a-share/financials-balance-sheets.md#balance-sheets-return-fields) 与
-[共有响应字段](../../api/a-share/financials-balance-sheets.md#共有响应字段)。
+字段含义见 REST 端点 [资产负债表返回字段](../../api/a-share/financials.md#financials-balance-sheets--balance-sheets-return-fields) 与
+[共有响应字段](../../api/a-share/financials.md#financials-balance-sheets--共有响应字段)。
 
 ```json
 {

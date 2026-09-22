@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_fund_indicators_line`
 >
-> 对应 REST 端点：[`GET /api/fund/indicators/line`](../../api/fund/indicators-line.md#基金画线指标)
+> 对应 REST 端点：[`GET /api/fund/indicators/line`](../../api/fund/fund-indicators.md#indicators-line--基金画线指标)
 
 
 ## 工具描述
@@ -30,4 +30,4 @@
 
 ## 返回
 
-返回 Unix 毫秒时间轴、指标元信息、完整 `thscode` 和数值数组；详见[基金画线指标](../../api/fund/indicators-line.md#基金画线指标)。
+返回 Unix 毫秒时间轴、指标元信息、完整 `thscode` 和数值数组；详见[基金画线指标](../../api/fund/fund-indicators.md#indicators-line--基金画线指标)。

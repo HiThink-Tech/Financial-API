@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_options_contracts_list`
 >
-> 对应 REST 端点：[`GET /api/options/contracts/list`](../../api/options/contracts-list.md#contracts-list)
+> 对应 REST 端点：[`GET /api/options/contracts/list`](../../api/options/options-reference.md#contracts-list--contracts-list)
 
 
 ## 工具描述
@@ -30,4 +30,4 @@
 
 ## 返回
 
-返回期权合约基础信息分页列表，字段详见 [期权合约基础资料](../../api/options/contracts-list.md#contracts-list)。
+返回期权合约基础信息分页列表，字段详见 [期权合约基础资料](../../api/options/options-reference.md#contracts-list--contracts-list)。

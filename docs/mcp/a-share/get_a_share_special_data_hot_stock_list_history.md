@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_a_share_special_data_hot_stock_list_history`
 >
-> 对应 REST 端点：[`GET /api/a-share/special-data/hot-stock-list-history`](../../api/a-share/special-data-hot-stock-list-history.md#历史热股排行)
+> 对应 REST 端点：[`GET /api/a-share/special-data/hot-stock-list-history`](../../api/a-share/hot-list-data.md#special-data-hot-stock-list-history--历史热股排行)
 
 
 ## 工具描述
@@ -30,7 +30,7 @@
 ## 返回
 
 返回 `{ date, date_ms, item: [HotListHistoryItem, ...] }`。`date` / `date_ms` 是整批榜单日期，
-不会在每个 `item` 内重复出现。字段含义见 REST 端点 [历史热股排行](../../api/a-share/special-data-hot-stock-list-history.md#历史热股排行)。
+不会在每个 `item` 内重复出现。字段含义见 REST 端点 [历史热股排行](../../api/a-share/hot-list-data.md#special-data-hot-stock-list-history--历史热股排行)。
 
 ```json
 {

@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_fund_holders_top`
 >
-> 对应 REST 端点：[`GET /api/fund/holders/top`](../../api/fund/holders-top.md#基金前十大持有人)
+> 对应 REST 端点：[`GET /api/fund/holders/top`](../../api/fund/fund-holders.md#holders-top--基金前十大持有人)
 
 
 ## 工具描述
@@ -30,4 +30,4 @@
 
 ## 返回
 
-返回持有人、排名、份额、比例与报告日期；字段见 [基金前十大持有人](../../api/fund/holders-top.md#基金前十大持有人)。
+返回持有人、排名、份额、比例与报告日期；字段见 [基金前十大持有人](../../api/fund/fund-holders.md#holders-top--基金前十大持有人)。

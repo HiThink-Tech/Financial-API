@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_a_share_index_prices_snapshot`
 >
-> 对应 REST 端点：[`GET /api/a-share-index/prices/snapshot`](../../api/index/prices-snapshot.md#指数行情快照)
+> 对应 REST 端点：[`GET /api/a-share-index/prices/snapshot`](../../api/index/a-share-index.md#prices-snapshot--指数行情快照)
 
 
 ## 工具描述
@@ -32,7 +32,7 @@
 ## 返回
 
 返回 `{ timestamp, total, item: [PriceSnapshotItem, ...] }`。字段含义见 REST 端点
-[指数行情快照](../../api/index/prices-snapshot.md#指数行情快照)。
+[指数行情快照](../../api/index/a-share-index.md#prices-snapshot--指数行情快照)。
 
 ```json
 {

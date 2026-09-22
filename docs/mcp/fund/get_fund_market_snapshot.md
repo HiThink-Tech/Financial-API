@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_fund_market_snapshot`
 >
-> 对应 REST 端点：[`GET /api/fund/market/snapshot`](../../api/fund/market-snapshot.md#场内基金行情快照)
+> 对应 REST 端点：[`GET /api/fund/market/snapshot`](../../api/fund/fund-market.md#market-snapshot--场内基金行情快照)
 
 
 ## 工具描述
@@ -32,4 +32,4 @@
 ## 返回
 
 返回 `{ timestamp, item: [FundMarketSnapshotItem, ...] }`。字段含义见 REST 端点
-[场内基金行情快照](../../api/fund/market-snapshot.md#场内基金行情快照)。
+[场内基金行情快照](../../api/fund/fund-market.md#market-snapshot--场内基金行情快照)。

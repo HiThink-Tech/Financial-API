@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_fund_holders_detail`
 >
-> 对应 REST 端点：[`GET /api/fund/holders/detail`](../../api/fund/holders-detail.md)
+> 对应 REST 端点：[`GET /api/fund/holders/detail`](../../api/fund/fund-holders.md#holders-detail)
 
 
 ## 工具描述
@@ -31,4 +31,4 @@
 ## 返回
 
 返回 `{ timestamp, item: [FundHoldersItem, ...] }`。`all` 时 `item` 最多包含 `merged` 和 `separate` 两条最新记录；单一口径最多一条。字段含义见 REST 端点
-[基金持有人结构](../../api/fund/holders-detail.md#返回字段)。
+[基金持有人结构](../../api/fund/fund-holders.md#holders-detail--返回字段)。

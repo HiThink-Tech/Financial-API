@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_a_share_index_catalog_ths_index_list`
 >
-> 对应 REST 端点：[`GET /api/a-share-index/catalog/ths-index-list`](../../api/index/catalog-ths-index-list.md#同花顺指数列表)
+> 对应 REST 端点：[`GET /api/a-share-index/catalog/ths-index-list`](../../api/index/a-share-index.md#catalog-ths-index-list--同花顺指数列表)
 
 
 ## 工具描述
@@ -33,7 +33,7 @@
 ## 返回
 
 返回 `{ timestamp, item: [{ thscode, name }, ...] }`。字段含义见 REST 端点
-[同花顺指数列表和成分股 · 同花顺指数列表](../../api/index/catalog-ths-index-list.md#响应字段)。
+[同花顺指数列表和成分股 · 同花顺指数列表](../../api/index/a-share-index.md#catalog-ths-index-list--响应字段)。
 
 ```json
 {

@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_a_share_special_data_limit_up_pool`
 >
-> 对应 REST 端点：[`GET /api/a-share/special-data/limit-up-pool`](../../api/a-share/special-data-limit-up-pool.md#涨停股票池)
+> 对应 REST 端点：[`GET /api/a-share/special-data/limit-up-pool`](../../api/a-share/limit-up-data.md#special-data-limit-up-pool--涨停股票池)
 
 
 ## 工具描述
@@ -37,7 +37,7 @@
 ## 返回
 
 返回 `{ timestamp, pagination, item: [LimitUpPoolItem, ...] }`。
-字段含义见 REST 端点 [涨停股票池](../../api/a-share/special-data-limit-up-pool.md#响应字段)。
+字段含义见 REST 端点 [涨停股票池](../../api/a-share/limit-up-data.md#special-data-limit-up-pool--响应字段)。
 
 ```json
 {

@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_a_share_special_data_limit_up_ladder`
 >
-> 对应 REST 端点：[`GET /api/a-share/special-data/limit-up-ladder`](../../api/a-share/special-data-limit-up-ladder.md#连板天梯)
+> 对应 REST 端点：[`GET /api/a-share/special-data/limit-up-ladder`](../../api/a-share/limit-up-data.md#special-data-limit-up-ladder--连板天梯)
 
 
 ## 工具描述
@@ -29,7 +29,7 @@
 ## 返回
 
 返回 `{ timestamp, window, item: [LimitUpLadderItem, ...] }`。
-字段含义见 REST 端点 [连板天梯](../../api/a-share/special-data-limit-down-pool.md#响应字段)。
+字段含义见 REST 端点 [连板天梯](../../api/a-share/limit-up-data.md#special-data-limit-down-pool--响应字段)。
 
 ```json
 {

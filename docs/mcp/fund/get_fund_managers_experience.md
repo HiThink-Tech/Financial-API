@@ -5,7 +5,7 @@
 > **info**
 > 工具名：`get_fund_managers_experience`
 >
-> 对应 REST 端点：[`GET /api/fund/managers/experience`](../../api/fund/managers-experience.md#从业经历)
+> 对应 REST 端点：[`GET /api/fund/managers/experience`](../../api/fund/fund-managers.md#managers-experience--从业经历)
 
 
 ## 工具描述
@@ -28,4 +28,4 @@
 
 ## 返回
 
-返回荣誉、重仓资产与投资经历三组结构化数据；字段见 [从业经历](../../api/fund/managers-experience.md#从业经历)。
+返回荣誉、重仓资产与投资经历三组结构化数据；字段见 [从业经历](../../api/fund/fund-managers.md#managers-experience--从业经历)。
